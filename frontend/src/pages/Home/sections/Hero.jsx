@@ -30,13 +30,14 @@ function TerminalLine({ role }) {
     <Box
       sx={{
         fontFamily: theme.custom.fontMono,
-        fontSize: { xs: "0.9rem", md: "1rem" },
+        fontSize: { xs: "0.8125rem", sm: "0.9rem", md: "1rem" },
         color: "text.secondary",
         display: "flex",
         alignItems: "center",
         gap: 1,
         minHeight: 28,
-        mb: 3,
+        mb: { xs: 2, sm: 3 },
+        flexWrap: "wrap",
       }}
     >
       <Box component="span" sx={{ color: "primary.main" }}>$</Box>
@@ -64,19 +65,17 @@ export default function Hero() {
     []
   );
 
-  console.log("Identity data:", identity);
-
   return (
     <Box
       sx={{
         position: "relative",
         overflow: "hidden",
         background: `${theme.custom.gradient}, ${theme.palette.background.default}`,
-        pt: { xs: 10, md: 14 },
-        pb: { xs: 10, md: 16 },
+        pt: { xs: 8, sm: 10, md: 14 },
+        pb: { xs: 8, sm: 10, md: 16 },
       }}
     >
-      <Container maxWidth="md">
+      <Container maxWidth="md" sx={{ px: { xs: 2.5, sm: 3 } }}>
         <TerminalLine role={identity?.role} />
 
         {loading ? (
@@ -86,27 +85,81 @@ export default function Hero() {
           </>
         ) : (
           <>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-              <Typography variant="h1" sx={{ mb: 3 }}>
-                <Box component="span" sx={{ color: "primary.main" }}>{identity?.name || "Your Name"} </Box> builds software people{" "}
-                <Box component="span" sx={{ color: "primary.main" }}>trust.</Box>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Typography
+                component="h1"
+                sx={{
+                  mb: { xs: 2, sm: 3 },
+                  fontWeight: 700,
+                  fontSize: "clamp(1.5rem, 5vw + 0.5rem, 3.25rem)",
+                  lineHeight: { xs: 1.25, md: 1.15 },
+                  letterSpacing: { xs: "-0.01em", md: "-0.02em" },
+                  overflowWrap: "break-word",
+                  wordBreak: "break-word",
+                }}
+              >
+                <Box component="span" sx={{ color: "primary.main" }}>
+                  {identity?.name || "Your Name"}{" "}
+                </Box>
+                builds software people{" "}
+                <Box component="span" sx={{ color: "primary.main" }}>
+                  trust.
+                </Box>
               </Typography>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-              <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 560, mb: 5, fontSize: "1.05rem" }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{
+                  maxWidth: 560,
+                  mb: { xs: 4, sm: 5 },
+                  fontSize: "clamp(0.9375rem, 2vw + 0.4rem, 1.05rem)",
+                  lineHeight: 1.6,
+                  overflowWrap: "break-word",
+                }}
+              >
                 {identity?.tagline} {identity?.location ? `${identity.location}.` : ""}
               </Typography>
             </motion.div>
           </>
         )}
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <Button component={NavLink} to="/projects" variant="contained" size="large" endIcon={<FiArrowRight />}>
+            <Button
+              component={NavLink}
+              to="/projects"
+              variant="contained"
+              size="large"
+              fullWidth
+              endIcon={<FiArrowRight />}
+              sx={{ width: { xs: "100%", sm: "auto" }, fontSize: { xs: "0.875rem", sm: "0.9375rem" } }}
+            >
               View my work
             </Button>
-            <Button component={NavLink} to="/resume" variant="outlined" size="large" endIcon={<FiDownload />}>
+            <Button
+              component={NavLink}
+              to="/resume"
+              variant="outlined"
+              size="large"
+              fullWidth
+              endIcon={<FiDownload />}
+              sx={{ width: { xs: "100%", sm: "auto" }, fontSize: { xs: "0.875rem", sm: "0.9375rem" } }}
+            >
               Download résumé
             </Button>
           </Stack>
