@@ -8,7 +8,6 @@ function Counter({ value }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
   const [display, setDisplay] = useState("0");
-
   const numericMatch = value.match(/[\d.]+/);
   const numeric = numericMatch ? parseFloat(numericMatch[0]) : null;
   const suffix = numeric !== null ? value.replace(numericMatch[0], "") : "";
@@ -42,8 +41,8 @@ export default function Stats() {
 
   return (
     <Box sx={{ borderTop: `1px solid ${theme.palette.divider}`, borderBottom: `1px solid ${theme.palette.divider}` }}>
-      <Container maxWidth="md" sx={{ py: { xs: 5, md: 7 } }}>
-        <Grid container spacing={3}>
+      <Container maxWidth="md" sx={{ py: { xs: 4, sm: 5, md: 7 }, px: { xs: 2, sm: 3 } }}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           {loading &&
             Array.from({ length: 4 }).map((_, i) => (
               <Grid item xs={6} md={3} key={i}>
@@ -51,6 +50,7 @@ export default function Stats() {
                 <Skeleton variant="text" height={20} width="80%" />
               </Grid>
             ))}
+
           {!loading &&
             (stats || []).map((s, idx) => (
               <Grid item xs={6} md={3} key={s.label}>
@@ -60,10 +60,25 @@ export default function Stats() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: idx * 0.08 }}
                 >
-                  <Typography variant="h2" sx={{ fontFamily: theme.custom.fontMono, color: "primary.main" }}>
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      fontFamily: theme.custom.fontMono,
+                      color: "primary.main",
+                      fontSize: "clamp(1.5rem, 5vw + 0.3rem, 2.75rem)",
+                      lineHeight: 1.2,
+                      overflowWrap: "break-word",
+                    }}
+                  >
                     <Counter value={s.value} />
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">{s.label}</Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.8125rem", sm: "0.875rem" }, mt: 0.5 }}
+                  >
+                    {s.label}
+                  </Typography>
                 </motion.div>
               </Grid>
             ))}
