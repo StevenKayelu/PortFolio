@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Your Name — Full-Stack Software Engineer</title>
+        <title>Steven Kayelu — Full-Stack Software Engineer</title>
         <meta
           name="description"
           content="Portfolio, blog, and services from a full-stack software engineer specializing in fast, reliable products end to end."
