@@ -13,12 +13,6 @@ export default function Home() {
     <>
       <Helmet>
         <title>Steven Kayelu — Full-Stack Software Engineer</title>
-        <meta
-          name="description"
-          content="Portfolio, blog, and services from a full-stack software engineer specializing in fast, reliable products end to end."
-        />
-        <meta property="og:title" content="Your Name — Full-Stack Software Engineer" />
-        <meta property="og:type" content="website" />
       </Helmet>
 
       <Hero />
