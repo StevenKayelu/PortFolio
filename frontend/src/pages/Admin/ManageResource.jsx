@@ -72,7 +72,7 @@ function FieldInput({ field, value, onChange, selectOptions }) {
  * `fields` array describing the create/edit form, rather than writing
  * a bespoke form for each.
  */
-export default function ManageResource({ title, endpoint, columns, fields = [], selectOptionsEndpoints = {} }) {
+export default function ManageResource({ title, endpoint, listQuery, columns, fields = [], selectOptionsEndpoints = {} }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -87,13 +87,17 @@ export default function ManageResource({ title, endpoint, columns, fields = [], 
   const load = () => {
     setLoading(true);
     apiClient
-      .get(endpoint)
+      .get(endpoint, { params: listQuery })
       .then((res) => setItems(res.data.items || res.data))
       .catch(() => setError("Couldn't load this resource — check the API is running."))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [endpoint]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(load, [endpoint, JSON.stringify(listQuery)]);
+  // Pages pass selectOptionsEndpoints as an inline object; keying the effect on
+  // its contents (not identity) stops it refetching on every render.
+  const selectKey = JSON.stringify(selectOptionsEndpoints);
 
   useEffect(() => {
     Object.entries(selectOptionsEndpoints).forEach(([fieldName, path]) => {
@@ -101,11 +105,12 @@ export default function ManageResource({ title, endpoint, columns, fields = [], 
         const raw = res.data.items || res.data;
         setSelectOptions((prev) => ({
           ...prev,
-          [fieldName]: raw.map((r) => ({ value: r.id ?? r.slug, label: r.name ?? r.title })),
+          [fieldName]: raw.map((r) => ({ value: r.id ?? r.slug, label: r.name ?? r.title ?? r.legalName })),
         }));
       });
     });
-  }, [selectOptionsEndpoints]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectKey]);
 
   const openCreate = () => {
     const defaults = {};

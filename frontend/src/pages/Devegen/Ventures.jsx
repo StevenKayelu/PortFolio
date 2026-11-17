@@ -5,12 +5,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 import SectionHeading from "../../components/common/SectionHeading";
-import { ECOSYSTEM_NODES } from "../../brand/ecosystem";
+import { useEcosystem } from "../../brand/useEcosystem";
 
-const ENTRIES = ECOSYSTEM_NODES.filter((n) => n.id !== "sk" && n.id !== "dv");
 const FILTERS = [
   { key: "all", label: "All", test: () => true },
-  { key: "ok", label: "Operating", test: (n) => n.kind === "service" },
+  { key: "ok", label: "Operating", test: (n) => n.kind === "service" && n.status.tone !== "open" },
   { key: "pending", label: "Under review", test: (n) => n.kind === "product" },
   { key: "open", label: "Open slots", test: (n) => n.kind === "slot" },
 ];
@@ -19,6 +18,8 @@ export default function Ventures() {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const [filter, setFilter] = useState("all");
+  const { nodes } = useEcosystem();
+  const ENTRIES = nodes.filter((n) => n.id !== "sk" && n.id !== "dv");
   const visible = ENTRIES.filter(FILTERS.find((f) => f.key === filter).test);
   const toneColor = { ok: theme.palette.success.main, pending: theme.palette.warning.main, open: theme.palette.primary.main };
 

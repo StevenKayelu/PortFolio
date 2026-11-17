@@ -7,10 +7,15 @@ export const ManageProjects = () => (
   <ManageResource
     title="Manage Projects"
     endpoint="/projects"
-    selectOptionsEndpoints={{ categoryId: "/projects/categories" }}
+    listQuery={{ includeHidden: "true", pageSize: 50 }}
+    selectOptionsEndpoints={{ categoryId: "/projects/categories", showcaseBrandId: "/admin/brands" }}
     columns={[
       { key: "title", label: "Title" },
       { key: "status", label: "Status", render: (p) => <Chip size="small" label={p.status} /> },
+      { key: "visibility", label: "Visibility", render: (p) => <Chip size="small" variant="outlined" label={p.visibility} /> },
+      { key: "ownershipStatus", label: "Ownership", render: (p) => (
+        <Chip size="small" color={p.ownershipStatus === "NEEDS_REVIEW" ? "warning" : "default"} label={p.ownershipStatus.replace("_", " ")} />
+      ) },
       { key: "isFeatured", label: "Featured", render: (p) => (p.isFeatured ? "Yes" : "—") },
       { key: "viewCount", label: "Views" },
     ]}
@@ -32,6 +37,83 @@ export const ManageProjects = () => (
       { name: "lessonsLearned", label: "Lessons learned", type: "textarea" },
       { name: "githubUrl", label: "GitHub URL", type: "text" },
       { name: "liveDemoUrl", label: "Live demo URL", type: "text" },
+      // Attribution (report §05): who owns it, and whether it may be shown.
+      { name: "visibility", label: "Visibility", type: "select", default: "PUBLIC", options: [
+        { value: "PUBLIC", label: "Public — listed" }, { value: "UNLISTED", label: "Unlisted — link only" }, { value: "PRIVATE", label: "Private — admin only" },
+      ] },
+      { name: "ownershipStatus", label: "Ownership", type: "select", default: "NEEDS_REVIEW", options: [
+        { value: "NEEDS_REVIEW", label: "Needs review" }, { value: "CONFIRMED", label: "Confirmed — ours" }, { value: "NOT_OWNED", label: "Not ours — shown with permission" },
+      ] },
+      { name: "ownerName", label: "Owner (person or organisation)", type: "text" },
+      { name: "publicationPermission", label: "Permission to publish", type: "select", default: "UNKNOWN", options: [
+        { value: "UNKNOWN", label: "Unknown" }, { value: "GRANTED", label: "Granted by owner" }, { value: "NOT_REQUIRED", label: "Not required (own work)" }, { value: "DENIED", label: "Denied" },
+      ] },
+      { name: "showcaseBrandId", label: "Shown on brand", type: "select", allowEmpty: true },
+      { name: "outcome", label: "Verified outcome", type: "textarea" },
+    ]}
+  />
+);
+
+const STATUS_OPTIONS = [
+  { value: "DRAFT", label: "Draft" }, { value: "PUBLISHED", label: "Published" }, { value: "ARCHIVED", label: "Archived" },
+];
+const statusChip = (r) => <Chip size="small" color={r.status === "PUBLISHED" ? "success" : "default"} label={r.status} />;
+
+export const ManageVentures = () => (
+  <ManageResource
+    title="Ventures"
+    endpoint="/admin/ventures"
+    selectOptionsEndpoints={{ brandId: "/admin/brands" }}
+    columns={[
+      { key: "name", label: "Venture" },
+      { key: "brand", label: "Brand", render: (v) => v.brand?.name || "—" },
+      { key: "stage", label: "Stage" },
+      { key: "status", label: "Status", render: statusChip },
+      { key: "verificationStatus", label: "Verified", render: (v) => v.verificationStatus },
+    ]}
+    fields={[
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "summary", label: "Summary (shown on cards)", type: "textarea", required: true },
+      { name: "description", label: "Full description", type: "textarea" },
+      { name: "brandId", label: "Brand", type: "select", required: true },
+      { name: "stage", label: "Stage", type: "select", default: "IDEA", options: [
+        { value: "IDEA", label: "Idea" }, { value: "BUILDING", label: "Building" }, { value: "OPERATING", label: "Operating" }, { value: "PAUSED", label: "Paused" },
+      ] },
+      { name: "status", label: "Publication (brand admins publish)", type: "select", default: "DRAFT", options: STATUS_OPTIONS },
+      { name: "verificationStatus", label: "Relationship verification (super admin)", type: "select", default: "UNVERIFIED", options: [
+        { value: "UNVERIFIED", label: "Unverified" }, { value: "PENDING", label: "Pending" }, { value: "VERIFIED", label: "Verified" },
+      ] },
+      { name: "website", label: "Website", type: "text" },
+      { name: "displayOrder", label: "Display order", type: "number", default: 0 },
+    ]}
+  />
+);
+
+export const ManageProducts = () => (
+  <ManageResource
+    title="Products"
+    endpoint="/admin/products"
+    selectOptionsEndpoints={{ ventureId: "/admin/ventures", projectId: "/projects?includeHidden=true&pageSize=50" }}
+    columns={[
+      { key: "name", label: "Product" },
+      { key: "venture", label: "Venture", render: (p) => p.venture?.name || "—" },
+      { key: "status", label: "Status", render: statusChip },
+      { key: "ownershipStatus", label: "Ownership", render: (p) => (
+        <Chip size="small" color={p.ownershipStatus === "NEEDS_REVIEW" ? "warning" : "default"} label={p.ownershipStatus.replace("_", " ")} />
+      ) },
+    ]}
+    fields={[
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "summary", label: "Summary", type: "textarea" },
+      { name: "ventureId", label: "Venture", type: "select", allowEmpty: true },
+      { name: "projectId", label: "Case study project", type: "select", allowEmpty: true },
+      { name: "lifecycle", label: "Lifecycle (concept, beta, live…)", type: "text" },
+      { name: "status", label: "Publication (brand admins publish)", type: "select", default: "DRAFT", options: STATUS_OPTIONS },
+      { name: "ownershipStatus", label: "Ownership (super admin confirms)", type: "select", default: "NEEDS_REVIEW", options: [
+        { value: "NEEDS_REVIEW", label: "Needs review" }, { value: "CONFIRMED", label: "Confirmed" }, { value: "NOT_OWNED", label: "Not owned" },
+      ] },
+      { name: "website", label: "Website", type: "text" },
+      { name: "displayOrder", label: "Display order", type: "number", default: 0 },
     ]}
   />
 );

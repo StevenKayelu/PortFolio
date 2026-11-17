@@ -53,7 +53,10 @@ function validate(form, type) {
   return errors;
 }
 
-const EMPTY = { name: "", email: "", organisation: "", service: "", timeline: "", budget: "", message: "", consent: false };
+const EMPTY = { name: "", email: "", organisation: "", service: "", timeline: "", budget: "", message: "", consent: false, website: "" };
+
+// Server field names → this form's field ids
+const SERVER_FIELDS = { organization: "organisation" };
 
 export default function Contact() {
   const theme = useTheme();
@@ -65,12 +68,17 @@ export default function Contact() {
   const [form, setForm] = useState(EMPTY);
   const [touched, setTouched] = useState({});
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error | limited
+  const [reference, setReference] = useState(null);
+  const [serverErrors, setServerErrors] = useState({});
   const { data: identity } = useFetch(() => apiClient.get("/site-settings/identity").then((r) => r.data), []);
   const { data: services } = useFetch(() => apiClient.get("/services").then((r) => r.data), []);
 
   const errors = useMemo(() => validate(form, type), [form, type]);
-  const show = (field) => touched[field] && errors[field];
-  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+  const show = (field) => (touched[field] && errors[field]) || serverErrors[field];
+  const set = (field) => (e) => {
+    setForm((f) => ({ ...f, [field]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
+    setServerErrors(({ [field]: _cleared, ...rest }) => rest);
+  };
   const blur = (field) => () => setTouched((t) => ({ ...t, [field]: true }));
   const heading = HEADINGS[type];
 
@@ -82,6 +90,52 @@ export default function Contact() {
       return;
     }
     setStatus("sending");
+    setServerErrors({});
+    try {
+      const { data } = await apiClient.post("/enquiries", {
+        site: siteKey,
+        type: type.toUpperCase(),
+        name: form.name,
+        email: form.email,
+        organization: form.organisation,
+        service: form.service,
+        timeline: form.timeline,
+        budget: form.budget,
+        message: form.message,
+        consent: form.consent,
+        website: form.website, // honeypot
+      });
+      setReference(data.reference);
+      setStatus("sent");
+      setForm(EMPTY);
+      setTouched({});
+    } catch (err) {
+      const res = err.response;
+      if (res?.status === 404 || res?.status === 503) {
+        // API not yet upgraded or brands not seeded: use the legacy contact endpoint.
+        try {
+          await postLegacyContact();
+          setReference(null);
+          setStatus("sent");
+          setForm(EMPTY);
+          setTouched({});
+        } catch (legacyErr) {
+          setStatus(legacyErr.response?.status === 429 ? "limited" : "error");
+        }
+        return;
+      }
+      if (res?.status === 400 && res.data?.fields) {
+        const mapped = Object.fromEntries(Object.entries(res.data.fields).map(([k, v]) => [SERVER_FIELDS[k] || k, v[0]]));
+        setServerErrors(mapped);
+        setStatus("idle");
+        document.getElementById(`contact-${Object.keys(mapped)[0]}`)?.focus();
+        return;
+      }
+      setStatus(res?.status === 429 ? "limited" : "error");
+    }
+  };
+
+  const postLegacyContact = () => {
     const typeMeta = types.find((t) => t.key === type);
     const details = [
       form.organisation && `Organisation: ${form.organisation}`,
@@ -89,19 +143,12 @@ export default function Contact() {
       form.timeline && `Timeline: ${form.timeline}`,
       form.budget && `Budget: ${form.budget}`,
     ].filter(Boolean);
-    try {
-      await apiClient.post("/contact", {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        subject: `[${typeMeta.subject}] ${siteKey === "steven" ? "stevenkayelu.online" : "devegenventures.com"}`,
-        message: [...details, details.length ? "" : null, form.message.trim()].filter((l) => l !== null).join("\n"),
-      });
-      setStatus("sent");
-      setForm(EMPTY);
-      setTouched({});
-    } catch (err) {
-      setStatus(err.response?.status === 429 ? "limited" : "error");
-    }
+    return apiClient.post("/contact", {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      subject: `[${typeMeta.subject}] ${siteKey === "steven" ? "stevenkayelu.online" : "devegenventures.com"}`,
+      message: [...details, details.length ? "" : null, form.message.trim()].filter((l) => l !== null).join("\n"),
+    });
   };
 
   const contactLines = [
@@ -154,6 +201,11 @@ export default function Contact() {
                     </Box>
                     <Typography variant="h3" component="h2">Message received.</Typography>
                     <Typography color="text.secondary">Thank you. You will get a reply at the email address you gave.</Typography>
+                    {reference && (
+                      <Typography color="text.secondary">
+                        Your reference is <Box component="b" sx={{ fontFamily: theme.custom.fontMono, color: "text.primary" }}>{reference}</Box>. Quote it if you follow up.
+                      </Typography>
+                    )}
                     <Button onClick={() => setStatus("idle")} variant="outlined" sx={{ mt: 1 }}>Send another message</Button>
                   </Box>
                 </motion.div>
@@ -161,6 +213,11 @@ export default function Contact() {
                 <motion.div key="form" initial={false} exit={reduceMotion ? undefined : { opacity: 0 }}>
                   <Stack component="form" spacing={2.5} onSubmit={handleSubmit} noValidate aria-describedby="contact-required-note">
                     <Typography id="contact-required-note" variant="body2" color="text.secondary">Fields marked * are required.</Typography>
+                    {/* Honeypot: hidden from people and assistive tech; bots that fill it are discarded server-side. */}
+                    <Box aria-hidden="true" sx={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+                      <label htmlFor="contact-website">Website</label>
+                      <input id="contact-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={form.website} onChange={set("website")} />
+                    </Box>
                     <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
                       <TextField id="contact-name" label="Name" required autoComplete="name" value={form.name} onChange={set("name")} onBlur={blur("name")} error={Boolean(show("name"))} helperText={show("name") || " "} />
                       <TextField id="contact-email" label="Email" type="email" required autoComplete="email" value={form.email} onChange={set("email")} onBlur={blur("email")} error={Boolean(show("email"))} helperText={show("email") || " "} />
@@ -196,7 +253,7 @@ export default function Contact() {
                         label={<>I agree that my details are stored to reply to this enquiry, as described in the <NavLink to="/privacy-policy">privacy policy</NavLink>.</>}
                         sx={{ alignItems: "flex-start", "& .MuiCheckbox-root": { mt: -0.75 } }}
                       />
-                      {show("consent") && <Typography variant="body2" color="error" sx={{ ml: 4 }}>{errors.consent}</Typography>}
+                      {show("consent") && <Typography variant="body2" color="error" sx={{ ml: 4 }}>{show("consent")}</Typography>}
                     </Box>
                     <Box aria-live="polite">
                       {status === "error" && (

@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import {
   FiGrid, FiFolder, FiEdit3, FiBriefcase, FiAward, FiUsers, FiImage,
-  FiMail, FiMenu, FiLogOut, FiExternalLink, FiClock, FiSliders, FiHelpCircle,
+  FiMail, FiMenu, FiLogOut, FiExternalLink, FiClock, FiSliders, FiHelpCircle, FiInbox, FiLayers, FiPackage,
 } from "react-icons/fi";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -16,6 +16,9 @@ const DRAWER_WIDTH = 240;
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/admin", icon: FiGrid, end: true },
+  { label: "Leads", to: "/admin/leads", icon: FiInbox },
+  { label: "Ventures", to: "/admin/ventures", icon: FiLayers },
+  { label: "Products", to: "/admin/products", icon: FiPackage },
   { label: "Projects", to: "/admin/projects", icon: FiFolder },
   { label: "Blog", to: "/admin/blog", icon: FiEdit3 },
   { label: "Services", to: "/admin/services", icon: FiBriefcase },
@@ -45,9 +48,15 @@ export default function AdminLayout() {
   const drawerContent = (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Toolbar>
-        <Typography sx={{ fontFamily: theme.custom.fontMono, fontWeight: 600 }}>
-          {"</"}<Box component="span" sx={{ color: "primary.main" }}>{identity?.name}-admin</Box>{">"}
-        </Typography>
+        {/* One admin serves every brand (report §03), so it carries the umbrella name. */}
+        <Stack>
+          <Typography sx={{ fontFamily: theme.custom.fontSerif, fontSize: "1.15rem", lineHeight: 1.1 }}>Devegen admin</Typography>
+          {identity?.name && (
+            <Typography sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.68rem", color: "text.secondary", letterSpacing: "0.06em" }}>
+              {identity.name}
+            </Typography>
+          )}
+        </Stack>
       </Toolbar>
       <List sx={{ flex: 1, px: 1 }}>
         {NAV_ITEMS.map((item) => {

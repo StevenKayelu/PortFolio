@@ -3,12 +3,11 @@ import { Box, Stack, Typography, ToggleButton, ToggleButtonGroup, Button, useThe
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
-import { ECOSYSTEM_NODES, ECOSYSTEM_LINKS, ECOSYSTEM_LAYOUTS } from "../../brand/ecosystem";
+import { ECOSYSTEM_LAYOUTS } from "../../brand/ecosystem";
+import { useEcosystem } from "../../brand/useEcosystem";
 import { useBrand } from "../../context/BrandContext";
 import { siteHref } from "../../brand/brands";
 
-const byId = Object.fromEntries(ECOSYSTEM_NODES.map((n) => [n.id, n]));
-const ORDER = ECOSYSTEM_NODES.map((n) => n.id);
 
 // Verified links are always royal blue, so they never share copper with the founder link.
 const verifiedStroke = (theme) => (theme.palette.mode === "dark" ? "#79AAE6" : "#2769B6");
@@ -93,10 +92,13 @@ export default function EcosystemMap() {
   const svgRef = useRef(null);
   const width = useContainerWidth(canvasRef);
   const inView = useInView(canvasRef, { once: true, amount: 0.3 });
+  const { nodes: ECOSYSTEM_NODES, links: ECOSYSTEM_LINKS } = useEcosystem();
+  const byId = useMemo(() => Object.fromEntries(ECOSYSTEM_NODES.map((n) => [n.id, n])), [ECOSYSTEM_NODES]);
+  const ORDER = useMemo(() => ECOSYSTEM_NODES.map((n) => n.id), [ECOSYSTEM_NODES]);
   const [current, setCurrent] = useState("dv");
   const [view, setView] = useState("map");
   const layout = ECOSYSTEM_LAYOUTS[width && width < 520 ? "tall" : "wide"];
-  const node = byId[current];
+  const node = byId[current] ?? byId.dv;
 
   const lit = useMemo(() => {
     const s = new Set([current]);
@@ -104,7 +106,7 @@ export default function EcosystemMap() {
       if (l.a === current || l.b === current) { s.add(l.a); s.add(l.b); }
     });
     return s;
-  }, [current]);
+  }, [current, ECOSYSTEM_LINKS]);
 
   const select = useCallback((id, focus = false) => {
     setCurrent(id);
@@ -151,7 +153,7 @@ export default function EcosystemMap() {
           </span>
           <StatusChip tone={n.status.tone}>{n.status.label}</StatusChip>
         </Box>
-        {children && (
+        {children?.length > 0 && (
           <Box component="ul" sx={{ m: "4px 0 0 18px", pl: 1.75, borderLeft: `1px dashed ${theme.palette.divider}` }}>
             {children}
           </Box>
@@ -160,7 +162,10 @@ export default function EcosystemMap() {
     );
   };
 
-  const [vbW, vbH] = layout.viewBox;
+  // Without published products the bottom row is empty, so crop it off.
+  const hasProducts = ORDER.some((id) => id.startsWith("p"));
+  const [vbW, fullH] = layout.viewBox;
+  const vbH = hasProducts ? fullH : fullH - (vbW > 400 ? 70 : 150);
   const [bx, by, bw, bh] = layout.boundary;
   const animateDraw = inView && !reduceMotion;
 
@@ -266,7 +271,7 @@ export default function EcosystemMap() {
           </svg>
         ) : (
           <Box component="ul" aria-label="Devegen Ventures ecosystem" sx={{ p: 0.5, m: 0, display: "grid", gap: 0.5 }}>
-            {listItem("dv", [listItem("ds", ["p1", "p2", "p3"].map((id) => listItem(id))), listItem("fv")])}
+            {listItem("dv", [listItem("ds", ORDER.filter((id) => id.startsWith("p")).map((id) => listItem(id))), listItem("fv")])}
             <Box component="li" sx={{ listStyle: "none", mt: 1, p: 1.5, borderTop: 1, borderColor: "divider", fontFamily: theme.custom.fontMono, fontSize: "0.7rem", letterSpacing: "0.1em", color: "text.secondary" }}>
               INDEPENDENT IDENTITY
             </Box>

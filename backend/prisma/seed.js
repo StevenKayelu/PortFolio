@@ -133,17 +133,10 @@ async function main() {
     if (!exists) await prisma.faq.create({ data: { question, answer } });
   }
 
-  // ---------- Testimonials (pre-approved so they show up immediately) ----------
-  const testimonials = [
-    ["Amara Chen", "VP Engineering", "Northline", "Delivered ahead of schedule and left the codebase easier to work in than they found it.", 5],
-    ["Daniel Ortiz", "Founder", "Fielda", "Rare mix of product sense and engineering rigor — asked the right questions before writing code.", 5],
-  ];
-  for (const [clientName, clientRole, clientCompany, content, rating] of testimonials) {
-    const exists = await prisma.testimonial.findFirst({ where: { clientName, clientCompany } });
-    if (!exists) {
-      await prisma.testimonial.create({ data: { clientName, clientRole, clientCompany, content, rating, isApproved: true, isFeatured: true } });
-    }
-  }
+  // ---------- Testimonials ----------
+  // Intentionally none. Testimonials must come from real clients through
+  // POST /testimonials and admin approval; seeding invented quotes put
+  // fabricated endorsements on the live site.
 
   // ---------- Project categories + projects ----------
   const categories = [["web", "Web"], ["mobile", "Mobile"], ["data", "Data & Analytics"]];

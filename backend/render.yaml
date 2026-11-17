@@ -3,7 +3,8 @@ services:
     name: portfolio-platform-api
     env: node
     plan: starter
-    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    # seed-ecosystem.js only creates missing brand rows; it never overwrites admin edits.
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && node prisma/seed-ecosystem.js
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -16,3 +17,7 @@ services:
         sync: false
       - key: CLIENT_URL
         sync: false
+      - key: CLIENT_URLS
+        sync: false
+      - key: LEAD_IP_SALT
+        generateValue: true

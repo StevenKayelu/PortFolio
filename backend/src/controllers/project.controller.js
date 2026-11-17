@@ -1,19 +1,74 @@
+import { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "../config/prisma.js";
 import slugify from "slugify";
+import { STAFF_ROLES } from "../middleware/auth.middleware.js";
+import { projectAttributionSchema } from "../validation/schemas.js";
+import { audit } from "../services/audit.service.js";
+
+const PROTECTED = new Set(["id", "createdAt", "updatedAt", "deletedAt", "viewCount", "authorId"]);
+const PROJECT_FIELDS = new Set(
+  Prisma.dmmf.datamodel.models.find((m) => m.name === "Project").fields
+    .filter((f) => f.kind !== "object" && !PROTECTED.has(f.name))
+    .map((f) => f.name)
+);
+const attribution = z.object(projectAttributionSchema);
+const PROJECT_STATUSES = new Set(["DRAFT", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]);
+
+/**
+ * Splits an admin request body into Project columns, the technology list
+ * and the contributor list. Unknown keys are dropped; attribution fields
+ * are validated (a 400 is thrown for bad values).
+ */
+function parseProjectBody(body = {}) {
+  const parsed = attribution.safeParse(body);
+  if (!parsed.success) {
+    throw Object.assign(new Error("Invalid attribution fields."), { status: 400, publicMessage: "Some attribution fields are invalid." });
+  }
+  const { contributors, ...attr } = parsed.data;
+  const data = Object.fromEntries(
+    Object.entries(body)
+      .filter(([k]) => PROJECT_FIELDS.has(k))
+      .map(([k, v]) => [k, k.endsWith("Id") && v === "" ? null : v]) // empty select = no link
+  );
+  return { data: { ...data, ...attr }, technologyNames: body.technologyNames, contributors };
+}
+
+const projectInclude = {
+  category: true,
+  technologies: { include: { technology: true } },
+  images: true,
+  contributors: { orderBy: { displayOrder: "asc" } },
+  showcaseBrand: { select: { key: true, name: true } },
+};
+
+// Internal review state is not part of the public payload.
+// eslint-disable-next-line no-unused-vars
+function toPublic({ publicationPermission, authorId, deletedAt, ...project }) {
+  return project;
+}
+
+const isStaff = (req) => STAFF_ROLES.includes(req.user?.role);
 
 export async function listProjects(req, res, next) {
   try {
-    const { search, category, status, featuredOnly, page = 1, pageSize = 20 } = req.query;
+    const { search, category, status, featuredOnly, brand, includeHidden, page = 1, pageSize = 20 } = req.query;
+    // Drafts, private and unlisted projects only appear for signed-in staff
+    // who ask for them (the admin table); public pages never see them.
+    const showHidden = includeHidden === "true" && isStaff(req);
     const where = {
       deletedAt: null,
+      ...(showHidden ? {} : { visibility: "PUBLIC", status: { not: "DRAFT" } }),
+      ...(brand ? { showcaseBrand: { key: String(brand) } } : {}),
       ...(category ? { category: { slug: category } } : {}),
-      ...(status ? { status } : {}),
+      // Combine with the public "not DRAFT" rule instead of replacing it.
+      ...(PROJECT_STATUSES.has(status) ? { status: showHidden ? status : { equals: status, not: "DRAFT" } } : {}),
       ...(featuredOnly === "true" ? { isFeatured: true } : {}),
-      ...(search ? { OR: [{ title: { contains: search } }, { summary: { contains: search } }] } : {}),
+      ...(search ? { OR: [{ title: { contains: String(search) } }, { summary: { contains: String(search) } }] } : {}),
     };
 
-    const take = Math.min(parseInt(pageSize), 50);
-    const skip = (parseInt(page) - 1) * take;
+    const take = Math.min(Math.max(parseInt(pageSize) || 20, 1), 50);
+    const skip = (Math.max(parseInt(page) || 1, 1) - 1) * take;
 
     const [items, total] = await Promise.all([
       prisma.project.findMany({
@@ -21,12 +76,12 @@ export async function listProjects(req, res, next) {
         orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
         take,
         skip,
-        include: { category: true, technologies: { include: { technology: true } }, images: true },
+        include: projectInclude,
       }),
       prisma.project.count({ where }),
     ]);
 
-    res.json({ items, total, page: parseInt(page), pageSize: take });
+    res.json({ items: showHidden ? items : items.map(toPublic), total, page: skip / take + 1, pageSize: take });
   } catch (err) {
     next(err);
   }
@@ -34,16 +89,19 @@ export async function listProjects(req, res, next) {
 
 export async function getProjectBySlug(req, res, next) {
   try {
-    const project = await prisma.project.findUnique({
-      where: { slug: req.params.slug },
-      include: { category: true, technologies: { include: { technology: true } }, images: true },
-    });
+    const project = await prisma.project.findUnique({ where: { slug: req.params.slug }, include: projectInclude });
 
-    if (!project || project.deletedAt) return res.status(404).json({ error: "Project not found." });
+    // UNLISTED projects are reachable by link; drafts and PRIVATE are staff-only.
+    const hidden = project && (project.status === "DRAFT" || project.visibility === "PRIVATE");
+    if (!project || project.deletedAt || (hidden && !isStaff(req))) {
+      return res.status(404).json({ error: "Project not found." });
+    }
 
-    await prisma.project.update({ where: { id: project.id }, data: { viewCount: { increment: 1 } } });
+    if (!isStaff(req)) {
+      await prisma.project.update({ where: { id: project.id }, data: { viewCount: { increment: 1 } } });
+    }
 
-    res.json(project);
+    res.json(isStaff(req) ? project : toPublic(project));
   } catch (err) {
     next(err);
   }
@@ -51,24 +109,27 @@ export async function getProjectBySlug(req, res, next) {
 
 export async function createProject(req, res, next) {
   try {
-    const { technologyNames = [], categoryId, ...rest } = req.body;
-    const slug = rest.slug || slugify(rest.title, { lower: true, strict: true });
+    const { data, technologyNames = [], contributors = [] } = parseProjectBody(req.body);
+    if (!data.title) return res.status(400).json({ error: "A title is required." });
+    const slug = data.slug || slugify(data.title, { lower: true, strict: true });
 
     const project = await prisma.project.create({
       data: {
-        ...rest,
+        ...data,
         slug,
         authorId: req.user?.sub,
-        categoryId: categoryId || null,
+        categoryId: data.categoryId || null,
         technologies: {
           create: technologyNames.map((name) => ({
             technology: { connectOrCreate: { where: { name }, create: { name } } },
           })),
         },
+        contributors: { create: contributors },
       },
-      include: { technologies: { include: { technology: true } } },
+      include: projectInclude,
     });
 
+    await audit(req, "CREATE", "Project", project.id);
     res.status(201).json(project);
   } catch (err) {
     next(err);
@@ -77,7 +138,11 @@ export async function createProject(req, res, next) {
 
 export async function updateProject(req, res, next) {
   try {
-    const { technologyNames, ...rest } = req.body;
+    const { data: rest, technologyNames, contributors } = parseProjectBody(req.body);
+
+    if (contributors) {
+      await prisma.projectContributor.deleteMany({ where: { projectId: req.params.id } });
+    }
 
     if (technologyNames) {
       // Replace the tech-stack relation wholesale rather than trying to
@@ -96,10 +161,12 @@ export async function updateProject(req, res, next) {
             })),
           },
         }),
+        ...(contributors && { contributors: { create: contributors } }),
       },
-      include: { technologies: { include: { technology: true } } },
+      include: projectInclude,
     });
 
+    await audit(req, "UPDATE", "Project", project.id, { fields: Object.keys(rest) });
     res.json(project);
   } catch (err) {
     next(err);
@@ -109,6 +176,7 @@ export async function updateProject(req, res, next) {
 export async function deleteProject(req, res, next) {
   try {
     await prisma.project.update({ where: { id: req.params.id }, data: { deletedAt: new Date() } });
+    await audit(req, "DELETE", "Project", req.params.id);
     res.status(204).end();
   } catch (err) {
     next(err);

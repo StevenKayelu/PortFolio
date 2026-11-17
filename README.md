@@ -127,6 +127,55 @@ placeholder backend URL in that rewrite** once you know your Render domain.
 - **Auth**: short-lived JWT access tokens (kept in memory, not localStorage) + rotating, hashed
   refresh tokens in an httpOnly cookie.
 
+## Devegen ecosystem: brands, ventures, leads
+
+One app serves **stevenkayelu.online** (personal) and **devegenventures.com** (umbrella,
+with DevGen Solutions under `/solutions`). The frontend picks the site from the hostname;
+on any other host, add `?site=devegen` or `?site=steven` to review a site.
+
+### Data model (migration `20261117054425_devegen_ecosystem`, additive only)
+
+| Model | Purpose |
+|-------|---------|
+| `Brand`, `Organization`, `BrandRelationship` | Public brands, legal entities, and relationships with a verification status |
+| `Venture`, `Product` | Venture directory and products; DRAFT until published, products `NEEDS_REVIEW` until ownership is confirmed |
+| `ProjectContributor` + new `Project` fields | Attribution: visibility, ownership status, owner, publication permission, outcome, showcase brand. Existing projects start as `NEEDS_REVIEW` |
+| `UserBrandRole` | Brand-scoped admin access |
+| `Lead`, `LeadActivity` | Structured enquiries with a status pipeline, notes and history |
+
+`node prisma/seed-ecosystem.js` creates the three brands, their relationships (the
+Devegen ↔ DevGen Solutions one as `PENDING`) and draft products. It is idempotent and
+never overwrites admin edits; the Render build runs it after migrations.
+
+### API
+
+| Endpoint | Access |
+|----------|--------|
+| `GET /brands/public`, `GET /ecosystem`, `GET /ventures[/:slug]` | Public, published records only |
+| `POST /enquiries` | Public. Validated, consent required, honeypot, 3/min + 20/day per IP. Brand is chosen server-side from type + site |
+| `/admin/leads`, `/admin/ventures`, `/admin/products`, `/admin/brands` | Staff, filtered to their brands |
+| `/admin/organizations`, `/admin/relationships`, `/admin/users/:id/brand-roles` | Super admin only |
+
+**Permissions.** `SUPER_ADMIN` sees every brand. Everyone else needs a `UserBrandRole`:
+`ADMIN` (publish, manage), `EDITOR` (drafts only; can't edit published records),
+`LEAD_MANAGER` (leads only). Only a super admin can mark relationships verified, link legal
+entities or confirm product ownership. Grants are re-checked on every request, so
+deactivating a user takes effect immediately. Assign roles with
+`PUT /admin/users/:id/brand-roles` (no UI yet).
+
+`POST /contact` still works; convert old messages with `POST /admin/leads/from-message/:id`.
+
+### Integration tests
+
+Run against a disposable database, never production:
+
+```bash
+cd backend
+export DATABASE_URL="mysql://root@127.0.0.1:3306/devegen_test"
+npx prisma migrate deploy && node prisma/seed.js && node prisma/seed-ecosystem.js
+npm run test:integration
+```
+
 ## Changing the admin password
 
 There's no in-app "change password" screen yet. Fastest path for now:

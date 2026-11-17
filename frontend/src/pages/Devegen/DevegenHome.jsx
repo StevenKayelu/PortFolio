@@ -11,10 +11,13 @@ import Reveal from "../../components/common/Reveal";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 import { siteHref } from "../../brand/brands";
-import { ECOSYSTEM_NODES } from "../../brand/ecosystem";
 
-const INDEX = ["ds", "p1", "fv"].map((id) => ECOSYSTEM_NODES.find((n) => n.id === id));
-const INDEX_LABEL = { ds: "Operating", p1: "Under review", fv: "Open" };
+// Hero index: a summary of the directory, not a live record list.
+const INDEX = [
+  { id: "ds", name: "DevGen Solutions LTD", detail: "Technology services brand", label: "Operating" },
+  { id: "products", name: "Products", detail: "Listed after ownership review", label: "Under review" },
+  { id: "fv", name: "Future ventures", detail: "Configurable venture profiles", label: "Open" },
+];
 
 /** Faint static constellation behind the hero; decorative only. */
 function Constellation() {
@@ -104,13 +107,13 @@ export default function DevegenHome() {
                 {INDEX.map((n) => (
                   <Box component="li" key={n.id} sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 2, py: 1.75, borderBottom: `1px solid ${band.line}` }}>
                     <span>
-                      <Box component="b" sx={{ display: "block", fontWeight: 600 }}>{n.id === "p1" ? "Products" : n.name}</Box>
+                      <Box component="b" sx={{ display: "block", fontWeight: 600 }}>{n.name}</Box>
                       <Box component="span" sx={{ color: band.muted, fontSize: "0.88rem" }}>
-                        {n.id === "p1" ? "Listed after ownership review" : n.role}
+                        {n.detail}
                       </Box>
                     </span>
                     <Box component="small" sx={{ alignSelf: "center", fontFamily: theme.custom.fontMono, fontSize: "0.7rem", letterSpacing: "0.08em", color: band.muted, textTransform: "uppercase" }}>
-                      {INDEX_LABEL[n.id]}
+                      {n.label}
                     </Box>
                   </Box>
                 ))}

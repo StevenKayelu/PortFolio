@@ -15,6 +15,8 @@ import newsletterRoutes from "./newsletter.routes.js";
 import resumeRoutes from "./resume.routes.js";
 import siteSettingRoutes from "./siteSetting.routes.js";
 import adminRoutes from "./admin.routes.js";
+import ecosystemRoutes from "./ecosystem.routes.js";
+import adminEcosystemRoutes from "./adminEcosystem.routes.js";
 
 const router = Router();
 
@@ -36,5 +38,7 @@ router.use("/newsletter", newsletterRoutes);
 router.use("/resume", resumeRoutes);
 router.use("/site-settings", siteSettingRoutes);
 router.use("/admin", adminRoutes);
+router.use("/admin", adminEcosystemRoutes);
+router.use("/", ecosystemRoutes);
 
 export default router;

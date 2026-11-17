@@ -44,6 +44,9 @@ const ManageSkills = resource("ManageSkills");
 const ManageGallery = resource("ManageGallery");
 const ManageAchievements = resource("ManageAchievements");
 const ManageFaq = resource("ManageFaq");
+const ManageVentures = resource("ManageVentures");
+const ManageProducts = resource("ManageProducts");
+const ManageLeads = lazy(() => import("./pages/Admin/ManageLeads"));
 
 function RouteFallback() {
   return (
@@ -111,6 +114,9 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
+          <Route path="leads" element={<ManageLeads />} />
+          <Route path="ventures" element={<ManageVentures />} />
+          <Route path="products" element={<ManageProducts />} />
           <Route path="projects" element={<ManageProjects />} />
           <Route path="blog" element={<ManageBlog />} />
           <Route path="blog/new" element={<BlogEditor />} />

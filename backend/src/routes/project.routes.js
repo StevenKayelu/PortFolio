@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, requireRole } from "../middleware/auth.middleware.js";
+import { requireAuth, requireRole, optionalAuth } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.middleware.js";
 import { handleUpload } from "../services/upload.service.js";
 import { prisma } from "../config/prisma.js";
@@ -10,9 +10,9 @@ import {
 const router = Router();
 const canWrite = [requireAuth, requireRole("SUPER_ADMIN", "ADMIN", "EDITOR")];
 
-router.get("/", listProjects);
+router.get("/", optionalAuth, listProjects);
 router.get("/categories", listProjectCategories);
-router.get("/:slug", getProjectBySlug);
+router.get("/:slug", optionalAuth, getProjectBySlug);
 router.post("/", ...canWrite, createProject);
 router.patch("/:id", ...canWrite, updateProject);
 router.delete("/:id", ...canWrite, deleteProject);
