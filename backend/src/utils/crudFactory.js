@@ -43,7 +43,8 @@ export function createCrudController(modelName, options = {}) {
       if (softDelete) where.deletedAt = null;
 
       if (search && searchFields.length) {
-        where.OR = searchFields.map((field) => ({ [field]: { contains: search } }));
+        // PostgreSQL compares case-sensitively by default; keep search case-insensitive.
+        where.OR = searchFields.map((field) => ({ [field]: { contains: String(search), mode: "insensitive" } }));
       }
 
       const take = Math.min(Math.max(parseInt(pageSize) || 50, 1), 100);

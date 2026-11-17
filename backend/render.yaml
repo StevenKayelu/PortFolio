@@ -1,3 +1,6 @@
+# LEGACY: the API is moving to the MotoGo server (see deploy/DEPLOY.md).
+# Render keeps running the pre-move code as a fallback, with auto-deploy OFF.
+# This file targets the old MySQL setup and should be removed after the move.
 services:
   - type: web
     name: portfolio-platform-api

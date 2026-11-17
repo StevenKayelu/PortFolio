@@ -49,7 +49,7 @@ export async function sendMail({ to, subject, text, html, replyTo }) {
     warned = true;
     return false;
   }
-  const message = { from: process.env.MAIL_FROM || "Devegen <no-reply@devegenventures.com>", to, subject, text, html, replyTo };
+  const message = { from: process.env.MAIL_FROM || "Devegen <no-reply@devgenventures.com>", to, subject, text, html, replyTo };
   await t.sendMail(message);
   if (process.env.MAIL_TRANSPORT === "memory") outbox.push(message);
   return true;

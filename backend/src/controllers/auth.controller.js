@@ -20,7 +20,8 @@ export const cookieOptions = {
 export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
+    // Case-insensitive, as it was on MySQL: "Admin@Example.com" still signs in.
+    const user = await prisma.user.findFirst({ where: { email: { equals: email, mode: "insensitive" }, deletedAt: null } });
 
     if (!user || !user.isActive) {
       return res.status(401).json({ error: "Invalid email or password." });

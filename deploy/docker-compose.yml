@@ -1,0 +1,51 @@
+# Devegen API on the shared MotoGo server.
+#
+# It joins MotoGo's two Docker networks, exactly like MotoGo's own backend:
+#  - motolink_internal (no internet): MotoGo's PostgreSQL lives only here, and
+#    MotoGo's Caddy reaches this API here as "devegen-api:5000"
+#  - motolink_public: outbound internet for Cloudflare R2 and email
+# HTTPS stays in MotoGo's Caddy; this service publishes no ports of its own.
+#
+# Usage (from this folder on the server):
+#   docker compose build
+#   docker compose run --rm devegen-api npx prisma migrate deploy
+#   docker compose up -d
+name: devegen
+
+services:
+  devegen-api:
+    build:
+      context: ../backend
+    image: devegen-api:latest
+    container_name: devegen-api
+    restart: unless-stopped
+    env_file: .env.production   # not committed; see env.production.example
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+      TRUST_PROXY: "1"            # exactly one proxy in front: MotoGo's Caddy (it overwrites X-Forwarded-For)
+      SHARP_LOW_MEMORY: "true"
+      NODE_OPTIONS: "--max-old-space-size=192"
+    # Hard ceiling so the website can never starve MotoGo (server has ~400 MB free;
+    # measured ~90 MB in use).
+    mem_limit: 320m
+    memswap_limit: 512m
+    cpus: 0.75
+    volumes:
+      - devegen-private:/app/private_uploads   # only used if STORAGE_DRIVER=local
+    networks:
+      - motolink_internal
+      - motolink_public
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  devegen-private:
+
+# Created by MotoGo's compose project ("motolink"); joined, never modified.
+networks:
+  motolink_internal:
+    external: true
+  motolink_public:
+    external: true

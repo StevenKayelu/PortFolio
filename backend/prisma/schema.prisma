@@ -1,5 +1,5 @@
 // ============================================================
-// Personal Brand Platform — Prisma Schema (MySQL)
+// Personal Brand Platform — Prisma Schema (PostgreSQL)
 // Conventions:
 //  - Every table: id (cuid), createdAt, updatedAt
 //  - Soft deletes via deletedAt (nullable) instead of hard delete
@@ -12,7 +12,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -146,6 +146,8 @@ enum SkillCategory {
   LANGUAGE
   FRAMEWORK
   SOFT_SKILL
+  MOBILE
+  OTHER
 }
 
 model Skill {
@@ -310,7 +312,7 @@ model BlogPost {
   title           String
   slug            String     @unique
   excerpt         String     @db.Text
-  content         String     @db.LongText // TipTap/EditorJS JSON or rendered HTML
+  content         String     @db.Text // TipTap/EditorJS JSON or rendered HTML
   contentFormat   String     @default("tiptap-json")
   coverImage      String?
   status          PostStatus @default(DRAFT)
@@ -440,6 +442,7 @@ enum ExperienceType {
   LEADERSHIP
   VOLUNTEER
   INTERNET_CAFE
+  STUDENT_DEVELOPER
 }
 
 model Experience {

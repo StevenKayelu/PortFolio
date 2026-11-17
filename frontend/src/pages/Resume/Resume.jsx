@@ -8,6 +8,7 @@ import { useFetch } from "../../hooks/useFetch";
 const CATEGORY_LABELS = {
   FRONTEND: "Frontend", BACKEND: "Backend", DATABASE: "Database", CLOUD: "Cloud",
   DEVOPS: "DevOps", TOOLS: "Tools", LANGUAGE: "Languages", FRAMEWORK: "Frameworks", SOFT_SKILL: "Soft Skills",
+  MOBILE: "Mobile", OTHER: "Other",
 };
 
 function groupByCategory(skills) {

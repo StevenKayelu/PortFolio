@@ -9,7 +9,7 @@ export async function listPosts(req, res, next) {
       status: "PUBLISHED",
       ...(category ? { category: { slug: category } } : {}),
       ...(tag ? { tags: { some: { tag: { slug: tag } } } } : {}),
-      ...(search ? { OR: [{ title: { contains: search } }, { excerpt: { contains: search } }] } : {}),
+      ...(search ? { OR: [{ title: { contains: String(search), mode: "insensitive" } }, { excerpt: { contains: String(search), mode: "insensitive" } }] } : {}),
     };
 
     const take = Math.min(parseInt(pageSize), 30);

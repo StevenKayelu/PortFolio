@@ -1,0 +1,27 @@
+# Devegen API: add this block to MotoGo's Caddyfile IN THE MOTOGO REPOSITORY
+# (infrastructure/production/Caddyfile), after the www.{$SITE_DOMAIN} block,
+# then release MotoGo the usual way. MotoGo's Caddy image is built from that
+# file, so an edit made only on the server would be lost at the next release.
+#
+# Caddy gets HTTPS certificates for both names automatically once their DNS
+# A records point at the server. It uses MotoGo's existing (compress) snippet.
+
+# Devegen Ventures / Steven Kayelu API (separate project on this server:
+# github.com/StevenKayelu/PortFolio, deploy/). Reached on motolink_internal.
+api.stevenkayelu.online, api.devgenventures.com {
+	import compress
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	# Certificate uploads: up to two files of 10 MB each.
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy devegen-api:5000 {
+		health_uri /api/v1/health
+		health_interval 30s
+	}
+}

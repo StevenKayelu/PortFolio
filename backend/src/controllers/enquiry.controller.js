@@ -15,7 +15,7 @@ const ROUTING = {
   devegen: { QUOTE: "solutions", PARTNERSHIP: "devegen", GENERAL: "devegen", CAREER: "steven", COLLABORATION: "devegen" },
 };
 
-const SOURCE = { steven: "stevenkayelu.online", devegen: "devegenventures.com" };
+const SOURCE = { steven: "stevenkayelu.online", devegen: "devgenventures.com" };
 
 function hashIp(ip) {
   const salt = process.env.LEAD_IP_SALT || process.env.JWT_ACCESS_SECRET || "";
@@ -85,7 +85,7 @@ export async function listLeads(req, res, next) {
       ...(status ? { status } : { status: { notIn: ["SPAM", "ARCHIVED"] } }),
       ...(type ? { type } : {}),
       ...(brand ? { brand: { key: brand } } : {}),
-      ...(search ? { OR: [{ name: { contains: search } }, { email: { contains: search } }, { reference: { contains: search } }, { organization: { contains: search } }] } : {}),
+      ...(search ? { OR: ["name", "email", "reference", "organization"].map((f) => ({ [f]: { contains: search, mode: "insensitive" } })) } : {}),
     };
     const [items, total, counts] = await Promise.all([
       prisma.lead.findMany({ where, select: leadListSelect, orderBy: { createdAt: "desc" }, take: pageSize, skip: (page - 1) * pageSize }),

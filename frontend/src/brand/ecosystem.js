@@ -20,7 +20,7 @@ export const ECOSYSTEM_NODES = [
   {
     id: "dv", name: "Devegen Ventures", short: "Umbrella", kind: "umbrella", r: 36,
     role: "Registered umbrella business name",
-    where: "devegenventures.com", link: { site: "devegen", path: "/ventures", label: "Browse the venture directory" },
+    where: "devgenventures.com", link: { site: "devegen", path: "/ventures", label: "Browse the venture directory" },
     relationship: "The umbrella brand that presents ventures, products and partnerships. Using the name does not by itself imply a legal parent–subsidiary structure.",
     status: { tone: "ok", label: "Registered name" },
     visit: "Organisation story, venture directory, partnerships and the founder profile.",
@@ -28,7 +28,7 @@ export const ECOSYSTEM_NODES = [
   {
     id: "ds", name: "DevGen Solutions LTD", short: "Services", kind: "service", r: 28,
     role: "Technology services brand",
-    where: "devegenventures.com/solutions", link: { site: "devegen", path: "/solutions", label: "Explore DevGen Solutions" },
+    where: "devgenventures.com/solutions", link: { site: "devegen", path: "/solutions", label: "Explore DevGen Solutions" },
     relationship: "Operates as the technology services brand within the ecosystem. The legal relationship to Devegen Ventures is still to be confirmed against PACRA records.",
     status: { tone: "pending", label: "Relationship wording pending" },
     visit: "Services, case studies, delivery process and quote requests.",
@@ -36,7 +36,7 @@ export const ECOSYSTEM_NODES = [
   {
     id: "fv", name: "Future ventures", short: "Open slot", kind: "slot", r: 26,
     role: "Configurable venture profiles",
-    where: "devegenventures.com/ventures/…",
+    where: "devgenventures.com/ventures/…",
     relationship: "New businesses are added from the admin and published only after ownership, legal, privacy and content checks.",
     status: { tone: "open", label: "None published yet" },
     visit: "Each venture will get its own profile, products and enquiry routing.",
@@ -86,7 +86,7 @@ export function buildEcosystem(api) {
     base.fv = {
       ...base.fv, name: other.name, short: other.stage.toLowerCase(), kind: "service",
       role: `Venture · ${other.stage.charAt(0) + other.stage.slice(1).toLowerCase()}`,
-      where: other.website?.replace(/^https?:\/\//, "") || `devegenventures.com/ventures/${other.slug}`,
+      where: other.website?.replace(/^https?:\/\//, "") || `devgenventures.com/ventures/${other.slug}`,
       relationship: other.summary, visit: other.description || other.summary,
       status: other.verificationStatus === "VERIFIED" ? { tone: "ok", label: "Verified venture" } : { tone: "pending", label: "Verification pending" },
       link: { site: "devegen", path: `/ventures/${other.slug}`, label: `About ${other.name}` },

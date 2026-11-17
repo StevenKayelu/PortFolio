@@ -23,7 +23,7 @@ const BRANDS = [
   {
     key: "devegen", name: "Devegen Ventures", slug: "devegen-ventures", kind: "UMBRELLA", displayOrder: 1,
     tagline: "Building ideas into meaningful ventures.", // proposed positioning line, not a registered tagline
-    domains: ["devegenventures.com", "www.devegenventures.com"],
+    domains: ["devgenventures.com", "www.devgenventures.com"],
   },
   {
     key: "solutions", name: "DevGen Solutions LTD", slug: "devgen-solutions", kind: "SERVICE", displayOrder: 2,

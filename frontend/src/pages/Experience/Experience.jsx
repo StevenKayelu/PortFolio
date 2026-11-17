@@ -7,6 +7,7 @@ import { useFetch } from "../../hooks/useFetch";
 const typeLabels = {
   EMPLOYMENT: "Employment", INTERNSHIP: "Internship", FREELANCE: "Freelance",
   LEADERSHIP: "Leadership", VOLUNTEER: "Volunteer", INTERNET_CAFE: "Early Experience",
+  STUDENT_DEVELOPER: "Student Developer",
 };
 
 export default function Experience() {

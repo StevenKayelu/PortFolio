@@ -186,6 +186,7 @@ export const ManageExperience = () => (
         { value: "EMPLOYMENT", label: "Employment" }, { value: "INTERNSHIP", label: "Internship" },
         { value: "FREELANCE", label: "Freelance" }, { value: "LEADERSHIP", label: "Leadership" },
         { value: "VOLUNTEER", label: "Volunteer" }, { value: "INTERNET_CAFE", label: "Early Experience" },
+        { value: "STUDENT_DEVELOPER", label: "Student Developer" },
       ], default: "EMPLOYMENT" },
       { name: "location", label: "Location", type: "text" },
       { name: "startDate", label: "Start date", type: "date", required: true },
@@ -212,7 +213,8 @@ export const ManageSkills = () => (
         { value: "DATABASE", label: "Database" }, { value: "CLOUD", label: "Cloud" },
         { value: "DEVOPS", label: "DevOps" }, { value: "TOOLS", label: "Tools" },
         { value: "LANGUAGE", label: "Languages" }, { value: "FRAMEWORK", label: "Frameworks" },
-        { value: "SOFT_SKILL", label: "Soft Skills" },
+        { value: "SOFT_SKILL", label: "Soft Skills" }, { value: "MOBILE", label: "Mobile" },
+        { value: "OTHER", label: "Other" },
       ], default: "FRONTEND" },
       { name: "proficiency", label: "Proficiency (0-100)", type: "number", default: 80 },
     ]}

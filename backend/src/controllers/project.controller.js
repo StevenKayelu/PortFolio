@@ -64,7 +64,7 @@ export async function listProjects(req, res, next) {
       // Combine with the public "not DRAFT" rule instead of replacing it.
       ...(PROJECT_STATUSES.has(status) ? { status: showHidden ? status : { equals: status, not: "DRAFT" } } : {}),
       ...(featuredOnly === "true" ? { isFeatured: true } : {}),
-      ...(search ? { OR: [{ title: { contains: String(search) } }, { summary: { contains: String(search) } }] } : {}),
+      ...(search ? { OR: [{ title: { contains: String(search), mode: "insensitive" } }, { summary: { contains: String(search), mode: "insensitive" } }] } : {}),
     };
 
     const take = Math.min(Math.max(parseInt(pageSize) || 20, 1), 50);

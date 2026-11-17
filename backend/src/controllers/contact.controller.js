@@ -50,7 +50,7 @@ export async function listSubscribers(req, res, next) {
 }
 export async function unsubscribeNewsletter(req, res, next) {
   try {
-    const { email } = req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
     await prisma.newsletterSubscriber.update({
       where: { email },
       data: { unsubscribedAt: new Date() },
@@ -75,7 +75,8 @@ export async function deleteContactMessage(req, res, next) {
 
 export async function subscribeNewsletter(req, res, next) {
   try {
-    const { email } = req.body;
+    // Stored lowercase so the unique index behaves like MySQL's case-insensitive one.
+    const email = String(req.body.email || "").trim().toLowerCase();
     await prisma.newsletterSubscriber.upsert({
       where: { email },
       update: {},
