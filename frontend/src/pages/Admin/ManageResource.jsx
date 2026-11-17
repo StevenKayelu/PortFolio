@@ -3,11 +3,12 @@ import {
   Box, Typography, Table, TableHead, TableRow, TableCell, TableBody,
   IconButton, Chip, CircularProgress, Alert, Tooltip, Button, Stack,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Switch,
-  FormControlLabel, MenuItem, Autocomplete,
+  FormControlLabel, MenuItem, Autocomplete, InputAdornment, useMediaQuery, useTheme,
 } from "@mui/material";
 import { FiTrash2, FiEdit2, FiPlus } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
 import { useAdminBrand } from "../../context/AdminBrandContext";
+import { toDateInput } from "../../utils/format";
 
 const emptyValueFor = (field) => {
   if (field.type === "boolean") return false;
@@ -51,12 +52,32 @@ function FieldInput({ field, value, onChange, selectOptions }) {
     );
   }
 
+  if (field.type === "money") {
+    return (
+      <TextField
+        label={field.label}
+        type="number"
+        value={value ?? ""}
+        // Empty means "not set" (shown as "Custom pricing"), not K 0.
+        onChange={(e) => onChange(e.target.value === "" ? null : e.target.valueAsNumber)}
+        inputProps={{ min: 0, step: "0.01", inputMode: "decimal" }}
+        InputProps={{ startAdornment: <InputAdornment position="start">K</InputAdornment> }}
+        helperText={field.helperText}
+        fullWidth
+      />
+    );
+  }
+
   return (
     <TextField
       label={field.label}
       type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
-      value={value ?? ""}
-      onChange={(e) => onChange(field.type === "number" ? e.target.valueAsNumber || 0 : e.target.value)}
+      value={(field.type === "date" ? toDateInput(value) : value) ?? ""}
+      onChange={(e) => onChange(field.type === "number"
+        ? (e.target.value === "" ? null : e.target.valueAsNumber)
+        : field.type === "date" ? e.target.value || null : e.target.value)}
+      inputProps={field.type === "number" ? { min: field.min, max: field.max, inputMode: "numeric" } : undefined}
+      helperText={field.helperText}
       multiline={field.type === "textarea"}
       rows={field.type === "textarea" ? 3 : undefined}
       required={field.required}
@@ -73,9 +94,13 @@ function FieldInput({ field, value, onChange, selectOptions }) {
  * `fields` array describing the create/edit form, rather than writing
  * a bespoke form for each.
  */
-export default function ManageResource({ title, endpoint, listQuery, brandScoped = false, columns, fields = [], selectOptionsEndpoints = {} }) {
+export default function ManageResource({ title, endpoint, listQuery, brandScoped = false, columns, fields = [], selectOptionsEndpoints = {}, canDelete = true }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { brandKey } = useAdminBrand();
-  const query = brandScoped && brandKey ? { ...listQuery, brand: brandKey } : listQuery;
+  // Staff lists include drafts, inactive and unpublished items; the API only honours this for signed-in staff.
+  const baseQuery = { includeHidden: "true", ...listQuery };
+  const query = brandScoped && brandKey ? { ...baseQuery, brand: brandKey } : baseQuery;
   const [notice, setNotice] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -154,14 +179,38 @@ export default function ManageResource({ title, endpoint, listQuery, brandScoped
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this item? This can't be undone from here.")) return;
-    await apiClient.delete(`${endpoint}/${id}`).catch(() => {});
+    try {
+      await apiClient.delete(`${endpoint}/${id}`);
+    } catch (err) {
+      setError(err.response?.status === 403
+        ? "Only admins can delete. Ask a brand admin, or unpublish it instead."
+        : err.response?.data?.error || "Couldn't delete it. Try again.");
+      return;
+    }
     load();
   };
 
+  const actions = (item) => (
+    <Stack direction="row" justifyContent="flex-end">
+      {fields.length > 0 && (
+        <Tooltip title="Edit">
+          <IconButton onClick={() => openEdit(item)} aria-label="Edit"><FiEdit2 size={18} /></IconButton>
+        </Tooltip>
+      )}
+      {canDelete && (
+        <Tooltip title="Delete">
+          <IconButton onClick={() => handleDelete(item.id)} aria-label="Delete"><FiTrash2 size={18} /></IconButton>
+        </Tooltip>
+      )}
+    </Stack>
+  );
+  const cell = (col, item) => (col.render ? col.render(item) : item[col.key] ?? "—");
+  const empty = <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>Nothing here yet.</Typography>;
+
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        {title && <Typography variant="h2">{title}</Typography>}
+      <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1.5} sx={{ mb: 3 }}>
+        {title && <Typography variant="h2" sx={{ fontSize: { xs: "1.6rem", md: undefined }, minWidth: 0 }}>{title}</Typography>}
         {fields.length > 0 && (
           <Button variant="contained" startIcon={<FiPlus />} onClick={openCreate} sx={{ ml: "auto" }}>
             Add new
@@ -170,51 +219,62 @@ export default function ManageResource({ title, endpoint, listQuery, brandScoped
       </Stack>
 
       {loading && <CircularProgress size={24} />}
-      {error && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="warning" onClose={() => { setError(""); load(); }} sx={{ mb: 2 }}>{error}</Alert>}
       {notice && <Alert severity="info" onClose={() => setNotice("")} sx={{ mb: 2 }}>{notice} It will appear here once a brand admin approves it.</Alert>}
 
-      {!loading && !error && (
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {columns.map((col) => <TableCell key={col.key}>{col.label}</TableCell>)}
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.id} hover>
-                {columns.map((col) => (
-                  <TableCell key={col.key}>{col.render ? col.render(item) : item[col.key]}</TableCell>
-                ))}
-                <TableCell align="right">
-                  {fields.length > 0 && (
-                    <Tooltip title="Edit">
-                      <IconButton size="small" onClick={() => openEdit(item)}>
-                        <FiEdit2 size={16} />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  <Tooltip title="Delete">
-                    <IconButton size="small" onClick={() => handleDelete(item.id)}>
-                      <FiTrash2 size={16} />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-            {items.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={columns.length + 1}>
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>Nothing here yet.</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+      {/* Phones: one card per item, so nothing scrolls sideways. */}
+      {!loading && isMobile && (
+        <Stack gap={1.25}>
+          {items.map((item) => {
+            const [first, ...rest] = columns;
+            return (
+              <Box key={item.id} sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 1.5, bgcolor: "background.paper", minWidth: 0 }}>
+                <Stack direction="row" alignItems="flex-start" gap={1}>
+                  <Box sx={{ flex: 1, minWidth: 0, fontWeight: 600, overflowWrap: "anywhere", pt: 0.75 }}>{cell(first, item)}</Box>
+                  {actions(item)}
+                </Stack>
+                {rest.length > 0 && (
+                  <Box component="dl" sx={{ m: 0, mt: 1, display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", columnGap: 1.5, rowGap: 0.75, alignItems: "center" }}>
+                    {rest.map((col) => (
+                      <Box key={col.key} sx={{ display: "contents" }}>
+                        <Typography component="dt" variant="caption" color="text.secondary">{col.label}</Typography>
+                        <Box component="dd" sx={{ m: 0, minWidth: 0, fontSize: "0.875rem", overflowWrap: "anywhere" }}>{cell(col, item)}</Box>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+          {items.length === 0 && !error && empty}
+        </Stack>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      {!loading && !isMobile && (
+        <Box sx={{ overflowX: "auto" }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                {columns.map((col) => <TableCell key={col.key}>{col.label}</TableCell>)}
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.id} hover>
+                  {columns.map((col) => <TableCell key={col.key}>{cell(col, item)}</TableCell>)}
+                  <TableCell align="right">{actions(item)}</TableCell>
+                </TableRow>
+              ))}
+              {items.length === 0 && !error && (
+                <TableRow><TableCell colSpan={columns.length + 1}>{empty}</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Box>
+      )}
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle>{editingId ? "Edit" : "Add new"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2.5} sx={{ mt: 1 }}>
@@ -230,7 +290,7 @@ export default function ManageResource({ title, endpoint, listQuery, brandScoped
             ))}
           </Stack>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? "Saving…" : "Save"}

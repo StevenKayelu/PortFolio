@@ -9,11 +9,12 @@ import apiClient from "../../services/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { useAdminBrand } from "../../context/AdminBrandContext";
 
+import { formatDateTime, formatDate } from "../../utils/format";
 const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "PROPOSAL", "WON", "LOST", "ARCHIVED", "SPAM"];
 const TYPE_LABEL = { CAREER: "Career", COLLABORATION: "Collaboration", QUOTE: "Quote", PARTNERSHIP: "Partnership", GENERAL: "General" };
 const STATUS_COLOR = { NEW: "primary", QUALIFIED: "info", CONTACTED: "info", PROPOSAL: "warning", WON: "success", LOST: "default", ARCHIVED: "default", SPAM: "error" };
 
-const fmt = (d) => new Date(d).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+const fmt = formatDateTime;
 
 function LeadDetail({ id, onClose, onChanged }) {
   const theme = useTheme();
@@ -214,7 +215,7 @@ export default function ManageLeads() {
                   <Typography variant="body2" color="text.secondary" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.organization || l.email}</Typography>
                 </Box>
                 <Typography variant="body2" sx={{ display: { xs: "none", md: "block" } }}>{TYPE_LABEL[l.type]} · {l.brand.name}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", md: "block" } }}>{new Date(l.createdAt).toLocaleDateString()}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", md: "block" } }}>{formatDate(l.createdAt)}</Typography>
                 <Chip size="small" label={l.status} color={STATUS_COLOR[l.status]} variant={l.status === "NEW" ? "filled" : "outlined"} />
               </Box>
             </Box>

@@ -38,7 +38,7 @@ function ListEditor({ id, items, onChange, fields, addLabel, max }) {
   return (
     <Stack gap={1.5}>
       {items.map((row, i) => (
-        <Box key={i} sx={{ display: "grid", gap: 1, gridTemplateColumns: { xs: "1fr", sm: `${fields.map((f) => f.width || "1fr").join(" ")} auto` }, alignItems: "start", p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
+        <Box key={i} sx={{ display: "grid", gap: 1, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: `${fields.map((f) => (f.width ? f.width : "minmax(0, 1fr)")).join(" ")} auto` }, alignItems: "start", p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
           {fields.map((f) => (
             <TextField
               key={f.key} id={`${id}-${i}-${f.key}`} size="small" label={f.label} value={row[f.key] || ""}
@@ -148,7 +148,7 @@ export default function ManageSiteContent() {
             <>
               <PhotoField value={value.photo} alt={value.photoAlt} onUploaded={(photo) => set({ photo })} />
               {field("photoAlt", "Photo description (for screen readers)", { helperText: "e.g. Steven Kayelu smiling, wearing a blue shirt" })}
-              <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+              <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" } }}>
                 {field("name", "Name")}
                 {field("role", "Role")}
                 {field("location", "Location")}
@@ -156,7 +156,7 @@ export default function ManageSiteContent() {
               </Box>
               {field("tagline", "Tagline (under the headline)", { multiline: true, minRows: 2 })}
               <Typography variant="h4" component="h3">Contact &amp; profiles</Typography>
-              <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+              <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" } }}>
                 {field("email", "Email")}
                 {field("phone", "Phone")}
                 {field("github", "GitHub URL")}

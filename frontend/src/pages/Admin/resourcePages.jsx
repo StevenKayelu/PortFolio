@@ -2,6 +2,24 @@ import { Chip, Button, Stack, Typography, Box } from "@mui/material";
 import { FiPlus, FiEdit2 } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 import ManageResource from "./ManageResource";
+import { formatKwacha, formatDate, formatMonthYear, formatCount } from "../../utils/format";
+
+const EXPERIENCE_TYPES = [
+  { value: "EMPLOYMENT", label: "Employment" }, { value: "INTERNSHIP", label: "Internship" },
+  { value: "FREELANCE", label: "Freelance" }, { value: "LEADERSHIP", label: "Leadership" },
+  { value: "VOLUNTEER", label: "Volunteer" }, { value: "INTERNET_CAFE", label: "Early Experience" },
+  { value: "STUDENT_DEVELOPER", label: "Student Developer" },
+];
+const SKILL_CATEGORIES = [
+  { value: "FRONTEND", label: "Frontend" }, { value: "BACKEND", label: "Backend" },
+  { value: "DATABASE", label: "Database" }, { value: "CLOUD", label: "Cloud" },
+  { value: "DEVOPS", label: "DevOps" }, { value: "TOOLS", label: "Tools" },
+  { value: "LANGUAGE", label: "Languages" }, { value: "FRAMEWORK", label: "Frameworks" },
+  { value: "SOFT_SKILL", label: "Soft Skills" }, { value: "MOBILE", label: "Mobile" },
+  { value: "OTHER", label: "Other" },
+];
+const labelOf = (options, value) => options.find((o) => o.value === value)?.label || value || "—";
+const humanize = (v) => (v ? v.charAt(0) + v.slice(1).toLowerCase().replace(/_/g, " ") : "—");
 
 export const ManageProjects = () => (
   <ManageResource
@@ -11,13 +29,13 @@ export const ManageProjects = () => (
     selectOptionsEndpoints={{ categoryId: "/projects/categories", showcaseBrandId: "/admin/brands" }}
     columns={[
       { key: "title", label: "Title" },
-      { key: "status", label: "Status", render: (p) => <Chip size="small" label={p.status} /> },
-      { key: "visibility", label: "Visibility", render: (p) => <Chip size="small" variant="outlined" label={p.visibility} /> },
+      { key: "status", label: "Status", render: (p) => <Chip size="small" label={humanize(p.status)} /> },
+      { key: "visibility", label: "Visibility", render: (p) => <Chip size="small" variant="outlined" label={humanize(p.visibility)} /> },
       { key: "ownershipStatus", label: "Ownership", render: (p) => (
-        <Chip size="small" color={p.ownershipStatus === "NEEDS_REVIEW" ? "warning" : "default"} label={p.ownershipStatus.replace("_", " ")} />
+        <Chip size="small" color={p.ownershipStatus === "NEEDS_REVIEW" ? "warning" : "default"} label={humanize(p.ownershipStatus)} />
       ) },
       { key: "isFeatured", label: "Featured", render: (p) => (p.isFeatured ? "Yes" : "—") },
-      { key: "viewCount", label: "Views" },
+      { key: "viewCount", label: "Views", render: (p) => formatCount(p.viewCount) },
     ]}
     fields={[
       { name: "title", label: "Title", type: "text", required: true },
@@ -57,7 +75,7 @@ export const ManageProjects = () => (
 const STATUS_OPTIONS = [
   { value: "DRAFT", label: "Draft" }, { value: "PUBLISHED", label: "Published" }, { value: "ARCHIVED", label: "Archived" },
 ];
-const statusChip = (r) => <Chip size="small" color={r.status === "PUBLISHED" ? "success" : "default"} label={r.status} />;
+const statusChip = (r) => <Chip size="small" color={r.status === "PUBLISHED" ? "success" : "default"} label={humanize(r.status)} />;
 
 export const ManageVentures = () => (
   <ManageResource
@@ -68,9 +86,9 @@ export const ManageVentures = () => (
     columns={[
       { key: "name", label: "Venture" },
       { key: "brand", label: "Brand", render: (v) => v.brand?.name || "—" },
-      { key: "stage", label: "Stage" },
+      { key: "stage", label: "Stage", render: (v) => humanize(v.stage) },
       { key: "status", label: "Status", render: statusChip },
-      { key: "verificationStatus", label: "Verified", render: (v) => v.verificationStatus },
+      { key: "verificationStatus", label: "Verified", render: (v) => humanize(v.verificationStatus) },
     ]}
     fields={[
       { name: "name", label: "Name", type: "text", required: true },
@@ -101,7 +119,7 @@ export const ManageProducts = () => (
       { key: "venture", label: "Venture", render: (p) => p.venture?.name || "—" },
       { key: "status", label: "Status", render: statusChip },
       { key: "ownershipStatus", label: "Ownership", render: (p) => (
-        <Chip size="small" color={p.ownershipStatus === "NEEDS_REVIEW" ? "warning" : "default"} label={p.ownershipStatus.replace("_", " ")} />
+        <Chip size="small" color={p.ownershipStatus === "NEEDS_REVIEW" ? "warning" : "default"} label={humanize(p.ownershipStatus)} />
       ) },
     ]}
     fields={[
@@ -122,8 +140,8 @@ export const ManageProducts = () => (
 
 export const ManageBlog = () => (
   <Box>
-    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-      <Typography variant="h2">Manage Blog</Typography>
+    <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1.5} sx={{ mb: 1 }}>
+      <Typography variant="h2" sx={{ fontSize: { xs: "1.6rem", md: undefined } }}>Manage Blog</Typography>
       <Button component={NavLink} to="/admin/blog/new" variant="contained" startIcon={<FiPlus />}>
         New post
       </Button>
@@ -131,6 +149,7 @@ export const ManageBlog = () => (
     <ManageResource
       title=""
       endpoint="/blog"
+      listQuery={{ pageSize: 100 }}
       columns={[
         {
           key: "title", label: "Title",
@@ -143,9 +162,10 @@ export const ManageBlog = () => (
             </Stack>
           ),
         },
-        { key: "status", label: "Status", render: (p) => <Chip size="small" label={p.status} /> },
-        { key: "viewCount", label: "Views" },
-        { key: "likeCount", label: "Likes" },
+        { key: "status", label: "Status", render: (p) => <Chip size="small" color={p.status === "PUBLISHED" ? "success" : "default"} label={humanize(p.status)} /> },
+        { key: "publishedAt", label: "Published", render: (p) => (p.publishedAt ? formatDate(p.publishedAt) : "Not yet") },
+        { key: "viewCount", label: "Views", render: (p) => formatCount(p.viewCount) },
+        { key: "likeCount", label: "Likes", render: (p) => formatCount(p.likeCount) },
       ]}
     />
   </Box>
@@ -157,14 +177,14 @@ export const ManageServices = () => (
     endpoint="/services"
     columns={[
       { key: "title", label: "Title" },
-      { key: "startingPrice", label: "Starting price", render: (s) => (s.startingPrice ? `$${s.startingPrice}` : "—") },
+      { key: "startingPrice", label: "Starting price", render: (s) => (s.startingPrice ? `From ${formatKwacha(s.startingPrice)}` : "Custom pricing") },
       { key: "isActive", label: "Active", render: (s) => (s.isActive ? "Yes" : "No") },
     ]}
     fields={[
       { name: "title", label: "Title", type: "text", required: true },
       { name: "slug", label: "Slug", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea", required: true },
-      { name: "startingPrice", label: "Starting price ($)", type: "number" },
+      { name: "startingPrice", label: "Starting price (Kwacha, ZMW)", type: "money", helperText: "Shown as \"From K …\". Leave empty for \"Custom pricing\"." },
       { name: "isActive", label: "Active", type: "boolean", default: true },
     ]}
   />
@@ -176,19 +196,15 @@ export const ManageExperience = () => (
     endpoint="/experience"
     columns={[
       { key: "title", label: "Title" },
-      { key: "organization", label: "Organization" },
-      { key: "type", label: "Type" },
+      { key: "organization", label: "Organisation" },
+      { key: "type", label: "Type", render: (e) => labelOf(EXPERIENCE_TYPES, e.type) },
+      { key: "startDate", label: "Period", render: (e) => `${formatMonthYear(e.startDate)} – ${e.isCurrent || !e.endDate ? "Present" : formatMonthYear(e.endDate)}` },
     ]}
     fields={[
       { name: "title", label: "Title", type: "text", required: true },
-      { name: "organization", label: "Organization", type: "text", required: true },
-      { name: "type", label: "Type", type: "select", options: [
-        { value: "EMPLOYMENT", label: "Employment" }, { value: "INTERNSHIP", label: "Internship" },
-        { value: "FREELANCE", label: "Freelance" }, { value: "LEADERSHIP", label: "Leadership" },
-        { value: "VOLUNTEER", label: "Volunteer" }, { value: "INTERNET_CAFE", label: "Early Experience" },
-        { value: "STUDENT_DEVELOPER", label: "Student Developer" },
-      ], default: "EMPLOYMENT" },
-      { name: "location", label: "Location", type: "text" },
+      { name: "organization", label: "Organisation", type: "text", required: true },
+      { name: "type", label: "Type", type: "select", options: EXPERIENCE_TYPES, default: "EMPLOYMENT" },
+      { name: "location", label: "Location (e.g. Lusaka, Zambia)", type: "text" },
       { name: "startDate", label: "Start date", type: "date", required: true },
       { name: "endDate", label: "End date (leave blank if current)", type: "date" },
       { name: "isCurrent", label: "Current role", type: "boolean" },
@@ -203,20 +219,13 @@ export const ManageSkills = () => (
     endpoint="/skills"
     columns={[
       { key: "name", label: "Name" },
-      { key: "category", label: "Category" },
+      { key: "category", label: "Category", render: (s) => labelOf(SKILL_CATEGORIES, s.category) },
       { key: "proficiency", label: "Proficiency", render: (s) => `${s.proficiency}%` },
     ]}
     fields={[
       { name: "name", label: "Name", type: "text", required: true },
-      { name: "category", label: "Category", type: "select", options: [
-        { value: "FRONTEND", label: "Frontend" }, { value: "BACKEND", label: "Backend" },
-        { value: "DATABASE", label: "Database" }, { value: "CLOUD", label: "Cloud" },
-        { value: "DEVOPS", label: "DevOps" }, { value: "TOOLS", label: "Tools" },
-        { value: "LANGUAGE", label: "Languages" }, { value: "FRAMEWORK", label: "Frameworks" },
-        { value: "SOFT_SKILL", label: "Soft Skills" }, { value: "MOBILE", label: "Mobile" },
-        { value: "OTHER", label: "Other" },
-      ], default: "FRONTEND" },
-      { name: "proficiency", label: "Proficiency (0-100)", type: "number", default: 80 },
+      { name: "category", label: "Category", type: "select", options: SKILL_CATEGORIES, default: "FRONTEND" },
+      { name: "proficiency", label: "Proficiency (0–100)", type: "number", default: 80, min: 0, max: 100 },
     ]}
   />
 );
@@ -243,7 +252,7 @@ export const ManageAchievements = () => (
     endpoint="/achievements"
     columns={[
       { key: "title", label: "Title" },
-      { key: "date", label: "Date", render: (a) => new Date(a.date).toLocaleDateString() },
+      { key: "date", label: "Date", render: (a) => formatDate(a.date) },
     ]}
     fields={[
       { name: "title", label: "Title", type: "text", required: true },

@@ -4,6 +4,7 @@ import Reveal from "../../../components/common/Reveal";
 import apiClient from "../../../services/apiClient";
 import { useFetch } from "../../../hooks/useFetch";
 
+import { formatDate } from "../../../utils/format";
 export default function LatestBlogs() {
   const theme = useTheme();
   const { data, loading } = useFetch(
@@ -62,11 +63,7 @@ export default function LatestBlogs() {
                       variant="caption"
                       sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary", fontSize: "0.75rem" }}
                     >
-                      {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "2-digit",
-                        year: "numeric",
-                      })}
+                      {formatDate(post.publishedAt)}
                     </Typography>
                   </Grid>
 

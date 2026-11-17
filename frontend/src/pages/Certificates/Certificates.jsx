@@ -11,6 +11,7 @@ import EmptyState from "../../components/common/EmptyState";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
+import { formatMonthYear } from "../../utils/format";
 // Shown in this order, each type labelled for what it is.
 const GROUPS = [
   ["CERTIFICATION", "Professional certifications"],
@@ -18,7 +19,7 @@ const GROUPS = [
   ["COURSE", "Courses completed"],
   ["AWARD", "Awards"],
 ];
-const fmtDate = (d) => new Date(d).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+const fmtDate = formatMonthYear;
 
 function VerifyButton({ cert, size = "small" }) {
   if (!cert.verification) return null;

@@ -5,6 +5,7 @@ import Reveal from "../../components/common/Reveal";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
+import { formatMonthYear } from "../../utils/format";
 export default function Achievements() {
   const theme = useTheme();
   const { data, loading } = useFetch(
@@ -44,7 +45,7 @@ export default function Achievements() {
                     <Box>
                       <Typography variant="h4">{a.title}</Typography>
                       <Typography variant="caption" sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary" }}>
-                        {new Date(a.date).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                        {formatMonthYear(a.date)}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{a.description}</Typography>
                     </Box>

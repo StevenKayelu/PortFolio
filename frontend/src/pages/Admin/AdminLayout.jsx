@@ -83,7 +83,7 @@ function AdminShell() {
       <Toolbar>
         {/* One admin serves every brand (report §03), so it carries the umbrella name. */}
         <Stack>
-          <Typography sx={{ fontFamily: theme.custom.fontSerif, fontSize: "1.15rem", lineHeight: 1.1 }}>Devegen admin</Typography>
+          <Typography sx={{ fontFamily: theme.custom.fontSerif, fontSize: "1.15rem", lineHeight: 1.1 }}>DevGen admin</Typography>
           {identity?.name && (
             <Typography sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.68rem", color: "text.secondary", letterSpacing: "0.06em" }}>
               {identity.name}
@@ -122,7 +122,7 @@ function AdminShell() {
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", overflowX: "clip" }}>
       <AppBar
         position="fixed"
         elevation={0}
@@ -165,9 +165,9 @@ function AdminShell() {
         </Drawer>
       </Box>
 
-      <Box component="main" sx={{ flexGrow: 1, width: { md: `calc(100% - ${DRAWER_WIDTH}px)` } }}>
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0, width: { xs: "100%", md: `calc(100% - ${DRAWER_WIDTH}px)` } }}>
         <Toolbar />
-        <Box sx={{ p: { xs: 2, md: 4 } }}>
+        <Box sx={{ p: { xs: 2, md: 4 }, minWidth: 0, maxWidth: "100%" }}>
           <Outlet />
         </Box>
       </Box>

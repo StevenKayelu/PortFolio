@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createCrudController } from "../utils/crudFactory.js";
-import { requireAuth, requireRole } from "../middleware/auth.middleware.js";
+import { requireAuth, requireRole, optionalAuth } from "../middleware/auth.middleware.js";
 
 /**
  * GET /            → public list
@@ -13,7 +13,7 @@ export function createCrudRouter(modelName, options = {}) {
   const controller = createCrudController(modelName, options);
   const router = Router();
 
-  router.get("/", controller.list);
+  router.get("/", optionalAuth, controller.list);
   router.get("/:id", controller.getOne);
   router.post("/", requireAuth, requireRole("SUPER_ADMIN", "ADMIN", "EDITOR"), controller.create);
   router.patch("/:id", requireAuth, requireRole("SUPER_ADMIN", "ADMIN", "EDITOR"), controller.update);

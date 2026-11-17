@@ -7,7 +7,8 @@ import Reveal from "../../components/common/Reveal";
 import EmptyState from "../../components/common/EmptyState";
 import { useCompliance } from "../../brand/useCompliance";
 
-const fmt = (d) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+import { formatDateLong } from "../../utils/format";
+const fmt = formatDateLong;
 
 /**
  * Registration & compliance facts. Deliberately facts only: documents

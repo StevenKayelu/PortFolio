@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, requireRole } from "../middleware/auth.middleware.js";
+import { requireAuth, requireRole, optionalAuth } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.middleware.js";
 import { handleUpload } from "../services/upload.service.js";
 import {
@@ -10,7 +10,7 @@ import {
 const router = Router();
 const canWrite = [requireAuth, requireRole("SUPER_ADMIN", "ADMIN", "EDITOR")];
 
-router.get("/", listPosts);
+router.get("/", optionalAuth, listPosts);
 router.get("/categories", listCategories);
 router.get("/tags", listTags);
 router.get("/id/:id", ...canWrite, getPostById); // admin editor loads drafts by id

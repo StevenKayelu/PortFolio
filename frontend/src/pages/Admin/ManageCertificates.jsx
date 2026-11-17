@@ -6,6 +6,7 @@ import {
 import { FiPlus, FiEdit2, FiUpload, FiDownload, FiTrash2, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
 
+import { formatDate, toDateInput } from "../../utils/format";
 export const CERT_TYPES = {
   CERTIFICATION: "Professional certification",
   COURSE: "Course completed",
@@ -13,7 +14,7 @@ export const CERT_TYPES = {
   AWARD: "Award",
 };
 const EMPTY = { title: "", institution: "", category: "", type: "COURSE", issueDate: "", expiresAt: "", credentialId: "", showCredentialId: true, credentialUrl: "", isPublished: true, displayOrder: 0 };
-const dateInput = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
+const dateInput = toDateInput;
 const fmtSize = (n) => (n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`);
 
 function UploadDialog({ cert, onClose, onDone }) {
@@ -178,7 +179,7 @@ export default function ManageCertificates() {
               <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" gap={1}>
                 <Box>
                   <Typography sx={{ fontWeight: 600 }}>{c.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">{c.institution} · {new Date(c.issueDate).toLocaleDateString(undefined, { dateStyle: "medium" })}</Typography>
+                  <Typography variant="body2" color="text.secondary">{c.institution} · {formatDate(c.issueDate)}</Typography>
                 </Box>
                 <Stack direction="row" gap={0.75} flexWrap="wrap" alignItems="flex-start">
                   <Chip size="small" label={CERT_TYPES[c.type]} />

@@ -7,6 +7,7 @@ import { FiPlus, FiCopy, FiCheck, FiCheckCircle, FiAlertTriangle } from "react-i
 import apiClient from "../../services/apiClient";
 import { useAdminBrand } from "../../context/AdminBrandContext";
 
+import { formatDate } from "../../utils/format";
 const INVITE_STATUS = {
   SENT: { label: "Waiting for client", color: "info" },
   AWAITING_APPROVAL: { label: "Answered — review it", color: "warning" },
@@ -15,7 +16,7 @@ const INVITE_STATUS = {
   EXPIRED: { label: "Expired", color: "default" },
   REVOKED: { label: "Revoked", color: "default" },
 };
-const fmt = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—");
+const fmt = formatDate;
 
 function CopyField({ value }) {
   const [copied, setCopied] = useState(false);

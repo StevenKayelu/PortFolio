@@ -3,22 +3,24 @@ import slugify from "slugify";
 
 export async function listPosts(req, res, next) {
   try {
-    const { search, category, tag, page = 1, pageSize = 10 } = req.query;
+    const { search, category, tag, includeHidden, page = 1, pageSize = 10 } = req.query;
+    // The admin list asks for drafts too; only signed-in writers get them.
+    const showHidden = includeHidden === "true" && ["SUPER_ADMIN", "ADMIN", "EDITOR"].includes(req.user?.role);
     const where = {
       deletedAt: null,
-      status: "PUBLISHED",
+      ...(showHidden ? {} : { status: "PUBLISHED" }),
       ...(category ? { category: { slug: category } } : {}),
       ...(tag ? { tags: { some: { tag: { slug: tag } } } } : {}),
       ...(search ? { OR: [{ title: { contains: String(search), mode: "insensitive" } }, { excerpt: { contains: String(search), mode: "insensitive" } }] } : {}),
     };
 
-    const take = Math.min(parseInt(pageSize), 30);
-    const skip = (parseInt(page) - 1) * take;
+    const take = Math.min(Math.max(parseInt(pageSize) || 10, 1), showHidden ? 100 : 30);
+    const skip = (Math.max(parseInt(page) || 1, 1) - 1) * take;
 
     const [items, total] = await Promise.all([
       prisma.blogPost.findMany({
         where,
-        orderBy: [{ isPinned: "desc" }, { publishedAt: "desc" }],
+        orderBy: showHidden ? [{ updatedAt: "desc" }] : [{ isPinned: "desc" }, { publishedAt: "desc" }],
         take,
         skip,
         include: { category: true, tags: { include: { tag: true } } },

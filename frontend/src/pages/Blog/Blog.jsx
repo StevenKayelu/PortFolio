@@ -10,6 +10,7 @@ import Reveal from "../../components/common/Reveal";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
+import { formatDate } from "../../utils/format";
 export default function Blog() {
   const theme = useTheme();
   const [search, setSearch] = useState("");
@@ -79,7 +80,7 @@ console.log("posts", posts);
                   <Grid container spacing={2} alignItems="baseline" sx={{ py: 3, "&:hover .post-title": { color: "primary.main" } }}>
                     <Grid item xs={12} sm={2}>
                       <Typography variant="caption" sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary" }}>
-                        {new Date(post.publishedAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
+                        {formatDate(post.publishedAt)}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={8}>

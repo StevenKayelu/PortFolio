@@ -6,6 +6,7 @@ import Reveal from "../../components/common/Reveal";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
+import { formatKwacha } from "../../utils/format";
 export default function Services() {
   const theme = useTheme();
   const { data, loading } = useFetch(() => apiClient.get("/services").then((r) => r.data), []);
@@ -47,7 +48,7 @@ export default function Services() {
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 3, flex: 1 }}>{service.description}</Typography>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Typography sx={{ fontFamily: theme.custom.fontMono, color: "primary.main" }}>
-                          {service.startingPrice ? `From $${Number(service.startingPrice).toLocaleString()}` : "Custom pricing"}
+                          {service.startingPrice ? `From ${formatKwacha(service.startingPrice)}` : "Custom pricing"}
                         </Typography>
                         <Button component={NavLink} to="/contact" endIcon={<FiArrowRight />} size="small">
                           Inquire

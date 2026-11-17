@@ -116,7 +116,7 @@ export default function ManageUsers() {
         {users?.map((u) => (
           <Box key={u.id} sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2, bgcolor: "background.paper", display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", md: "1.2fr 1.6fr auto" }, alignItems: "center", opacity: u.isActive ? 1 : 0.6 }}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontWeight: 600 }}>
+              <Typography component="div" sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>
                 {u.name} {u.id === me?.id && <Chip size="small" label="You" sx={{ ml: 0.5 }} />} {!u.isActive && <Chip size="small" label="Deactivated" sx={{ ml: 0.5 }} />}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{u.email}</Typography>

@@ -6,6 +6,7 @@ import {
 import { FiPlus, FiEdit2, FiUpload, FiDownload, FiTrash2, FiLock } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
 
+import { formatDate, toDateInput } from "../../utils/format";
 /**
  * Business registrations, licences and compliance registrations
  * (super admins only). Only the facts are ever published; documents
@@ -27,8 +28,8 @@ const DEFAULTS = {
 };
 const EMPTY_CRED = { type: "PACRA_REGISTRATION", title: "", authority: DEFAULTS.PACRA_REGISTRATION.authority, referenceNumber: "", issuedAt: "", expiresAt: "", verificationUrl: "", verificationNote: DEFAULTS.PACRA_REGISTRATION.verificationNote, isPublic: false };
 const EMPTY_ORG = { legalName: "", tradingName: "", registrationType: "", registry: "", registrationNumber: "", website: "", verificationStatus: "UNVERIFIED", notes: "" };
-const dateInput = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
-const fmt = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—");
+const dateInput = toDateInput;
+const fmt = formatDate;
 const errorsFrom = (err) => {
   const res = err.response?.data;
   return { ...(res?.fields ? Object.fromEntries(Object.entries(res.fields).map(([k, v]) => [k, v[0]])) : {}), _form: res?.error || "Not saved. Try again." };

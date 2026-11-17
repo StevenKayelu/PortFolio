@@ -4,6 +4,7 @@ import { Grid, Card, CardContent, CardActionArea, Typography, Box, Alert, Skelet
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import apiClient from "../../services/apiClient";
 
+import { formatCount } from "../../utils/format";
 /**
  * Overview. Shows only real numbers: while loading, skeletons; on
  * failure, an error. (It used to show invented totals and a random
@@ -64,7 +65,7 @@ export default function Dashboard() {
         <CardContent>
           <Typography variant="h4" component="h2">Page views, last 30 days</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {series?.length ? `${totalViews.toLocaleString()} views across both sites.` : "Counted on the live domains only. No IP addresses are stored."}
+            {series?.length ? `${formatCount(totalViews)} views across both sites.` : "Counted on the live domains only. No IP addresses are stored."}
           </Typography>
           <Box sx={{ height: 280 }}>
             {!series && <Skeleton variant="rounded" height={280} />}

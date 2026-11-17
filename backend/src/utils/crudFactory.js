@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
 
 const PROTECTED_FIELDS = new Set(["id", "createdAt", "updatedAt", "deletedAt"]);
+const STAFF_ROLES = ["SUPER_ADMIN", "ADMIN", "EDITOR"];
 
 /**
  * Writable fields for a model: its own scalar/enum columns, minus ids and
@@ -38,8 +39,11 @@ export function createCrudController(modelName, options = {}) {
 
   async function list(req, res, next) {
     try {
-      const { search, page = 1, pageSize = 50 } = req.query;
-      const where = { ...publicWhere };
+      const { search, includeHidden, page = 1, pageSize = 50 } = req.query;
+      // Signed-in staff can ask for hidden items (inactive services, unpublished
+      // FAQs) so they can be switched back on; the public never sees them.
+      const showHidden = includeHidden === "true" && STAFF_ROLES.includes(req.user?.role);
+      const where = showHidden ? {} : { ...publicWhere };
       if (softDelete) where.deletedAt = null;
 
       if (search && searchFields.length) {

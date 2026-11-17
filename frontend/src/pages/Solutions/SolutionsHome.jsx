@@ -13,6 +13,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { siteHref } from "../../brand/brands";
 import { useCompliance, organizationForBrand } from "../../brand/useCompliance";
 
+import { formatKwacha } from "../../utils/format";
 const QUOTE_STEPS = [
   { title: "Choose a service", detail: "Business system, web app, mobile app or IT support" },
   { title: "Describe the project", detail: "Goals, users, timeline and an optional budget" },
@@ -46,7 +47,7 @@ function ServiceRow({ service, index }) {
         <Typography color="text.secondary" sx={{ mt: 0.5, maxWidth: "60ch" }}>{service.description}</Typography>
       </Box>
       <Box component="span" sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.8rem", color: "text.secondary", whiteSpace: "nowrap" }}>
-        {service.startingPrice ? `From $${Number(service.startingPrice).toLocaleString()}` : "Custom pricing"}
+        {service.startingPrice ? `From ${formatKwacha(service.startingPrice)}` : "Custom pricing"}
       </Box>
     </Box>
   );

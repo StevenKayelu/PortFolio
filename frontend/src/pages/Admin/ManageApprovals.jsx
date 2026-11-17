@@ -6,12 +6,13 @@ import { FiCheck, FiX, FiRotateCcw } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
 import { useAdminBrand } from "../../context/AdminBrandContext";
 
+import { formatDateTime } from "../../utils/format";
 const FIELD_LABEL = {
   name: "Name", summary: "Summary", description: "Description", stage: "Stage", website: "Website", logoUrl: "Logo",
   displayOrder: "Display order", lifecycle: "Lifecycle", ventureId: "Venture", projectId: "Case study", brandId: "Brand",
 };
 const show = (v) => (v === null || v === undefined || v === "" ? "—" : String(v));
-const fmt = (d) => new Date(d).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+const fmt = formatDateTime;
 
 /** Side-by-side "before → after" for each changed field. */
 function Diff({ changes, before }) {

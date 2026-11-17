@@ -11,6 +11,7 @@ import RichTextRenderer from "../../components/blog/RichTextRenderer";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
+import { formatDate } from "../../utils/format";
 // A stable per-browser id so likes/bookmarks survive a refresh without
 // requiring a login — matches BlogLike/BlogBookmark's `fingerprint` field.
 function getFingerprint() {
@@ -103,7 +104,7 @@ export default function SingleBlogPost() {
 
           <Stack direction="row" spacing={2} sx={{ mb: 4 }} divider={<Box sx={{ width: "1px", bgcolor: "divider" }} />}>
             <Typography variant="caption" sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary" }}>
-              {new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" })}
+              {formatDate(post.publishedAt)}
             </Typography>
             <Typography variant="caption" sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary" }}>
               {post.readingTimeMins} min read
