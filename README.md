@@ -204,6 +204,18 @@ returns a testimonial only if it is approved, has recorded consent and is not wi
 so older testimonials without consent are never shown. Admins can publish, feature or
 unpublish, but cannot edit a client's words. Link tokens are stored only as hashes.
 
+### Certificates
+
+**Admin → Certificates** stores each certificate's original (PDF or image) **privately**:
+in `PRIVATE_UPLOAD_DIR` locally, or in a separate, non-public R2 bucket
+(`R2_PRIVATE_BUCKET`) in production. Only signed-in staff can download it. Visitors see a
+1200px, watermarked WebP preview (for PDFs, page 1 is rendered in the admin's browser
+with pdf.js) and a link to the issuer's own record (Credly, Coursera, Microsoft Learn…).
+LinkedIn links are accepted but not labelled as verification. Each certificate has a
+type (certification, course, academic, award), optional expiry, and switches for
+publishing and showing the credential ID. Previews can still be screenshotted; the
+verification link is the real proof.
+
 ### SEO per brand
 
 - Each brand has default meta tags, Open Graph and JSON-LD (`components/seo/SeoTags.jsx`).

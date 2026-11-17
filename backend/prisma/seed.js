@@ -96,16 +96,10 @@ async function main() {
   }
 
   // ---------- Certificates ----------
-  const certificates = [
-    ["AWS Certified Solutions Architect", "Amazon Web Services", "Cloud", "2024-02-01", "AWS-000000"],
-    ["Professional Scrum Master I", "Scrum.org", "Process", "2022-08-01", "PSM-000000"],
-  ];
-  for (const [title, institution, category, issueDate, credentialId] of certificates) {
-    const exists = await prisma.certificate.findFirst({ where: { title, institution } });
-    if (!exists) {
-      await prisma.certificate.create({ data: { title, institution, category, issueDate: new Date(issueDate), credentialId } });
-    }
-  }
+  // Intentionally none. The template seeded placeholder credentials
+  // ("AWS Certified Solutions Architect", "Professional Scrum Master I")
+  // that showed on the live site as if they were real. Add real
+  // certificates in Admin → Certificates.
 
   // ---------- Gallery ----------
   const gallery = [["Conference talk, 2025", "Speaking"], ["Hackathon win, 2023", "Events"], ["Workstation setup", "Behind the scenes"]];

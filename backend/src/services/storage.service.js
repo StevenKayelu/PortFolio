@@ -5,7 +5,7 @@
 
 import fs from "fs/promises";
 import path from "path";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 
 const driver = process.env.STORAGE_DRIVER || "local";
 const uploadDir = process.env.UPLOAD_DIR || "./src/uploads";
@@ -77,4 +77,59 @@ export async function deleteFile(keyOrUrl) {
   }
 
   await fs.unlink(path.join(uploadDir, key)).catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
+// Private files (e.g. original certificate PDFs). Never publicly reachable:
+//  - local: PRIVATE_UPLOAD_DIR, which is not served by express.static
+//  - r2:    a separate bucket, R2_PRIVATE_BUCKET, with no public access.
+//           (A public bucket exposes every object in it, so the public
+//           bucket must not be reused.)
+// ---------------------------------------------------------------------------
+
+const privateDir = process.env.PRIVATE_UPLOAD_DIR || "./private_uploads";
+
+export function privateStorageAvailable() {
+  return driver !== "r2" || Boolean(process.env.R2_PRIVATE_BUCKET);
+}
+
+const safeKey = (key) => {
+  if (!/^[\w.-]+$/.test(key)) throw new Error("Invalid private file key.");
+  return key;
+};
+
+export async function savePrivateFile({ buffer, filename, mimetype }) {
+  if (!privateStorageAvailable()) {
+    throw Object.assign(new Error("Private storage not configured."), {
+      status: 503,
+      publicMessage: "Private file storage isn't set up on the server (R2_PRIVATE_BUCKET). The original wasn't saved.",
+    });
+  }
+  const key = safeKey(filename);
+  if (driver === "r2") {
+    await getR2Client().send(new PutObjectCommand({ Bucket: process.env.R2_PRIVATE_BUCKET, Key: key, Body: buffer, ContentType: mimetype }));
+  } else {
+    await fs.mkdir(privateDir, { recursive: true });
+    await fs.writeFile(path.join(privateDir, key), buffer);
+  }
+  return { key };
+}
+
+export async function readPrivateFile(key) {
+  safeKey(key);
+  if (driver === "r2") {
+    const res = await getR2Client().send(new GetObjectCommand({ Bucket: process.env.R2_PRIVATE_BUCKET, Key: key }));
+    return Buffer.from(await res.Body.transformToByteArray());
+  }
+  return fs.readFile(path.join(privateDir, key));
+}
+
+export async function deletePrivateFile(key) {
+  if (!key) return;
+  safeKey(key);
+  if (driver === "r2") {
+    await getR2Client().send(new DeleteObjectCommand({ Bucket: process.env.R2_PRIVATE_BUCKET, Key: key })).catch(() => {});
+    return;
+  }
+  await fs.unlink(path.join(privateDir, key)).catch(() => {});
 }

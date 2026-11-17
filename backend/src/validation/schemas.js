@@ -296,3 +296,24 @@ export const inviteSubmitSchema = z.object({
   consentPublish: z.literal(true, { errorMap: () => ({ message: "Your consent is needed to publish the testimonial." }) }),
   consentContact: z.boolean().default(false),
 });
+
+// --------------------------------------------------------------- certificates
+
+const optionalDate = z.preprocess((v) => (v === "" || v === undefined ? undefined : v), z.coerce.date().nullable().optional());
+
+const certificateFields = {
+  title: trimmed(191).min(1, "Enter the certificate's title."),
+  institution: trimmed(191).min(1, "Enter who issued it."),
+  category: optionalText(80),
+  type: z.enum(["CERTIFICATION", "COURSE", "ACADEMIC", "AWARD"]),
+  issueDate: z.coerce.date({ errorMap: () => ({ message: "Enter the issue date." }) }),
+  expiresAt: optionalDate,
+  credentialId: optionalText(120),
+  showCredentialId: z.boolean().optional(),
+  credentialUrl: url,
+  isPublished: z.boolean().optional(),
+  displayOrder: z.coerce.number().int().optional(),
+};
+const expiryAfterIssue = (v) => !v.expiresAt || !v.issueDate || v.expiresAt > v.issueDate;
+export const certificateSchema = z.object(certificateFields).refine(expiryAfterIssue, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });
+export const certificateUpdateSchema = z.object(certificateFields).partial().refine(expiryAfterIssue, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });

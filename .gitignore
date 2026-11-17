@@ -6,3 +6,4 @@ dist/
 build/
 backend/src/uploads/*
 !backend/src/uploads/.gitkeep
+backend/private_uploads/

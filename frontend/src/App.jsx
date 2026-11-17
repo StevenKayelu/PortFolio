@@ -41,7 +41,7 @@ const ManageProjects = resource("ManageProjects");
 const ManageBlog = resource("ManageBlog");
 const ManageServices = resource("ManageServices");
 const ManageExperience = resource("ManageExperience");
-const ManageCertificates = resource("ManageCertificates");
+const ManageCertificates = lazy(() => import("./pages/Admin/ManageCertificates"));
 const ManageSkills = resource("ManageSkills");
 const ManageGallery = resource("ManageGallery");
 const ManageAchievements = resource("ManageAchievements");

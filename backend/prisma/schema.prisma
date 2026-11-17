@@ -464,20 +464,38 @@ model Experience {
 // CERTIFICATES
 // ---------------------------------------------------------
 
+/// Labels a credential honestly: a course completion is not a certification.
+enum CertificateType {
+  CERTIFICATION
+  COURSE
+  ACADEMIC
+  AWARD
+}
+
 model Certificate {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   title         String
   institution   String
   category      String?
   issueDate     DateTime
   credentialId  String?
-  credentialUrl String?
-  imageUrl      String?
-  fileUrl       String? // downloadable PDF
-  displayOrder  Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  credentialUrl String? // issuer's verification page (Credly, Coursera, Microsoft Learn…)
+  imageUrl      String? // public, watermarked, reduced-resolution preview
+  fileUrl       String? // legacy public file link; no longer returned publicly
+  displayOrder  Int      @default(0)
+
+  type             CertificateType @default(COURSE)
+  expiresAt        DateTime?
+  showCredentialId Boolean         @default(true)
+  isPublished      Boolean         @default(true)
+  // Private original (PDF or image): stored outside public storage, admin download only.
+  originalKey      String?
+  originalName     String?
+  originalMime     String?
+  originalSize     Int?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
 
   @@map("certificates")
 }

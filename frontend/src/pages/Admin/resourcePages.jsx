@@ -196,26 +196,6 @@ export const ManageExperience = () => (
   />
 );
 
-export const ManageCertificates = () => (
-  <ManageResource
-    title="Manage Certificates"
-    endpoint="/certificates"
-    columns={[
-      { key: "title", label: "Title" },
-      { key: "institution", label: "Institution" },
-      { key: "issueDate", label: "Issued", render: (c) => new Date(c.issueDate).toLocaleDateString() },
-    ]}
-    fields={[
-      { name: "title", label: "Title", type: "text", required: true },
-      { name: "institution", label: "Institution", type: "text", required: true },
-      { name: "category", label: "Category", type: "text" },
-      { name: "issueDate", label: "Issue date", type: "date", required: true },
-      { name: "credentialId", label: "Credential ID", type: "text" },
-      { name: "credentialUrl", label: "Credential URL", type: "text" },
-    ]}
-  />
-);
-
 export const ManageSkills = () => (
   <ManageResource
     title="Manage Skills"
