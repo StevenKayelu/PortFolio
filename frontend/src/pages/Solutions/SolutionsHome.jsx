@@ -239,6 +239,11 @@ export default function SolutionsHome() {
             <Typography sx={{ mt: 2, color: band.muted, maxWidth: "52ch" }}>
               A quote request takes a few minutes. You will hear back with questions or a scoped proposal.
             </Typography>
+            {trust.length === 0 && (
+              <Box component={NavLink} to="/compliance" sx={{ mt: 2.5, display: "inline-flex", alignItems: "center", gap: 0.75, color: band.muted, fontSize: "0.9rem", "&:hover": { color: band.ink } }}>
+                Registration details available on request <FiArrowRight aria-hidden="true" />
+              </Box>
+            )}
             {trust.length > 0 && (
               <Box component={NavLink} to="/compliance" sx={{ mt: 2.5, display: "flex", flexWrap: "wrap", gap: 1, textDecoration: "none" }} aria-label="Registration and compliance details">
                 {[...new Set(trust)].map((label) => (

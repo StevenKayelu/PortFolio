@@ -3,9 +3,11 @@ import { Helmet } from "react-helmet-async";
 import {
   Container, Typography, Stack, TextField, InputAdornment, Box, Skeleton, Button, Chip, Dialog, DialogContent, IconButton, useTheme, useMediaQuery,
 } from "@mui/material";
-import { FiSearch, FiAward, FiExternalLink, FiX, FiCheckCircle } from "react-icons/fi";
+import { FiSearch, FiAward, FiExternalLink, FiX, FiCheckCircle, FiGithub, FiArrowRight } from "react-icons/fi";
+import { NavLink } from "react-router-dom";
 import Reveal from "../../components/common/Reveal";
 import SectionHeading from "../../components/common/SectionHeading";
+import EmptyState from "../../components/common/EmptyState";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
@@ -72,6 +74,9 @@ export default function Certificates() {
   const [search, setSearch] = useState("");
   const [viewing, setViewing] = useState(null);
   const { data, loading, error } = useFetch(() => apiClient.get("/certificates").then((r) => r.data), []);
+  // For the empty state: real education and profile details from the CMS.
+  const { data: about } = useFetch(() => apiClient.get("/site-settings/about").then((r) => r.data).catch(() => null), []);
+  const { data: identity } = useFetch(() => apiClient.get("/site-settings/identity").then((r) => r.data).catch(() => null), []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -102,8 +107,24 @@ export default function Certificates() {
 
         {loading && <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" } }}>{[0, 1, 2].map((i) => <Skeleton key={i} variant="rounded" height={320} />)}</Box>}
         {error && <Typography color="text.secondary">Certificates couldn't be loaded right now. Please try again later.</Typography>}
-        {!loading && !error && filtered.length === 0 && (
-          <Typography color="text.secondary">{search ? "No certificates match that search." : "Certificates will be listed here soon."}</Typography>
+        {!loading && !error && filtered.length === 0 && search && (
+          <Typography color="text.secondary">No certificates match that search.</Typography>
+        )}
+        {!loading && !error && (data?.items || []).length === 0 && (
+          <EmptyState
+            icon={FiAward}
+            title="Certificates are being added."
+            items={(about?.education || []).length ? about.education.map((e) => ({ label: e.degree, detail: `${e.institution}, ${e.year}` })) : null}
+            actions={[
+              <Button key="ask" component={NavLink} to="/contact?type=career" variant="contained" endIcon={<FiArrowRight />}>Request certificate copies</Button>,
+              identity?.github && <Button key="gh" href={identity.github} target="_blank" rel="noopener noreferrer" variant="outlined" startIcon={<FiGithub />}>See my code on GitHub</Button>,
+            ].filter(Boolean)}
+          >
+            <Typography>
+              Course certificates and qualifications will be listed here, each linked to the issuer's own record where one exists.
+            </Typography>
+            {(about?.education || []).length > 0 && <Typography>In the meantime, here is my education.</Typography>}
+          </EmptyState>
         )}
 
         <Stack gap={{ xs: 6, md: 8 }}>

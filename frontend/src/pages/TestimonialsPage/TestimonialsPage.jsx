@@ -1,7 +1,10 @@
 import { Helmet } from "react-helmet-async";
-import { Container, Typography, Grid, Skeleton, useTheme } from "@mui/material";
+import { Container, Typography, Grid, Skeleton, Button, useTheme } from "@mui/material";
 import Reveal from "../../components/common/Reveal";
 import TestimonialCard from "../../components/common/TestimonialCard";
+import EmptyState from "../../components/common/EmptyState";
+import { NavLink } from "react-router-dom";
+import { FiMessageSquare, FiArrowRight } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
@@ -41,7 +44,21 @@ export default function TestimonialsPage() {
           ))}
 
           {!loading && (testimonials || []).length === 0 && (
-            <Grid item xs={12}><Typography color="text.secondary">No testimonials published yet. Every testimonial here comes from someone we worked with and is published with their consent.</Typography></Grid>
+            <Grid item xs={12}>
+              <EmptyState
+                icon={FiMessageSquare}
+                title="Client testimonials will appear here."
+                actions={[
+                  <Button key="work" component={NavLink} to="/projects" variant="contained" endIcon={<FiArrowRight />}>See selected work</Button>,
+                  <Button key="contact" component={NavLink} to="/contact" variant="outlined">Get in touch</Button>,
+                ]}
+              >
+                <Typography>
+                  Every testimonial here comes from someone we actually worked with and is published only with their written consent,
+                  so they're added as clients respond rather than all at once.
+                </Typography>
+              </EmptyState>
+            </Grid>
           )}
         </Grid>
       </Container>

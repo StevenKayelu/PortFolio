@@ -1,9 +1,10 @@
 import { Helmet } from "react-helmet-async";
 import { Box, Container, Typography, Stack, Skeleton, Button, useTheme } from "@mui/material";
-import { FiExternalLink, FiShield } from "react-icons/fi";
+import { FiExternalLink, FiShield, FiArrowRight } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 import SectionHeading from "../../components/common/SectionHeading";
 import Reveal from "../../components/common/Reveal";
+import EmptyState from "../../components/common/EmptyState";
 import { useCompliance } from "../../brand/useCompliance";
 
 const fmt = (d) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
@@ -32,7 +33,26 @@ export default function Compliance() {
 
         {loading && <Skeleton variant="rounded" height={240} />}
         {!loading && organizations.length === 0 && (
-          <Typography color="text.secondary">Registration details will be published here soon. To ask about them now, <NavLink to="/contact">contact us</NavLink>.</Typography>
+          <EmptyState
+            icon={FiShield}
+            eyebrow="DevGen Solutions LTD"
+            title="Our registration details are being prepared for this page."
+            items={[
+              { label: "Company registration", detail: "Patents and Companies Registration Agency (PACRA)" },
+              { label: "Data protection registration", detail: "Office of the Data Protection Commissioner" },
+            ]}
+            actions={[
+              <Button key="ask" component={NavLink} to="/contact?type=general" variant="contained" endIcon={<FiArrowRight />}>Request registration details</Button>,
+              <Button key="ds" component={NavLink} to="/solutions" variant="outlined">About DevGen Solutions</Button>,
+            ]}
+          >
+            <Typography>
+              For each registration we'll publish the registered name, number, issuing authority and how to verify it with them.
+            </Typography>
+            <Typography>
+              Need them now for a tender, supplier form or contract? Ask and we'll send what's required directly.
+            </Typography>
+          </EmptyState>
         )}
 
         <Stack gap={5}>
@@ -75,9 +95,11 @@ export default function Compliance() {
           ))}
         </Stack>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 6, maxWidth: "62ch" }}>
-          Need copies for a tender or supplier registration? <NavLink to="/contact?type=general">Ask us</NavLink> and we'll send what's required directly.
-        </Typography>
+        {organizations.length > 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 6, maxWidth: "62ch" }}>
+            Need copies for a tender or supplier registration? <NavLink to="/contact?type=general">Ask us</NavLink> and we'll send what's required directly.
+          </Typography>
+        )}
       </Container>
     </>
   );
