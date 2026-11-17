@@ -131,24 +131,41 @@ TiDB's `contact_messages` once after the switch and re-enter any new ones.
 
 ## 10. Backups
 
-```bash
-chmod +x /root/devegen/deploy/backup-devegen.sh
-/root/devegen/deploy/backup-devegen.sh && ls -lh /root/backups/devegen
-( crontab -l 2>/dev/null; echo "30 2 * * * /root/devegen/deploy/backup-devegen.sh" ) | crontab -
-```
-
-Test a restore once (into a scratch database, never over the live one):
+Set up once (already done on the server):
 
 ```bash
-docker exec motolink-postgres-1 createdb -U motolink restore_test
-gunzip -c /root/backups/devegen/$(ls -t /root/backups/devegen | head -1) \
-  | docker exec -i motolink-postgres-1 psql -U motolink -d restore_test -q
-docker exec motolink-postgres-1 psql -U motolink -d restore_test -c "SELECT count(*) FROM projects;"
-docker exec motolink-postgres-1 dropdb -U motolink restore_test
+/root/devegen/deploy/install-backups.sh
 ```
 
-Optional off-server copies: install `rclone`, add a remote named `r2-private` for
-the private R2 bucket, and the script uploads each backup automatically.
+| When (UTC) | Lusaka | What |
+|---|---|---|
+| Every night 00:30 | 02:30 | `backup-devegen.sh`: dump, check it can be read, keep 14 days in `/root/backups/devegen`, copy to the private R2 bucket (`backups/devegen/`, 30 recent + 12 monthly) |
+| 1st of the month 01:30 | 03:30 | `restore-test-devegen.sh`: restore the newest **off-server** copy into a temporary database, compare tables and row counts with the live one, delete the temporary database |
+
+Failures are emailed to the super admins. The log is `/var/log/devegen-backup.log`.
+
+Useful commands:
+
+```bash
+/root/devegen/deploy/backup-devegen.sh            # back up now
+/root/devegen/deploy/restore-test-devegen.sh      # prove a restore works now
+tail -20 /var/log/devegen-backup.log              # recent runs
+docker exec devegen-api node scripts/offsite-backup.js list   # copies in R2
+```
+
+### Restoring for real (only after data loss)
+
+1. Pick a backup: the newest is first in `/root/backups/devegen` (or download one from R2:
+   `docker exec devegen-api node scripts/offsite-backup.js download devegen-YYYYMMDDTHHMMSSZ.dump > /root/restore.dump`).
+2. Stop the API so nothing writes during the restore: `cd /root/devegen/deploy && docker compose stop`.
+3. Replace the database contents (MotoGo's database is not touched):
+
+   ```bash
+   F=/root/backups/devegen/devegen-YYYYMMDDTHHMMSSZ.dump
+   docker exec -i motolink-postgres-1 pg_restore -U motolink -d devegen --clean --if-exists --no-owner --role=devegen --exit-on-error < "$F"
+   ```
+
+4. Start the API again: `docker compose up -d`, then check the website and the admin.
 
 ## 11. After a week without problems
 
