@@ -5,12 +5,14 @@ import {
   TextField, InputAdornment, ToggleButtonGroup, ToggleButton, Skeleton, useTheme,
 } from "@mui/material";
 import { FiSearch } from "react-icons/fi";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import Reveal from "../../components/common/Reveal";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
 export default function Projects() {
+  // Same page serves /projects (Steven) and /solutions/work (DevGen Solutions).
+  const basePath = useLocation().pathname.startsWith("/solutions") ? "/solutions/work" : "/projects";
   const theme = useTheme();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -35,7 +37,7 @@ export default function Projects() {
   return (
     <>
       <Helmet>
-        <title>Projects — Your Name</title>
+        <title>Projects</title>
         <meta name="description" content="A filterable portfolio of shipped projects, tech stacks, and outcomes." />
       </Helmet>
 
@@ -81,7 +83,7 @@ export default function Projects() {
                 <Reveal delay={idx * 0.06} style={{ height: "100%" }}>
                   <Card
                     component={NavLink}
-                    to={`/projects/${project.slug}`}
+                    to={`${basePath}/${project.slug}`}
                     elevation={0}
                     sx={{
                       height: "100%", display: "flex", flexDirection: "column", textDecoration: "none",

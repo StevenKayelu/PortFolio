@@ -1,42 +1,52 @@
 import { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { createAppTheme } from "../theme/createAppTheme";
-import { themes, themeOrder, DEFAULT_THEME } from "../theme/tokens";
+import { useBrand } from "./BrandContext";
 
-const STORAGE_KEY = "portfolio.theme";
+const STORAGE_KEY = "devegen.color-mode";
+const PREFERENCES = ["system", "light", "dark"];
 
 const ThemeSwitcherContext = createContext(null);
 
-export function ThemeSwitcherProvider({ children }) {
-  const [themeName, setThemeName] = useState(() => {
-    if (typeof window === "undefined") return DEFAULT_THEME;
+function readPreference() {
+  try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored && themes[stored] ? stored : DEFAULT_THEME;
-  });
+    return PREFERENCES.includes(stored) ? stored : "system";
+  } catch {
+    return "system";
+  }
+}
+
+/**
+ * Brand preset comes from BrandContext; the visitor only chooses
+ * light, dark or "follow my device".
+ */
+export function ThemeSwitcherProvider({ children }) {
+  const { brandKey } = useBrand();
+  const prefersDark = useMediaQuery("(prefers-color-scheme: dark)", { noSsr: true });
+  const [preference, setPreference] = useState(readPreference);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, themeName);
-  }, [themeName]);
+    try { window.localStorage.setItem(STORAGE_KEY, preference); } catch { /* storage unavailable */ }
+  }, [preference]);
 
-  const setTheme = useCallback((name) => {
-    if (themes[name]) setThemeName(name);
+  const mode = preference === "system" ? (prefersDark ? "dark" : "light") : preference;
+
+  const cyclePreference = useCallback(() => {
+    setPreference((prev) => PREFERENCES[(PREFERENCES.indexOf(prev) + 1) % PREFERENCES.length]);
   }, []);
 
-  const toggleLightDark = useCallback(() => {
-    setThemeName((prev) => (themes[prev].mode === "dark" ? "minimal-white" : "elegant-dark"));
-  }, []);
+  const muiTheme = useMemo(() => createAppTheme(brandKey, mode), [brandKey, mode]);
 
-  const muiTheme = useMemo(() => createAppTheme(themeName), [themeName]);
+  useEffect(() => {
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", muiTheme.palette.background.default);
+  }, [muiTheme]);
 
   const value = useMemo(
-    () => ({
-      themeName,
-      setTheme,
-      toggleLightDark,
-      availableThemes: themeOrder.map((key) => ({ key, label: themes[key].label, mode: themes[key].mode })),
-    }),
-    [themeName, setTheme, toggleLightDark]
+    () => ({ mode, preference, setPreference, cyclePreference }),
+    [mode, preference, cyclePreference]
   );
 
   return (

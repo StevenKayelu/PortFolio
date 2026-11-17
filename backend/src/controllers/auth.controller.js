@@ -7,11 +7,13 @@ import {
   revokeRefreshToken,
 } from "../services/token.service.js";
 
-const REFRESH_COOKIE = "refreshToken";
-const cookieOptions = {
+export const REFRESH_COOKIE = "refreshToken";
+export const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  // "none" is needed when the admin and API are on different sites
+  // (e.g. stevenkayelu.online → onrender.com); it requires HTTPS.
+  sameSite: process.env.COOKIE_SAMESITE || "lax",
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 

@@ -14,7 +14,7 @@ export default function Services() {
   return (
     <>
       <Helmet>
-        <title>Services — Your Name</title>
+        <title>Services</title>
         <meta name="description" content="Web development, software development, API design, and consultation services." />
       </Helmet>
 

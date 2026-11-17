@@ -36,7 +36,7 @@ console.log("posts", posts);
   return (
     <>
       <Helmet>
-        <title>Blog — Your Name</title>
+        <title>Blog</title>
         <meta name="description" content="Writing on engineering, architecture, and building products." />
       </Helmet>
 

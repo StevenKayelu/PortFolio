@@ -38,7 +38,7 @@ export default function Resume() {
   return (
     <>
       <Helmet>
-        <title>Résumé — Your Name</title>
+        <title>Résumé</title>
         <meta name="description" content="Experience, skills, and education — downloadable résumé." />
       </Helmet>
 
@@ -50,7 +50,7 @@ export default function Resume() {
                 RÉSUMÉ
               </Typography>
               <Typography variant="h1" sx={{ mt: 1, fontSize: { xs: "2rem", md: "2.5rem" } }}>
-                {identity?.name || "Your Name"}
+                {identity?.name || "Steven Kayelu"}
               </Typography>
               <Typography variant="body1" color="text.secondary">{identity?.role}</Typography>
             </Box>

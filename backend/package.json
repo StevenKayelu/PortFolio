@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20.0.0" },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -11,7 +13,10 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "prisma:seed-ecosystem": "node prisma/seed-ecosystem.js",
+    "prisma:deploy": "prisma migrate deploy",
+    "test:integration": "node --test --test-concurrency=1 \"tests/**/*.test.js\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.658.1",
@@ -27,6 +32,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.16",
     "sharp": "^0.33.5",
     "slugify": "^1.6.6",
     "zod": "^3.23.8"

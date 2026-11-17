@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Container, Grid, Typography, Skeleton, useTheme } from "@mui/material";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import apiClient from "../../../services/apiClient";
 import { useFetch } from "../../../hooks/useFetch";
 
@@ -11,9 +11,12 @@ function Counter({ value }) {
   const numericMatch = value.match(/[\d.]+/);
   const numeric = numericMatch ? parseFloat(numericMatch[0]) : null;
   const suffix = numeric !== null ? value.replace(numericMatch[0], "") : "";
+  const reduceMotion = useReducedMotion();
+  // Count up only quantities like "14+" or "95%" — never years or labels.
+  const countable = numeric !== null && /^[+%]/.test(suffix.trim()) && !reduceMotion;
 
   useEffect(() => {
-    if (!inView || numeric === null) {
+    if (!inView || !countable) {
       if (inView) setDisplay(value);
       return;
     }
@@ -27,7 +30,7 @@ function Counter({ value }) {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [inView, numeric, suffix, value]);
+  }, [inView, countable, numeric, suffix, value]);
 
   return <span ref={ref}>{display}</span>;
 }
@@ -41,7 +44,7 @@ export default function Stats() {
 
   return (
     <Box sx={{ borderTop: `1px solid ${theme.palette.divider}`, borderBottom: `1px solid ${theme.palette.divider}` }}>
-      <Container maxWidth="md" sx={{ py: { xs: 4, sm: 5, md: 7 }, px: { xs: 2, sm: 3 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 4, sm: 5, md: 7 }, px: { xs: 2, sm: 3 } }}>
         <Grid container spacing={{ xs: 2, sm: 3 }}>
           {loading &&
             Array.from({ length: 4 }).map((_, i) => (
@@ -63,10 +66,12 @@ export default function Stats() {
                   <Typography
                     variant="h2"
                     sx={{
-                      fontFamily: theme.custom.fontMono,
-                      color: "primary.main",
-                      fontSize: "clamp(1.5rem, 5vw + 0.3rem, 2.75rem)",
-                      lineHeight: 1.2,
+                      fontFamily: theme.custom.fontSerif,
+                      fontWeight: 400,
+                      color: "text.primary",
+                      fontSize: "clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem)",
+                      lineHeight: 1.1,
+                      fontVariantNumeric: "tabular-nums",
                       overflowWrap: "break-word",
                     }}
                   >

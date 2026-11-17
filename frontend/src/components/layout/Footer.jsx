@@ -1,188 +1,96 @@
-import { useEffect, useState } from "react";
-import {
-  Box,
-  Container,
-  Grid,
-  Stack,
-  Typography,
-  Button,
-  IconButton,
-  useTheme,
-} from "@mui/material";
-import {
-  FiGithub,
-  FiFacebook,
-  FiLinkedin,
-  FiTwitter,
-  FiMail,
-  FiPhone,
-} from "react-icons/fi";
+import { Box, Container, Grid, Stack, Typography, IconButton, useTheme } from "@mui/material";
+import { FiGithub, FiFacebook, FiMail, FiPhone, FiArrowUpRight } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 import apiClient from "../../services/apiClient";
+import { useFetch } from "../../hooks/useFetch";
+import { useBrand } from "../../context/BrandContext";
+import { siteHref } from "../../brand/brands";
+import Wordmark from "../brand/Wordmark";
+import { useCompliance } from "../../brand/useCompliance";
 
-const columns = [
-  {
-    title: "Explore",
-    links: [
-      { label: "Projects", to: "/projects" },
-      { label: "Blog", to: "/blog" },
-      { label: "Services", to: "/services" },
-      { label: "Resume", to: "/resume" },
-    ],
-  },
-  {
-    title: "About",
-    links: [
-      { label: "About Me", to: "/about" },
-      { label: "Experience", to: "/experience" },
-      { label: "Skills", to: "/skills" },
-      { label: "Contact", to: "/contact" },
-    ],
-  },
-  {
-    title: "More",
-    links: [
-      { label: "Testimonials", to: "/testimonials" },
-      { label: "FAQ", to: "/faq" },
-      { label: "Privacy Policy", to: "/privacy-policy" },
-    ],
-  },
-];
+// Shown until /site-settings/identity responds (and if it fails).
+const FALLBACK_IDENTITY = {
+  name: "Steven Kayelu",
+  tagline: "I design and build reliable, user-focused digital products for web and mobile.",
+  location: "Kitwe, Copperbelt, Zambia",
+  email: "stevenkayelu1@gmail.com",
+  phone: "+260 964 626 286",
+  github: "https://github.com/StevenKayelu",
+  facebook: "https://www.facebook.com/profile.php?id=61592826819870",
+};
+
+const BRAND_LINE = {
+  steven: null,
+  devegen: "Building ideas into meaningful ventures.",
+  solutions: "Business systems, web and mobile applications, and IT support.",
+};
+
+function Label({ children }) {
+  const theme = useTheme();
+  return (
+    <Typography component="h2" sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary", letterSpacing: "0.12em", fontSize: "0.7rem", fontWeight: 500 }}>
+      {children}
+    </Typography>
+  );
+}
+
+/** e.g. "DevGen Solutions LTD · Private limited company registered with PACRA, No. 123" */
+function RegistrationLine() {
+  const { organizations } = useCompliance();
+  const lines = organizations.flatMap((o) => o.credentials
+    .filter((c) => c.type === "PACRA_REGISTRATION")
+    .map((c) => `${o.legalName} · ${o.registrationType ? `${o.registrationType} registered` : "Registered"} with PACRA, No. ${c.referenceNumber}`));
+  if (!lines.length) return null;
+  return (
+    <Box component={NavLink} to="/compliance" sx={{ display: "block", color: "text.secondary", fontSize: "0.8125rem", mt: 1, "&:hover": { color: "text.primary" } }}>
+      {lines.join(" · ")}
+    </Box>
+  );
+}
 
 export default function Footer() {
   const theme = useTheme();
-
-  const [identity, setIdentity] = useState({
-    name: "Steven Kayelu",
-    brand: "DevGen Solutions",
-    role: "Full-Stack Software Engineer",
-    tagline:
-      "I design and build reliable, user-focused digital products for web and mobile.",
-    email: "stevenkayelu1@gmail.com",
-    phone: "+260 964 626 286",
-    github: "https://github.com/StevenKayelu",
-    facebook:
-      "https://www.facebook.com/profile.php?id=61592826819870",
-  });
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const response = await apiClient.get("/settings");
-
-        // Supports either:
-        // { identity: {...} }
-        // or { data: { identity: {...} } }
-        const settings = response.data?.data || response.data;
-
-        if (settings?.identity) {
-          setIdentity((prev) => ({
-            ...prev,
-            ...settings.identity,
-          }));
-        }
-      } catch (error) {
-        console.error("Failed to load footer settings:", error);
-      }
-    };
-
-    loadSettings();
-  }, []);
+  const { siteKey, brandKey, footer } = useBrand();
+  const { data } = useFetch(() => apiClient.get("/site-settings/identity").then((r) => r.data), []);
+  const identity = { ...FALLBACK_IDENTITY, ...(data || {}) };
 
   const socials = [
-    {
-      icon: FiGithub,
-      href: identity.github,
-      label: "GitHub",
-    },
-    {
-      icon: FiFacebook,
-      href: identity.facebook,
-      label: "Facebook",
-    },
-    {
-      icon: FiMail,
-      href: `mailto:${identity.email}`,
-      label: "Email",
-    },
-    {
-      icon: FiPhone,
-      href: `tel:${identity.phone.replace(/\s/g, "")}`,
-      label: "Phone",
-    },
-  ].filter((social) => social.href);
+    { icon: FiGithub, href: identity.github, label: "GitHub", external: true },
+    { icon: FiFacebook, href: identity.facebook, label: "Facebook", external: true },
+    { icon: FiMail, href: identity.email && `mailto:${identity.email}`, label: "Email" },
+    { icon: FiPhone, href: identity.phone && `tel:${identity.phone.replace(/\s/g, "")}`, label: "Phone" },
+  ].filter((s) => s.href);
+
+  const linkSx = {
+    color: "text.secondary", textDecoration: "none", fontSize: "0.9rem", minHeight: 32,
+    display: "inline-flex", alignItems: "center", width: "fit-content",
+    "&:hover": { color: "text.primary" },
+  };
 
   return (
-    <Box
-      component="footer"
-      sx={{
-        borderTop: `1px solid ${theme.palette.divider}`,
-        mt: { xs: 8, sm: 10, md: 12 },
-      }}
-    >
-      <Container maxWidth="lg" sx={{ py: { xs: 6, sm: 7, md: 8 }, px: { xs: 2.5, sm: 3 } }}>
-        <Grid container spacing={{ xs: 4, sm: 5 }}>
-          {/* BRAND */}
+    <Box component="footer" sx={{ borderTop: 1, borderColor: "divider", mt: { xs: 10, md: 14 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 }, px: { xs: 2, sm: 3 } }}>
+        <Grid container spacing={{ xs: 4, md: 5 }}>
           <Grid item xs={12} md={4}>
-            <Typography
-              sx={{
-                fontFamily: theme.custom.fontMono,
-                fontWeight: 600,
-                mb: 1.5,
-                fontSize: { xs: "1rem", sm: "1.0625rem" },
-                overflowWrap: "break-word",
-              }}
-            >
-              {"</"}
-              <Box component="span" sx={{ color: "primary.main" }}>
-                {identity.brand || "DevGen Solutions"}
-              </Box>
-              {">"}
+            <Wordmark brandKey={brandKey} />
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, maxWidth: 340 }}>
+              {BRAND_LINE[brandKey] ?? identity.tagline}
             </Typography>
-
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                maxWidth: 320,
-                mb: 2,
-                fontSize: "0.875rem",
-                lineHeight: 1.6,
-                overflowWrap: "break-word",
-              }}
-            >
-              {identity.tagline}
-            </Typography>
-
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mb: 2, fontSize: "0.875rem", overflowWrap: "break-word" }}
-            >
-              {identity.name}
-              {identity.location ? ` · ${identity.location}` : ""}
-            </Typography>
-
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {socials.map(({ icon: Icon, href, label }) => (
+            {siteKey === "steven" && identity.location && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontFamily: theme.custom.fontMono, fontSize: "0.78rem" }}>
+                {identity.location}
+              </Typography>
+            )}
+            <Stack direction="row" spacing={0.5} sx={{ mt: 2, ml: -1.25 }}>
+              {socials.map(({ icon: Icon, href, label, external }) => (
                 <IconButton
                   key={label}
                   component="a"
                   href={href}
-                  target={label === "Email" || label === "Phone" ? undefined : "_blank"}
-                  rel={
-                    label === "Email" || label === "Phone"
-                      ? undefined
-                      : "noopener noreferrer"
-                  }
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noopener noreferrer" : undefined}
                   aria-label={label}
-                  size="small"
-                  sx={{
-                    color: "text.secondary",
-                    "&:hover": {
-                      color: "primary.main",
-                    },
-                  }}
+                  sx={{ width: 44, height: 44, color: "text.secondary", "&:hover": { color: "primary.main" } }}
                 >
                   <Icon size={18} />
                 </IconButton>
@@ -190,117 +98,53 @@ export default function Footer() {
             </Stack>
           </Grid>
 
-          {/* NAVIGATION */}
-          {columns.map((col) => (
-            <Grid item xs={6} sm={4} md={2} key={col.title}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontFamily: theme.custom.fontMono,
-                  color: "text.secondary",
-                  letterSpacing: 1,
-                  fontSize: "0.75rem",
-                }}
-              >
-                {col.title.toUpperCase()}
-              </Typography>
-
-              <Stack spacing={1} sx={{ mt: 1.5 }}>
+          {footer.map((col) => (
+            <Grid item xs={6} sm={4} md={2} key={col.title} component="nav" aria-label={col.title}>
+              <Label>{col.title.toUpperCase()}</Label>
+              <Stack spacing={0.5} sx={{ mt: 1.5 }}>
                 {col.links.map((link) => (
-                  <Typography
-                    key={link.to}
-                    component={NavLink}
-                    to={link.to}
-                    variant="body2"
-                    sx={{
-                      color: "text.secondary",
-                      textDecoration: "none",
-                      fontSize: "0.875rem",
-                      "&:hover": {
-                        color: "text.primary",
-                      },
-                    }}
-                  >
+                  <Box key={link.to} component={NavLink} to={link.to} sx={linkSx}>
                     {link.label}
-                  </Typography>
+                  </Box>
                 ))}
               </Stack>
             </Grid>
           ))}
-
-          {/* CONTACT / NEWSLETTER */}
-          <Grid item xs={12} sm={12} md={4}>
-            <Typography
-              variant="caption"
-              sx={{
-                fontFamily: theme.custom.fontMono,
-                color: "text.secondary",
-                letterSpacing: 1,
-                fontSize: "0.75rem",
-              }}
-            >
-              STAY CONNECTED
-            </Typography>
-
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mt: 1, mb: 2, fontSize: "0.875rem", lineHeight: 1.6, maxWidth: { xs: "100%", md: 320 } }}
-            >
-              Get in touch for software development, web, mobile or
-              custom digital product projects.
-            </Typography>
-
-            <Stack spacing={1}>
-              <Typography
-                component="a"
-                href={`mailto:${identity.email}`}
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  overflowWrap: "break-word",
-                  "&:hover": {
-                    color: "primary.main",
-                  },
-                }}
-              >
-                {identity.email}
-              </Typography>
-
-              <Typography
-                component="a"
-                href={`tel:${identity.phone.replace(/\s/g, "")}`}
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  "&:hover": {
-                    color: "primary.main",
-                  },
-                }}
-              >
-                {identity.phone}
-              </Typography>
-            </Stack>
-          </Grid>
         </Grid>
+
+        {/* Ecosystem strip: each site points to the other, as the report's cross-linking rules require */}
+        <Box
+          component="a"
+          href={siteKey === "steven" ? siteHref("devegen") : siteHref("steven")}
+          sx={{
+            mt: { xs: 5, md: 7 }, p: { xs: 2, sm: 2.5 }, display: "flex", alignItems: "center",
+            justifyContent: "space-between", gap: 2, textDecoration: "none", color: "text.primary",
+            border: 1, borderColor: "divider", borderRadius: `${theme.custom.radii.lg}px`,
+            transition: "border-color 150ms",
+            "&:hover": { borderColor: "primary.main" },
+            "&:hover svg": { transform: "translate(2px,-2px)" },
+            "& svg": { transition: "transform 150ms", flexShrink: 0 },
+          }}
+        >
+          <span>
+            <Box component="span" sx={{ display: "block", fontFamily: theme.custom.fontMono, fontSize: "0.68rem", letterSpacing: "0.12em", color: theme.custom.accentText }}>
+              {siteKey === "steven" ? "FOUNDER OF" : "FOUNDED BY"}
+            </Box>
+            <Box component="span" sx={{ fontFamily: theme.custom.fontSerif, fontSize: "1.25rem" }}>
+              {siteKey === "steven" ? "Devegen Ventures" : "Steven Kayelu, software engineer"}
+            </Box>
+          </span>
+          <FiArrowUpRight size={20} aria-hidden="true" />
+        </Box>
 
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{
-            mt: { xs: 5, sm: 6, md: 8 },
-            pt: 3,
-            borderTop: `1px solid ${theme.palette.divider}`,
-            textAlign: "center",
-            fontSize: "0.8125rem",
-          }}
+          sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: "divider", fontSize: "0.8125rem" }}
         >
-          © {new Date().getFullYear()} {identity.name}. All rights reserved.
+          © {new Date().getFullYear()} {siteKey === "steven" ? identity.name : "Devegen Ventures"}. All rights reserved.
         </Typography>
+        {siteKey === "devegen" && <RegistrationLine />}
       </Container>
     </Box>
   );

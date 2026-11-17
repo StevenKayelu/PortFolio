@@ -27,36 +27,42 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   name         String
-  email        String   @unique
+  email        String    @unique
   passwordHash String
-  role         Role     @default(ADMIN)
+  role         Role      @default(ADMIN)
   avatarUrl    String?
-  isActive     Boolean  @default(true)
+  isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
-  refreshTokens   RefreshToken[]
-  blogPosts       BlogPost[]
-  auditLogs       AuditLog[]
-  projects        Project[]
-  comments        Comment[]
+  refreshTokens      RefreshToken[]
+  blogPosts          BlogPost[]
+  auditLogs          AuditLog[]
+  projects           Project[]
+  comments           Comment[]
+  brandRoles         UserBrandRole[]
+  assignedLeads      Lead[]              @relation("LeadAssignee")
+  leadActivities     LeadActivity[]
+  authoredRevisions  ContentRevision[]   @relation("RevisionAuthor")
+  testimonialInvites TestimonialInvite[] @relation("InviteCreator")
+  reviewedRevisions  ContentRevision[]   @relation("RevisionReviewer")
 
   @@index([email])
   @@map("users")
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
+  id        String    @id @default(cuid())
+  token     String    @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   userAgent String?
   ipAddress String?
 
@@ -68,8 +74,8 @@ model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
   user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action     String   // e.g. "CREATE", "UPDATE", "DELETE", "LOGIN"
-  entityType String   // e.g. "Project", "BlogPost"
+  action     String // e.g. "CREATE", "UPDATE", "DELETE", "LOGIN"
+  entityType String // e.g. "Project", "BlogPost"
   entityId   String?
   metadata   Json?
   ipAddress  String?
@@ -99,7 +105,7 @@ model ThemePreference {
   label      String
   isDefault  Boolean  @default(false)
   isDarkMode Boolean  @default(true)
-  tokens     Json     // full token set: palette, typography, radii, shadows
+  tokens     Json // full token set: palette, typography, radii, shadows
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -108,16 +114,21 @@ model ThemePreference {
 
 model SeoMeta {
   id             String   @id @default(cuid())
-  route          String   @unique // e.g. "/", "/blog/:slug" resolved path
+  // Same path can exist on both sites ("/"), so routes are unique per brand.
+  route          String // e.g. "/", "/about", "/solutions"
+  brandId        String?
+  brand          Brand?   @relation(fields: [brandId], references: [id], onDelete: Cascade)
   title          String
   description    String   @db.Text
   keywords       String?  @db.Text
   ogImage        String?
   canonicalUrl   String?
   structuredData Json?
+  noIndex        Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@unique([brandId, route])
   @@map("seo_meta")
 }
 
@@ -164,37 +175,37 @@ enum ProjectStatus {
 }
 
 model ProjectCategory {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  slug      String    @unique
-  createdAt DateTime  @default(now())
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
 
-  projects  Project[]
+  projects Project[]
 
   @@map("project_categories")
 }
 
 model Project {
-  id                 String        @id @default(cuid())
-  title              String
-  slug               String        @unique
-  summary            String        @db.Text
-  description        String        @db.Text
-  features           Json?         // string[]
-  challenges         String?       @db.Text
-  solutions          String?       @db.Text
-  lessonsLearned     String?       @db.Text
+  id                  String        @id @default(cuid())
+  title               String
+  slug                String        @unique
+  summary             String        @db.Text
+  description         String        @db.Text
+  features            Json? // string[]
+  challenges          String?       @db.Text
+  solutions           String?       @db.Text
+  lessonsLearned      String?       @db.Text
   architectureDiagram String?
-  databaseDiagram    String?
-  githubUrl          String?
-  liveDemoUrl        String?
-  videoDemoUrl       String?
-  documentationUrl   String?
-  coverImage         String?
-  status             ProjectStatus @default(COMPLETED)
-  isFeatured         Boolean       @default(false)
-  displayOrder       Int           @default(0)
-  viewCount          Int           @default(0)
+  databaseDiagram     String?
+  githubUrl           String?
+  liveDemoUrl         String?
+  videoDemoUrl        String?
+  documentationUrl    String?
+  coverImage          String?
+  status              ProjectStatus @default(COMPLETED)
+  isFeatured          Boolean       @default(false)
+  displayOrder        Int           @default(0)
+  viewCount           Int           @default(0)
 
   categoryId String?
   category   ProjectCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -202,15 +213,30 @@ model Project {
   authorId String?
   author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Attribution (Digital Ecosystem report §05/§07). Legacy rows start as
+  // NEEDS_REVIEW: ownership is never inferred from where a project is shown.
+  visibility            ProjectVisibility     @default(PUBLIC)
+  ownershipStatus       OwnershipStatus       @default(NEEDS_REVIEW)
+  ownerName             String?
+  publicationPermission PublicationPermission @default(UNKNOWN)
+  outcome               String?               @db.Text
+  showcaseBrandId       String?
+  showcaseBrand         Brand?                @relation(fields: [showcaseBrandId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  images       ProjectImage[]
-  technologies ProjectTechnology[]
+  images             ProjectImage[]
+  technologies       ProjectTechnology[]
+  contributors       ProjectContributor[]
+  products           Product[]
+  testimonials       Testimonial[]
+  testimonialInvites TestimonialInvite[]
 
   @@index([slug])
   @@index([categoryId])
+  @@index([showcaseBrandId])
   @@map("projects")
 }
 
@@ -228,9 +254,9 @@ model ProjectImage {
 }
 
 model Technology {
-  id       String   @id @default(cuid())
-  name     String   @unique
-  icon     String?
+  id   String  @id @default(cuid())
+  name String  @unique
+  icon String?
 
   projects ProjectTechnology[]
 
@@ -259,20 +285,20 @@ enum PostStatus {
 }
 
 model BlogCategory {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  slug      String     @unique
-  createdAt DateTime   @default(now())
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
 
-  posts     BlogPost[]
+  posts BlogPost[]
 
   @@map("blog_categories")
 }
 
 model BlogTag {
-  id    String @id @default(cuid())
-  name  String @unique
-  slug  String @unique
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
 
   posts BlogPostTag[]
 
@@ -309,10 +335,10 @@ model BlogPost {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  tags       BlogPostTag[]
-  comments   Comment[]
-  likes      BlogLike[]
-  bookmarks  BlogBookmark[]
+  tags      BlogPostTag[]
+  comments  Comment[]
+  likes     BlogLike[]
+  bookmarks BlogBookmark[]
 
   @@index([slug])
   @@index([status, publishedAt])
@@ -331,18 +357,18 @@ model BlogPostTag {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  postId    String
-  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id         String    @id @default(cuid())
+  postId     String
+  post       BlogPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   guestName  String?
   guestEmail String?
-  content   String   @db.Text
-  isApproved Boolean @default(false)
-  parentId  String?
-  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  replies   Comment[] @relation("CommentReplies")
+  content    String    @db.Text
+  isApproved Boolean   @default(false)
+  parentId   String?
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies    Comment[] @relation("CommentReplies")
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -353,11 +379,11 @@ model Comment {
 }
 
 model BlogLike {
-  id         String   @id @default(cuid())
-  postId     String
-  post       BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  fingerprint String  // anonymous device/session fingerprint or userId
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  postId      String
+  post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  fingerprint String // anonymous device/session fingerprint or userId
+  createdAt   DateTime @default(now())
 
   @@unique([postId, fingerprint])
   @@map("blog_likes")
@@ -375,11 +401,11 @@ model BlogBookmark {
 }
 
 model NewsletterSubscriber {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  isConfirmed   Boolean  @default(false)
+  id             String    @id @default(cuid())
+  email          String    @unique
+  isConfirmed    Boolean   @default(false)
   unsubscribedAt DateTime?
-  createdAt     DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@map("newsletter_subscribers")
 }
@@ -389,16 +415,16 @@ model NewsletterSubscriber {
 // ---------------------------------------------------------
 
 model Service {
-  id           String   @id @default(cuid())
-  title        String
-  slug         String   @unique
-  description  String   @db.Text
-  icon         String?
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  description   String   @db.Text
+  icon          String?
   startingPrice Decimal? @db.Decimal(10, 2)
-  displayOrder Int      @default(0)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  displayOrder  Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@map("services")
 }
@@ -438,20 +464,38 @@ model Experience {
 // CERTIFICATES
 // ---------------------------------------------------------
 
+/// Labels a credential honestly: a course completion is not a certification.
+enum CertificateType {
+  CERTIFICATION
+  COURSE
+  ACADEMIC
+  AWARD
+}
+
 model Certificate {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   title         String
   institution   String
   category      String?
   issueDate     DateTime
   credentialId  String?
-  credentialUrl String?
-  imageUrl      String?
-  fileUrl       String?   // downloadable PDF
-  displayOrder  Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  credentialUrl String? // issuer's verification page (Credly, Coursera, Microsoft Learn…)
+  imageUrl      String? // public, watermarked, reduced-resolution preview
+  fileUrl       String? // legacy public file link; no longer returned publicly
+  displayOrder  Int      @default(0)
+
+  type             CertificateType @default(COURSE)
+  expiresAt        DateTime?
+  showCredentialId Boolean         @default(true)
+  isPublished      Boolean         @default(true)
+  // Private original (PDF or image): stored outside public storage, admin download only.
+  originalKey      String?
+  originalName     String?
+  originalMime     String?
+  originalSize     Int?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
 
   @@map("certificates")
 }
@@ -461,12 +505,12 @@ model Certificate {
 // ---------------------------------------------------------
 
 model GalleryItem {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   title        String?
   imageUrl     String
   category     String?
-  displayOrder Int      @default(0)
-  createdAt    DateTime @default(now())
+  displayOrder Int       @default(0)
+  createdAt    DateTime  @default(now())
   deletedAt    DateTime?
 
   @@map("gallery_items")
@@ -477,19 +521,61 @@ model GalleryItem {
 // ---------------------------------------------------------
 
 model Testimonial {
-  id           String   @id @default(cuid())
-  clientName   String
-  clientRole   String?
+  id            String   @id @default(cuid())
+  clientName    String
+  clientRole    String?
   clientCompany String?
-  clientAvatar String?
-  content      String   @db.Text
-  rating       Int      @default(5)
-  isFeatured   Boolean  @default(false)
-  isApproved   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  clientAvatar  String?
+  content       String   @db.Text
+  rating        Int      @default(5)
+  isFeatured    Boolean  @default(false)
+  isApproved    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  // Verified, consented testimonials (invite links). Only rows with
+  // publication consent and no withdrawal are ever shown publicly.
+  verified         Boolean   @default(false) // came through a private invite link
+  clientEmail      String? // private: never returned by public endpoints
+  relationship     String? // e.g. "Client", "Employer", "Colleague"
+  consentPublishAt DateTime? // agreed to publish quote + name, role, organisation
+  consentContactAt DateTime? // agreed to be contacted about it at clientEmail
+  consentText      String?   @db.Text // exact wording they agreed to
+  withdrawnAt      DateTime?
+
+  brandId   String?
+  brand     Brand?             @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  inviteId  String?            @unique
+  invite    TestimonialInvite? @relation(fields: [inviteId], references: [id], onDelete: SetNull)
+
+  @@index([isApproved, withdrawnAt])
   @@map("testimonials")
+}
+
+/// A private, single-client link to leave (and later edit or withdraw) a testimonial.
+model TestimonialInvite {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique // sha256 of the link token; the token itself is never stored
+  clientName  String
+  clientEmail String
+  expiresAt   DateTime // for the first submission; a submitted link stays valid for withdrawal
+  submittedAt DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  brandId     String
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   User?    @relation("InviteCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  testimonial Testimonial?
+
+  @@index([brandId])
+  @@map("testimonial_invites")
 }
 
 // ---------------------------------------------------------
@@ -514,13 +600,13 @@ model Achievement {
 // ---------------------------------------------------------
 
 model Resume {
-  id         String   @id @default(cuid())
-  isActive   Boolean  @default(true)
-  fileUrl    String?  // uploaded canonical PDF
-  jsonData   Json?    // structured fallback for rendering
-  version    Int      @default(1)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  isActive  Boolean  @default(true)
+  fileUrl   String? // uploaded canonical PDF
+  jsonData  Json? // structured fallback for rendering
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("resumes")
 }
@@ -580,4 +666,380 @@ model PageView {
   @@index([path])
   @@index([createdAt])
   @@map("page_views")
+}
+
+// =========================================================
+// ECOSYSTEM: brands, organizations, ventures, products
+// (Digital Ecosystem report §02, §07). Operational association
+// is stored separately from legally verified relationships.
+// =========================================================
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+}
+
+enum BrandKind {
+  PERSONAL
+  UMBRELLA
+  SERVICE
+  VENTURE
+}
+
+enum RelationType {
+  UMBRELLA_OF // parent presents child under its umbrella brand
+  FOUNDER_OF // a person-brand founded the child
+  ASSOCIATED_WITH // operational association, no ownership implied
+}
+
+enum VentureStage {
+  IDEA
+  BUILDING
+  OPERATING
+  PAUSED
+}
+
+enum ProjectVisibility {
+  PUBLIC
+  UNLISTED // reachable by link, not listed
+  PRIVATE // admin only
+}
+
+enum OwnershipStatus {
+  NEEDS_REVIEW
+  CONFIRMED
+  NOT_OWNED // shown with permission, owned by a client or third party
+}
+
+enum PublicationPermission {
+  UNKNOWN
+  GRANTED
+  NOT_REQUIRED
+  DENIED
+}
+
+model Organization {
+  id                 String             @id @default(cuid())
+  legalName          String
+  tradingName        String?
+  registrationType   String? // e.g. "Business name", "Private limited company"
+  registry           String? // e.g. "PACRA"
+  registrationNumber String?
+  website            String?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  verifiedAt         DateTime?
+  notes              String?            @db.Text
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  brands      Brand[]
+  ventures    Venture[]
+  credentials OrganizationCredential[]
+
+  @@map("organizations")
+}
+
+enum CredentialType {
+  PACRA_REGISTRATION
+  ZICTA_LICENCE
+  DATA_PROTECTION_REGISTRATION
+  OTHER
+}
+
+/// A business registration, licence or compliance registration. Only the
+/// facts are ever public; the document itself is stored privately.
+model OrganizationCredential {
+  id               String         @id @default(cuid())
+  organizationId   String
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type             CredentialType
+  title            String // exactly as printed on the document
+  authority        String // issuing body, e.g. "Patents and Companies Registration Agency (PACRA)"
+  referenceNumber  String
+  issuedAt         DateTime
+  expiresAt        DateTime?
+  verificationUrl  String?
+  verificationNote String?        @db.Text // how a visitor can check it with the authority
+  isPublic         Boolean        @default(false) // opt-in per item
+  displayOrder     Int            @default(0)
+  // Private original document (admin download only)
+  originalKey      String?
+  originalName     String?
+  originalMime     String?
+  originalSize     Int?
+  reminder60SentAt DateTime?
+  reminder30SentAt DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([organizationId])
+  @@index([expiresAt])
+  @@map("organization_credentials")
+}
+
+model Brand {
+  id           String            @id @default(cuid())
+  key          String            @unique // stable code key: "steven", "devegen", "solutions"
+  name         String
+  slug         String            @unique
+  kind         BrandKind
+  tagline      String?
+  description  String?           @db.Text
+  logoUrl      String?
+  domains      Json? // string[] of hostnames
+  theme        Json? // optional token overrides
+  status       PublicationStatus @default(DRAFT)
+  displayOrder Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  childRelations     BrandRelationship[] @relation("ParentBrand")
+  parentRelations    BrandRelationship[] @relation("ChildBrand")
+  ventures           Venture[]
+  projects           Project[]
+  userRoles          UserBrandRole[]
+  leads              Lead[]
+  seoMeta            SeoMeta[]
+  testimonials       Testimonial[]
+  testimonialInvites TestimonialInvite[]
+
+  @@map("brands")
+}
+
+model BrandRelationship {
+  id                 String             @id @default(cuid())
+  parentBrandId      String
+  parentBrand        Brand              @relation("ParentBrand", fields: [parentBrandId], references: [id], onDelete: Cascade)
+  childBrandId       String
+  childBrand         Brand              @relation("ChildBrand", fields: [childBrandId], references: [id], onDelete: Cascade)
+  relationType       RelationType
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  publicNote         String?            @db.Text // wording approved for public display
+  internalNote       String?            @db.Text
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@unique([parentBrandId, childBrandId, relationType])
+  @@index([childBrandId])
+  @@map("brand_relationships")
+}
+
+model Venture {
+  id                 String             @id @default(cuid())
+  name               String
+  slug               String             @unique
+  summary            String             @db.Text
+  description        String?            @db.Text
+  stage              VentureStage       @default(IDEA)
+  status             PublicationStatus  @default(DRAFT)
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  website            String?
+  logoUrl            String?
+  displayOrder       Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  brandId        String?
+  brand          Brand?        @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  products Product[]
+
+  @@index([brandId])
+  @@index([status])
+  @@map("ventures")
+}
+
+model Product {
+  id              String            @id @default(cuid())
+  name            String
+  slug            String            @unique
+  summary         String?           @db.Text
+  website         String?
+  lifecycle       String? // e.g. "concept", "beta", "live"
+  status          PublicationStatus @default(DRAFT)
+  ownershipStatus OwnershipStatus   @default(NEEDS_REVIEW)
+  displayOrder    Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  ventureId String?
+  venture   Venture? @relation(fields: [ventureId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([ventureId])
+  @@map("products")
+}
+
+model ProjectContributor {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name             String // person or organisation credited
+  organizationName String?
+  role             String // e.g. "Lead developer", "Client"
+  contribution     String?  @db.Text
+  displayOrder     Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@index([projectId])
+  @@map("project_contributors")
+}
+
+// ---------------------------------------------------------
+// BRAND-SCOPED ADMINISTRATION (report §08)
+// SUPER_ADMIN (User.role) sees everything; everyone else is
+// limited to the brands granted here.
+// ---------------------------------------------------------
+
+enum BrandScope {
+  ADMIN // brand settings, ventures, products, publishing, leads
+  EDITOR // drafts only; publishing needs a brand ADMIN
+  LEAD_MANAGER // enquiries only
+}
+
+model UserBrandRole {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId   String
+  brand     Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  scope     BrandScope
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, brandId])
+  @@index([brandId])
+  @@map("user_brand_roles")
+}
+
+// ---------------------------------------------------------
+// LEADS: structured enquiries (report §05, §08)
+// ---------------------------------------------------------
+
+enum LeadType {
+  CAREER
+  COLLABORATION
+  QUOTE
+  PARTNERSHIP
+  GENERAL
+}
+
+enum LeadStatus {
+  NEW
+  QUALIFIED
+  CONTACTED
+  PROPOSAL
+  WON
+  LOST
+  ARCHIVED
+  SPAM
+}
+
+enum LeadActivityKind {
+  CREATED
+  NOTE
+  STATUS_CHANGE
+  ASSIGNMENT
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  reference    String     @unique // short reference shown to the sender
+  type         LeadType
+  status       LeadStatus @default(NEW)
+  name         String
+  email        String
+  phone        String?
+  organization String?
+  message      String     @db.Text
+  details      Json? // service, timeline, budget
+  source       String? // site the enquiry came from
+  consentAt    DateTime? // null for legacy messages, which had no consent checkbox
+  ipHash       String? // salted hash, never the raw IP
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  brandId          String
+  brand            Brand   @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  assignedToId     String?
+  assignedTo       User?   @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  contactMessageId String? @unique // set when converted from a legacy ContactMessage
+
+  activities LeadActivity[]
+
+  @@index([brandId, status])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id         String           @id @default(cuid())
+  leadId     String
+  lead       Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  kind       LeadActivityKind
+  body       String?          @db.Text
+  fromStatus LeadStatus?
+  toStatus   LeadStatus?
+  createdAt  DateTime         @default(now())
+
+  @@index([leadId])
+  @@map("lead_activities")
+}
+
+// ---------------------------------------------------------
+// EDITORIAL REVISIONS (report §06, §08: "publishing by approval",
+// "auditable revisions and rollback"). Every applied change to a
+// venture or product is recorded; editors' changes to published
+// records wait as PENDING until a brand admin approves them.
+// ---------------------------------------------------------
+
+enum RevisionEntity {
+  VENTURE
+  PRODUCT
+}
+
+enum RevisionStatus {
+  PENDING
+  APPLIED
+  REJECTED
+}
+
+model ContentRevision {
+  id         String         @id @default(cuid())
+  entityType RevisionEntity
+  entityId   String
+  brandId    String? // for scoping; null = super admin only
+  status     RevisionStatus
+  changes    Json // { field: newValue }
+  previous   Json? // { field: oldValue } captured when applied
+  note       String?        @db.Text // author's explanation
+  reviewNote String?        @db.Text
+  createdAt  DateTime       @default(now())
+  reviewedAt DateTime?
+
+  authorId   String?
+  author     User?   @relation("RevisionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewerId String?
+  reviewer   User?   @relation("RevisionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([status, brandId])
+  @@map("content_revisions")
 }

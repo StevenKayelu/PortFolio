@@ -1,48 +1,35 @@
-import { useState } from "react";
-import { Box, IconButton, Menu, MenuItem, ListItemText, Tooltip } from "@mui/material";
-import { FiSun, FiMoon, FiDroplet } from "react-icons/fi";
+import { IconButton, Tooltip } from "@mui/material";
+import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
+import { AnimatePresence, motion } from "framer-motion";
 import { useThemeSwitcher } from "../../context/ThemeContext";
 
-export default function ThemeSwitcher() {
-  const { themeName, setTheme, toggleLightDark, availableThemes } = useThemeSwitcher();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+const META = {
+  system: { icon: FiMonitor, label: "Theme follows your device", next: "light" },
+  light: { icon: FiSun, label: "Light theme", next: "dark" },
+  dark: { icon: FiMoon, label: "Dark theme", next: "your device setting" },
+};
 
-  const currentMode = availableThemes.find((t) => t.key === themeName)?.mode;
+/** Cycles system → light → dark. The icon shows the current setting. */
+export default function ThemeSwitcher() {
+  const { preference, cyclePreference } = useThemeSwitcher();
+  const { icon: Icon, label, next } = META[preference];
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-      <Tooltip title="Toggle light / dark">
-        <IconButton onClick={toggleLightDark} size="small" aria-label="Toggle light or dark mode">
-          {currentMode === "dark" ? <FiSun size={18} /> : <FiMoon size={18} />}
-        </IconButton>
-      </Tooltip>
-
-      <Tooltip title="Choose theme">
-        <IconButton
-          onClick={(e) => setAnchorEl(e.currentTarget)}
-          size="small"
-          aria-label="Choose color theme"
-          aria-haspopup="true"
-        >
-          <FiDroplet size={18} />
-        </IconButton>
-      </Tooltip>
-
-      <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
-        {availableThemes.map((t) => (
-          <MenuItem
-            key={t.key}
-            selected={t.key === themeName}
-            onClick={() => {
-              setTheme(t.key);
-              setAnchorEl(null);
-            }}
+    <Tooltip title={`${label}. Switch to ${next}.`}>
+      <IconButton onClick={cyclePreference} aria-label={`${label}. Switch to ${next}.`} sx={{ width: 44, height: 44 }}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={preference}
+            initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={{ opacity: 0, rotate: 45, scale: 0.8 }}
+            transition={{ duration: 0.18 }}
+            style={{ display: "inline-flex" }}
           >
-            <ListItemText primary={t.label} secondary={t.mode} />
-          </MenuItem>
-        ))}
-      </Menu>
-    </Box>
+            <Icon size={18} />
+          </motion.span>
+        </AnimatePresence>
+      </IconButton>
+    </Tooltip>
   );
 }

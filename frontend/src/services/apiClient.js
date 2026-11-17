@@ -21,7 +21,8 @@ apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
+    // Never retry the auth endpoints themselves, or a failed refresh loops.
+    if (error.response?.status === 401 && !original._retry && !original.url?.startsWith("/auth/")) {
       original._retry = true;
       try {
         refreshPromise ??= apiClient.post("/auth/refresh").finally(() => {

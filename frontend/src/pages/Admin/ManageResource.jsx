@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { FiTrash2, FiEdit2, FiPlus } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
+import { useAdminBrand } from "../../context/AdminBrandContext";
 
 const emptyValueFor = (field) => {
   if (field.type === "boolean") return false;
@@ -72,7 +73,10 @@ function FieldInput({ field, value, onChange, selectOptions }) {
  * `fields` array describing the create/edit form, rather than writing
  * a bespoke form for each.
  */
-export default function ManageResource({ title, endpoint, columns, fields = [], selectOptionsEndpoints = {} }) {
+export default function ManageResource({ title, endpoint, listQuery, brandScoped = false, columns, fields = [], selectOptionsEndpoints = {} }) {
+  const { brandKey } = useAdminBrand();
+  const query = brandScoped && brandKey ? { ...listQuery, brand: brandKey } : listQuery;
+  const [notice, setNotice] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -87,13 +91,17 @@ export default function ManageResource({ title, endpoint, columns, fields = [], 
   const load = () => {
     setLoading(true);
     apiClient
-      .get(endpoint)
+      .get(endpoint, { params: query })
       .then((res) => setItems(res.data.items || res.data))
       .catch(() => setError("Couldn't load this resource — check the API is running."))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [endpoint]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(load, [endpoint, JSON.stringify(query)]);
+  // Pages pass selectOptionsEndpoints as an inline object; keying the effect on
+  // its contents (not identity) stops it refetching on every render.
+  const selectKey = JSON.stringify(selectOptionsEndpoints);
 
   useEffect(() => {
     Object.entries(selectOptionsEndpoints).forEach(([fieldName, path]) => {
@@ -101,11 +109,12 @@ export default function ManageResource({ title, endpoint, columns, fields = [], 
         const raw = res.data.items || res.data;
         setSelectOptions((prev) => ({
           ...prev,
-          [fieldName]: raw.map((r) => ({ value: r.id ?? r.slug, label: r.name ?? r.title })),
+          [fieldName]: raw.map((r) => ({ value: r.id ?? r.slug, label: r.name ?? r.title ?? r.legalName })),
         }));
       });
     });
-  }, [selectOptionsEndpoints]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectKey]);
 
   const openCreate = () => {
     const defaults = {};
@@ -129,11 +138,11 @@ export default function ManageResource({ title, endpoint, columns, fields = [], 
     setSaving(true);
     setSaveError("");
     try {
-      if (editingId) {
-        await apiClient.patch(`${endpoint}/${editingId}`, formData);
-      } else {
-        await apiClient.post(endpoint, formData);
-      }
+      const res = editingId
+        ? await apiClient.patch(`${endpoint}/${editingId}`, formData)
+        : await apiClient.post(endpoint, formData);
+      // 202: an editor's change to published content is waiting for approval.
+      setNotice(res.status === 202 ? res.data.message || "Sent for approval." : "");
       setDialogOpen(false);
       load();
     } catch (err) {
@@ -162,6 +171,7 @@ export default function ManageResource({ title, endpoint, columns, fields = [], 
 
       {loading && <CircularProgress size={24} />}
       {error && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
+      {notice && <Alert severity="info" onClose={() => setNotice("")} sx={{ mb: 2 }}>{notice} It will appear here once a brand admin approves it.</Alert>}
 
       {!loading && !error && (
         <Table size="small">

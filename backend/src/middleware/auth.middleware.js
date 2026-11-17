@@ -16,6 +16,25 @@ export function requireAuth(req, res, next) {
   }
 }
 
+/**
+ * Attaches req.user when a valid access token is present, but never
+ * rejects — for public endpoints that reveal extra data (drafts) to staff.
+ */
+export function optionalAuth(req, res, next) {
+  const header = req.headers.authorization;
+  const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
+  if (token) {
+    try {
+      req.user = verifyAccessToken(token);
+    } catch {
+      // treat an invalid/expired token as anonymous
+    }
+  }
+  return next();
+}
+
+export const STAFF_ROLES = ["SUPER_ADMIN", "ADMIN", "EDITOR"];
+
 export function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {

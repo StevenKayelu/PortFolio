@@ -15,7 +15,7 @@ export default function FeaturedProjects() {
 
   return (
     <Box sx={{ bgcolor: "background.paper", py: { xs: 6, sm: 8, md: 10 } }}>
-      <Container maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <Reveal>
           <Stack
             direction={{ xs: "column", sm: "row" }}

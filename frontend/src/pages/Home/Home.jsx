@@ -11,7 +11,7 @@ import ContactCTA from "./sections/ContactCTA";
 export default function Home() {
   return (
     <>
-      <Helmet>
+      <Helmet titleTemplate="%s">
         <title>Steven Kayelu — Full-Stack Software Engineer</title>
       </Helmet>
 

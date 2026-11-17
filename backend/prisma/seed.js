@@ -47,7 +47,9 @@ async function main() {
   };
 
   for (const [key, value] of Object.entries(settings)) {
-    await prisma.siteSetting.upsert({ where: { key }, update: { value }, create: { key, value } });
+    // Create-only: re-running the seed must never overwrite real content
+    // edited in the admin (it used to replace it with these samples).
+    await prisma.siteSetting.upsert({ where: { key }, update: {}, create: { key, value } });
   }
 
   // ---------- Skills ----------
@@ -94,16 +96,10 @@ async function main() {
   }
 
   // ---------- Certificates ----------
-  const certificates = [
-    ["AWS Certified Solutions Architect", "Amazon Web Services", "Cloud", "2024-02-01", "AWS-000000"],
-    ["Professional Scrum Master I", "Scrum.org", "Process", "2022-08-01", "PSM-000000"],
-  ];
-  for (const [title, institution, category, issueDate, credentialId] of certificates) {
-    const exists = await prisma.certificate.findFirst({ where: { title, institution } });
-    if (!exists) {
-      await prisma.certificate.create({ data: { title, institution, category, issueDate: new Date(issueDate), credentialId } });
-    }
-  }
+  // Intentionally none. The template seeded placeholder credentials
+  // ("AWS Certified Solutions Architect", "Professional Scrum Master I")
+  // that showed on the live site as if they were real. Add real
+  // certificates in Admin → Certificates.
 
   // ---------- Gallery ----------
   const gallery = [["Conference talk, 2025", "Speaking"], ["Hackathon win, 2023", "Events"], ["Workstation setup", "Behind the scenes"]];
@@ -133,17 +129,10 @@ async function main() {
     if (!exists) await prisma.faq.create({ data: { question, answer } });
   }
 
-  // ---------- Testimonials (pre-approved so they show up immediately) ----------
-  const testimonials = [
-    ["Amara Chen", "VP Engineering", "Northline", "Delivered ahead of schedule and left the codebase easier to work in than they found it.", 5],
-    ["Daniel Ortiz", "Founder", "Fielda", "Rare mix of product sense and engineering rigor — asked the right questions before writing code.", 5],
-  ];
-  for (const [clientName, clientRole, clientCompany, content, rating] of testimonials) {
-    const exists = await prisma.testimonial.findFirst({ where: { clientName, clientCompany } });
-    if (!exists) {
-      await prisma.testimonial.create({ data: { clientName, clientRole, clientCompany, content, rating, isApproved: true, isFeatured: true } });
-    }
-  }
+  // ---------- Testimonials ----------
+  // Intentionally none. Testimonials must come from real clients through
+  // POST /testimonials and admin approval; seeding invented quotes put
+  // fabricated endorsements on the live site.
 
   // ---------- Project categories + projects ----------
   const categories = [["web", "Web"], ["mobile", "Mobile"], ["data", "Data & Analytics"]];

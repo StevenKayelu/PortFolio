@@ -15,7 +15,7 @@ export default function Gallery() {
   return (
     <>
       <Helmet>
-        <title>Gallery — Your Name</title>
+        <title>Gallery</title>
         <meta name="description" content="Photos from talks, events, and behind the scenes." />
       </Helmet>
 

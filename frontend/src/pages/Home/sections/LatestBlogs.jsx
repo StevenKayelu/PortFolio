@@ -13,7 +13,7 @@ export default function LatestBlogs() {
   const posts = data?.items || [];
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 6, sm: 8, md: 10 }, px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 6, sm: 8, md: 10 }, px: { xs: 2, sm: 3 } }}>
       <Reveal>
         <Typography
           variant="caption"

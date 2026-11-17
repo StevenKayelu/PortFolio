@@ -5,7 +5,7 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import routes from "./routes/index.js";
-import { getSitemap } from "./controllers/sitemap.controller.js";
+import { getSitemap, getRobots } from "./controllers/sitemap.controller.js";
 import {
   notFoundHandler,
   errorHandler,
@@ -13,13 +13,24 @@ import {
 
 const app = express();
 
+// CLIENT_URLS is a comma-separated list, e.g.
+// "https://stevenkayelu.online,https://devegenventures.com"; CLIENT_URL is
+// still honoured for existing deployments.
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   process.env.CLIENT_URL,
-].filter(Boolean);
+  ...(process.env.CLIENT_URLS || "").split(","),
+]
+  .map((o) => o?.trim())
+  .filter(Boolean);
+
+// Behind Render/Nginx the client IP arrives in X-Forwarded-For. Without
+// this, every visitor shares the proxy's IP and rate limits become global.
+app.set("trust proxy", process.env.TRUST_PROXY !== undefined ? Number(process.env.TRUST_PROXY) : process.env.NODE_ENV === "production" ? 1 : false);
 
 app.use(helmet());
+app.disable("x-powered-by");
 
 app.use(
   cors({
@@ -34,9 +45,9 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(
-        new Error(`CORS blocked origin: ${origin}`)
-      );
+      // Refuse without throwing, so a disallowed origin gets a normal
+      // response without CORS headers instead of a 500.
+      return callback(null, false);
     },
     credentials: true,
   })
@@ -58,12 +69,14 @@ app.use(
 
 app.use(
   "/uploads",
-  express.static(
-    process.env.UPLOAD_DIR || "./src/uploads"
-  )
+  express.static(process.env.UPLOAD_DIR || "./src/uploads", {
+    // Uploaded images are shown on the frontend's own domains.
+    setHeaders: (res) => res.set("Cross-Origin-Resource-Policy", "cross-origin"),
+  })
 );
 
 app.get("/sitemap.xml", getSitemap);
+app.get("/robots.txt", getRobots);
 
 app.use("/api/v1", routes);
 

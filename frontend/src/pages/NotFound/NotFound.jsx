@@ -10,7 +10,7 @@ export default function NotFound() {
   return (
     <>
       <Helmet>
-        <title>Page not found — Your Name</title>
+        <title>Page not found</title>
       </Helmet>
 
       <Container maxWidth="sm" sx={{ py: { xs: 12, md: 18 }, textAlign: "center" }}>

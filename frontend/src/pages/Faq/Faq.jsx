@@ -16,7 +16,7 @@ export default function Faq() {
   return (
     <>
       <Helmet>
-        <title>FAQ — Your Name</title>
+        <title>FAQ</title>
         <meta name="description" content="Answers to common questions about working together." />
       </Helmet>
 

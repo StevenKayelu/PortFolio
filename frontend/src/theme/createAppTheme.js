@@ -1,19 +1,32 @@
 import { createTheme } from "@mui/material/styles";
-import { typography, radii, motion, themes } from "./tokens";
+import { typography, radii, motion, palette, brandThemes, DEFAULT_BRAND } from "./tokens";
 
 /**
- * Builds a complete MUI theme object from a named token set.
- * Component overrides live here so every theme automatically
- * restyles buttons, cards, navbar, footer, charts and code
- * blocks — never touched per-component in feature code.
+ * Builds a complete MUI theme for one brand preset in one mode.
+ * Component overrides live here so every brand automatically
+ * restyles buttons, cards, navbar, footer and inputs — never
+ * touched per-component in feature code.
  */
-export function createAppTheme(themeName) {
-  const t = themes[themeName] ?? themes["elegant-dark"];
+export function createAppTheme(brandKey, mode = "light") {
+  const preset = brandThemes[brandKey] ?? brandThemes[DEFAULT_BRAND];
+  const t = preset[mode] ?? preset.light;
+  const serif = preset.display === "serif";
+  const fontDisplay = serif ? typography.fontSerif : typography.fontBody;
+  const headingWeight = serif ? 400 : 700;
+  const heading = (s) => ({
+    fontFamily: fontDisplay,
+    fontWeight: headingWeight,
+    fontSize: s.size,
+    lineHeight: s.lineHeight,
+    letterSpacing: serif ? s.letterSpacing : `calc(${s.letterSpacing} - 0.01em)`,
+    textWrap: "balance",
+  });
+  const focusRing = { outline: `2px solid ${t.primary}`, outlineOffset: 3 };
 
-  const theme = createTheme({
+  return createTheme({
     palette: {
       mode: t.mode,
-      primary: { main: t.primary },
+      primary: { main: t.primary, contrastText: t.contrastText },
       secondary: { main: t.secondary },
       background: { default: t.bg.default, paper: t.bg.paper },
       text: { primary: t.text.primary, secondary: t.text.secondary, disabled: t.text.disabled },
@@ -22,67 +35,99 @@ export function createAppTheme(themeName) {
     shape: { borderRadius: radii.md },
     typography: {
       fontFamily: typography.fontBody,
-      h1: { fontFamily: typography.fontDisplay, ...typography.scale.h1 },
-      h2: { fontFamily: typography.fontDisplay, ...typography.scale.h2 },
-      h3: { fontFamily: typography.fontDisplay, ...typography.scale.h3 },
-      h4: { fontFamily: typography.fontDisplay, ...typography.scale.h4 },
+      h1: heading(typography.scale.h1),
+      h2: heading(typography.scale.h2),
+      h3: heading(typography.scale.h3),
+      h4: { ...heading(typography.scale.h4), fontFamily: typography.fontBody, fontWeight: 600 },
       body1: typography.scale.body1,
       body2: typography.scale.body2,
       caption: typography.scale.caption,
       button: { textTransform: "none", fontWeight: 600, letterSpacing: "0" },
     },
     // Custom tokens namespaced under `custom` so components can reach
-    // things MUI's palette has no concept of (glass, gradient, mono font).
+    // things MUI's palette has no concept of (band, copper, fonts, motion).
     custom: {
-      name: themeName,
-      label: t.label,
+      name: brandKey,
+      label: preset.label,
+      display: preset.display,
       fontMono: typography.fontMono,
-      glass: t.glass,
-      gradient: t.gradient,
+      fontSerif: typography.fontSerif,
+      fontDisplay,
+      displayScale: typography.scale.display,
+      headingWeight,
+      accentText: t.accentText,
+      copper: palette.copper,
+      band: t.band,
+      glass: t.mode === "dark" ? "rgba(11,21,36,0.78)" : "rgba(246,248,251,0.82)",
+      gradient: `linear-gradient(135deg, ${t.bg.elevated}, ${t.bg.paper})`,
       elevatedBg: t.bg.elevated,
       radii,
       motion,
-      monoAccent: Boolean(t.monoAccent),
-      heavyGlass: Boolean(t.heavyGlass),
     },
     shadows: buildShadowScale(t.mode),
     components: {
       MuiCssBaseline: {
         styleOverrides: {
+          html: { scrollPaddingTop: 88 },
           body: {
             backgroundColor: t.bg.default,
-            transition: "background-color 0.3s ease",
+            WebkitFontSmoothing: "antialiased",
+            overflowX: "clip",
           },
-          "::selection": { backgroundColor: t.primary, color: t.mode === "dark" ? "#0B0C10" : "#FFFFFF" },
+          "::selection": { backgroundColor: t.primary, color: t.contrastText },
+          ":focus-visible": focusRing,
+          // Plain links in running text (not MUI-styled components)
+          "a:not([class*='Mui'])": { color: t.primary, textUnderlineOffset: "3px", textDecorationThickness: "1px" },
+          "@media (prefers-reduced-motion: reduce)": {
+            "*, *::before, *::after": {
+              animationDuration: "1ms !important",
+              animationIterationCount: "1 !important",
+              transitionDuration: "1ms !important",
+              scrollBehavior: "auto !important",
+            },
+          },
         },
       },
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backgroundColor: t.heavyGlass ? t.glass : `${t.bg.default}CC`,
-            backdropFilter: "blur(16px) saturate(150%)",
+            backgroundColor: t.mode === "dark" ? "rgba(11,21,36,0.82)" : "rgba(246,248,251,0.86)",
+            backdropFilter: "blur(14px) saturate(140%)",
             boxShadow: "none",
             borderBottom: `1px solid ${t.border}`,
+            color: t.text.primary,
           },
         },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            backgroundColor: t.heavyGlass ? t.glass : t.bg.paper,
-            backdropFilter: t.heavyGlass ? "blur(20px)" : "none",
+            backgroundColor: t.bg.paper,
             border: `1px solid ${t.border}`,
             borderRadius: radii.lg,
-            transition: `transform ${motion.base}s ${motion.easeOut.join(",")}, box-shadow ${motion.base}s`,
+            transition: `transform ${motion.base}s cubic-bezier(${motion.easeOut.join(",")}), border-color ${motion.fast}s, box-shadow ${motion.base}s`,
           },
         },
       },
+      MuiButtonBase: {
+        defaultProps: { disableRipple: false },
+        styleOverrides: { root: { "&.Mui-focusVisible": focusRing } },
+      },
       MuiButton: {
         styleOverrides: {
-          root: { borderRadius: radii.pill, paddingInline: "1.5rem", paddingBlock: "0.65rem" },
+          root: {
+            borderRadius: radii.md,
+            paddingInline: "1.25rem",
+            paddingBlock: "0.7rem",
+            minHeight: 44,
+            transition: `transform ${motion.fast}s cubic-bezier(${motion.easeOut.join(",")}), background-color ${motion.fast}s, box-shadow ${motion.fast}s`,
+            "&:active": { transform: "scale(0.98)" },
+            "& .MuiButton-endIcon": { transition: `transform ${motion.fast}s` },
+            "&:hover .MuiButton-endIcon": { transform: "translateX(3px)" },
+          },
           containedPrimary: {
             boxShadow: "none",
-            "&:hover": { boxShadow: `0 8px 24px -8px ${t.primary}66` },
+            "&:hover": { boxShadow: `0 0 0 4px ${t.primary}26` },
           },
         },
       },
@@ -92,18 +137,21 @@ export function createAppTheme(themeName) {
       MuiPaper: {
         styleOverrides: { root: { backgroundImage: "none" } },
       },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: { borderRadius: radii.md, transition: `box-shadow ${motion.fast}s`, "&.Mui-focused": { boxShadow: `0 0 0 3px ${t.primary}22` } },
+        },
+      },
     },
   });
-
-  return theme;
 }
 
 function buildShadowScale(mode) {
-  const base = mode === "dark" ? "0,0,0" : "16,17,20";
+  const base = mode === "dark" ? "0,0,0" : "20,36,61";
   const shadows = ["none"];
   for (let i = 1; i < 25; i += 1) {
     const blur = 4 + i * 3;
-    const alpha = Math.min(0.04 + i * 0.012, 0.4);
+    const alpha = Math.min(0.03 + i * 0.01, 0.3);
     shadows.push(`0 ${Math.round(i * 1.2)}px ${blur}px rgba(${base},${alpha.toFixed(3)})`);
   }
   return shadows;
