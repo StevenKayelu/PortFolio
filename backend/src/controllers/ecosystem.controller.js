@@ -129,14 +129,6 @@ export async function adminUpdateBrand(req, res, next) {
 
 // ---------------------------------------------- admin: legal + relationships
 
-export async function adminListOrganizations(req, res, next) {
-  try {
-    res.json(await prisma.organization.findMany({ orderBy: { legalName: "asc" } }));
-  } catch (err) {
-    next(err);
-  }
-}
-
 export async function adminSaveOrganization(req, res, next) {
   try {
     const data = { ...req.body };

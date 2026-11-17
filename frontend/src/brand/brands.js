@@ -67,6 +67,7 @@ export const SITES = {
         { label: "Request a quote", to: "/contact?type=quote" },
       ] },
       { title: "Legal", links: [
+        { label: "Registration & compliance", to: "/compliance" },
         { label: "Privacy policy", to: "/privacy-policy" },
         { label: "FAQ", to: "/faq" },
       ] },

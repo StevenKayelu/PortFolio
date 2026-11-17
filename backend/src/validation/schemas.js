@@ -317,3 +317,21 @@ const certificateFields = {
 const expiryAfterIssue = (v) => !v.expiresAt || !v.issueDate || v.expiresAt > v.issueDate;
 export const certificateSchema = z.object(certificateFields).refine(expiryAfterIssue, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });
 export const certificateUpdateSchema = z.object(certificateFields).partial().refine(expiryAfterIssue, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });
+
+// ------------------------------------------------------ business compliance
+
+const credentialFields = {
+  type: z.enum(["PACRA_REGISTRATION", "ZICTA_LICENCE", "DATA_PROTECTION_REGISTRATION", "OTHER"]),
+  title: trimmed(191).min(1, "Enter the title exactly as printed."),
+  authority: trimmed(191).min(1, "Enter the issuing authority."),
+  referenceNumber: trimmed(120).min(1, "Enter the registration or licence number."),
+  issuedAt: z.coerce.date({ errorMap: () => ({ message: "Enter the issue date." }) }),
+  expiresAt: optionalDate,
+  verificationUrl: url,
+  verificationNote: optionalText(500),
+  isPublic: z.boolean().optional(),
+  displayOrder: z.coerce.number().int().optional(),
+};
+const credentialDates = (v) => !v.expiresAt || !v.issuedAt || v.expiresAt > v.issuedAt;
+export const credentialSchema = z.object(credentialFields).refine(credentialDates, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });
+export const credentialUpdateSchema = z.object(credentialFields).partial().refine(credentialDates, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });

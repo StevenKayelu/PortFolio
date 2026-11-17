@@ -11,6 +11,7 @@ import TestimonialCard from "../../components/common/TestimonialCard";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 import { siteHref } from "../../brand/brands";
+import { useCompliance, organizationForBrand } from "../../brand/useCompliance";
 
 const QUOTE_STEPS = [
   { title: "Choose a service", detail: "Business system, web app, mobile app or IT support" },
@@ -56,6 +57,10 @@ export default function SolutionsHome() {
   const band = theme.custom.band;
   const reduceMotion = useReducedMotion();
   const { data: services, loading: loadingServices, error: servicesError } = useFetch(() => apiClient.get("/services").then((r) => r.data), []);
+  const { organizations } = useCompliance();
+  const company = organizationForBrand(organizations, "solutions");
+  const TRUST_LABEL = { PACRA_REGISTRATION: "Registered with PACRA", ZICTA_LICENCE: "ZICTA licensed", DATA_PROTECTION_REGISTRATION: "Registered under the Data Protection Act" };
+  const trust = (company?.credentials || []).map((c) => TRUST_LABEL[c.type]).filter(Boolean);
   const { data: testimonials } = useFetch(() => apiClient.get("/testimonials", { params: { brand: "solutions" } }).then((r) => r.data), []);
   const { data: projects } = useFetch(() => apiClient.get("/projects", { params: { featuredOnly: "true", pageSize: 3 } }).then((r) => r.data), []);
   const fade = (delay) => ({
@@ -234,6 +239,15 @@ export default function SolutionsHome() {
             <Typography sx={{ mt: 2, color: band.muted, maxWidth: "52ch" }}>
               A quote request takes a few minutes. You will hear back with questions or a scoped proposal.
             </Typography>
+            {trust.length > 0 && (
+              <Box component={NavLink} to="/compliance" sx={{ mt: 2.5, display: "flex", flexWrap: "wrap", gap: 1, textDecoration: "none" }} aria-label="Registration and compliance details">
+                {[...new Set(trust)].map((label) => (
+                  <Box key={label} component="span" sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.7rem", letterSpacing: "0.06em", textTransform: "uppercase", color: band.ink, border: `1px solid ${band.line}`, borderRadius: 99, px: 1.25, py: 0.6 }}>
+                    ✓ {label}
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
           <Button component={NavLink} to="/contact?type=quote" size="large" endIcon={<FiArrowRight />} sx={{ justifySelf: { md: "end" }, bgcolor: "#FFFFFF", color: "#0F3566", "&:hover": { bgcolor: "#FFFFFF", boxShadow: "0 0 0 4px rgba(255,255,255,.2)" } }}>
             Request a quote

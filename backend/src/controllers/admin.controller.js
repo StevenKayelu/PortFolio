@@ -19,6 +19,10 @@ export async function getDashboardSummary(req, res, next) {
       prisma.contentRevision.count({ where: { status: "PENDING", ...brandFilter(req.brandAccess, SCOPES.manage) } }),
     ]);
     const leadCounts = Object.fromEntries(leadsByStatus.map((l) => [l.status, l._count]));
+    // Registrations/licences expiring within 60 days or already expired (super admins only).
+    const expiringCredentialCount = req.brandAccess.all
+      ? await prisma.organizationCredential.count({ where: { expiresAt: { not: null, lte: new Date(Date.now() + 60 * 86400000) } } })
+      : 0;
 
     res.json({
       projectCount, publishedPostCount, draftPostCount, newMessageCount,
@@ -26,6 +30,7 @@ export async function getDashboardSummary(req, res, next) {
       newLeadCount: leadCounts.NEW || 0,
       openLeadCount: ["NEW", "QUALIFIED", "CONTACTED", "PROPOSAL"].reduce((n, s) => n + (leadCounts[s] || 0), 0),
       pendingApprovalCount,
+      expiringCredentialCount,
     });
   } catch (err) {
     next(err);

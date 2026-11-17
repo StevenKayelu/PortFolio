@@ -216,6 +216,19 @@ type (certification, course, academic, award), optional expiry, and switches for
 publishing and showing the credential ID. Previews can still be screenshotted; the
 verification link is the real proof.
 
+### Registration & compliance (PACRA, ZICTA, data protection)
+
+**Admin → Legal & compliance** (super admins only) holds each organisation's exact legal
+details and its registrations and licences: title as printed, issuing authority, number,
+issue/expiry dates and how to verify. Each item is shown on
+**devegenventures.com/compliance** only when switched on, and **only as facts**: the
+documents (which can list directors, shareholders and ID numbers) are stored privately
+and never published. Expired items disappear from the site automatically; super admins
+are emailed 60 and 30 days before expiry, and the dashboard flags them. Published PACRA
+details also appear as a one-line statement in the Devegen footer and as trust labels on
+the Solutions page. Registrations prove each business exists; they do not by themselves
+change the Devegen ↔ DevGen Solutions relationship status.
+
 ### SEO per brand
 
 - Each brand has default meta tags, Open Graph and JSON-LD (`components/seo/SeoTags.jsx`).

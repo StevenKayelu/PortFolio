@@ -27,6 +27,7 @@ export default function Dashboard() {
     { label: "Waiting for approval", value: summary.pendingApprovalCount, to: "/admin/approvals", attention: summary.pendingApprovalCount > 0 },
     { label: "New messages", value: summary.newMessageCount, to: "/admin/messages", attention: summary.newMessageCount > 0 },
     { label: "Pending testimonials", value: summary.pendingTestimonialCount, to: "/admin/testimonials" },
+    ...(summary.expiringCredentialCount ? [{ label: "Registrations to renew", value: summary.expiringCredentialCount, to: "/admin/compliance", attention: true }] : []),
     { label: "Projects", value: summary.projectCount, to: "/admin/projects" },
     { label: "Published posts", value: summary.publishedPostCount, to: "/admin/blog" },
     { label: "Draft posts", value: summary.draftPostCount, to: "/admin/blog" },

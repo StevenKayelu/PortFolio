@@ -8,7 +8,7 @@ import {
 import {
   FiGrid, FiFolder, FiEdit3, FiBriefcase, FiAward, FiUsers, FiImage,
   FiMail, FiMenu, FiLogOut, FiExternalLink, FiClock, FiSliders, FiHelpCircle, FiInbox, FiLayers, FiPackage,
-  FiCheckSquare, FiSearch, FiShield, FiKey, FiType,
+  FiCheckSquare, FiSearch, FiShield, FiKey, FiType, FiFileText,
 } from "react-icons/fi";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AdminBrandProvider, useAdminBrand } from "../../context/AdminBrandContext";
@@ -35,6 +35,7 @@ const NAV_ITEMS = [
   { label: "Achievements", to: "/admin/achievements", icon: FiAward },
   { label: "FAQ", to: "/admin/faq", icon: FiHelpCircle },
   { label: "Messages", to: "/admin/messages", icon: FiMail },
+  { label: "Legal & compliance", to: "/admin/compliance", icon: FiFileText, superOnly: true },
   { label: "Users & access", to: "/admin/users", icon: FiShield, superOnly: true },
 ];
 

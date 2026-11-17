@@ -22,7 +22,7 @@ const ROUTES = {
   ],
   devegen: [
     ["/", "1.0"], ["/ventures", "0.8"], ["/solutions", "0.9"], ["/solutions/services", "0.8"],
-    ["/solutions/work", "0.7"], ["/contact", "0.6"], ["/faq", "0.4"], ["/privacy-policy", "0.3"],
+    ["/solutions/work", "0.7"], ["/compliance", "0.5"], ["/contact", "0.6"], ["/faq", "0.4"], ["/privacy-policy", "0.3"],
   ],
 };
 

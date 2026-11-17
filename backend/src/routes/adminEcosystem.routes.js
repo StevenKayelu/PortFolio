@@ -6,13 +6,14 @@ import {
   brandCreateSchema, brandUpdateSchema, organizationSchema, relationshipSchema, ventureSchema, ventureUpdateSchema,
   productSchema, productUpdateSchema, brandRolesSchema, leadQuerySchema, leadUpdateSchema, leadNoteSchema, convertMessageSchema,
   userCreateSchema, userUpdateSchema, passwordResetSchema, revisionQuerySchema, reviewSchema, seoSchema, seoUpdateSchema,
-  inviteCreateSchema, certificateSchema, certificateUpdateSchema,
+  inviteCreateSchema, certificateSchema, certificateUpdateSchema, credentialSchema, credentialUpdateSchema,
 } from "../validation/schemas.js";
 import * as users from "../controllers/users.controller.js";
 import * as revisions from "../controllers/revision.controller.js";
 import * as seo from "../controllers/seo.controller.js";
 import * as invites from "../controllers/testimonialInvite.controller.js";
 import * as certs from "../controllers/certificate.controller.js";
+import * as compliance from "../controllers/compliance.controller.js";
 import { upload } from "../middleware/upload.middleware.js";
 import * as eco from "../controllers/ecosystem.controller.js";
 import * as leads from "../controllers/enquiry.controller.js";
@@ -29,7 +30,12 @@ router.get("/brands", eco.adminListBrands);
 router.post("/brands", requireSuperAdmin, validate(brandCreateSchema), eco.adminCreateBrand);
 router.patch("/brands/:id", validate(brandUpdateSchema), eco.adminUpdateBrand);
 
-router.get("/organizations", requireSuperAdmin, eco.adminListOrganizations);
+router.get("/organizations", requireSuperAdmin, compliance.adminListOrganizationsWithCredentials);
+router.post("/organizations/:orgId/credentials", requireSuperAdmin, validate(credentialSchema), compliance.adminCreateCredential);
+router.patch("/credentials/:id", requireSuperAdmin, validate(credentialUpdateSchema), compliance.adminUpdateCredential);
+router.delete("/credentials/:id", requireSuperAdmin, compliance.adminDeleteCredential);
+router.post("/credentials/:id/file", requireSuperAdmin, upload.single("original"), compliance.adminUploadCredentialDocument);
+router.get("/credentials/:id/original", requireSuperAdmin, compliance.adminDownloadCredentialDocument);
 router.post("/organizations", requireSuperAdmin, validate(organizationSchema), eco.adminSaveOrganization);
 router.patch("/organizations/:id", requireSuperAdmin, validate(organizationSchema.partial()), eco.adminSaveOrganization);
 

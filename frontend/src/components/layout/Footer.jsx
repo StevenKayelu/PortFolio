@@ -6,6 +6,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { useBrand } from "../../context/BrandContext";
 import { siteHref } from "../../brand/brands";
 import Wordmark from "../brand/Wordmark";
+import { useCompliance } from "../../brand/useCompliance";
 
 // Shown until /site-settings/identity responds (and if it fails).
 const FALLBACK_IDENTITY = {
@@ -30,6 +31,20 @@ function Label({ children }) {
     <Typography component="h2" sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary", letterSpacing: "0.12em", fontSize: "0.7rem", fontWeight: 500 }}>
       {children}
     </Typography>
+  );
+}
+
+/** e.g. "DevGen Solutions LTD · Private limited company registered with PACRA, No. 123" */
+function RegistrationLine() {
+  const { organizations } = useCompliance();
+  const lines = organizations.flatMap((o) => o.credentials
+    .filter((c) => c.type === "PACRA_REGISTRATION")
+    .map((c) => `${o.legalName} · ${o.registrationType ? `${o.registrationType} registered` : "Registered"} with PACRA, No. ${c.referenceNumber}`));
+  if (!lines.length) return null;
+  return (
+    <Box component={NavLink} to="/compliance" sx={{ display: "block", color: "text.secondary", fontSize: "0.8125rem", mt: 1, "&:hover": { color: "text.primary" } }}>
+      {lines.join(" · ")}
+    </Box>
   );
 }
 
@@ -129,6 +144,7 @@ export default function Footer() {
         >
           © {new Date().getFullYear()} {siteKey === "steven" ? identity.name : "Devegen Ventures"}. All rights reserved.
         </Typography>
+        {siteKey === "devegen" && <RegistrationLine />}
       </Container>
     </Box>
   );

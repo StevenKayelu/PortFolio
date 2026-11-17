@@ -739,10 +739,49 @@ model Organization {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  brands   Brand[]
-  ventures Venture[]
+  brands      Brand[]
+  ventures    Venture[]
+  credentials OrganizationCredential[]
 
   @@map("organizations")
+}
+
+enum CredentialType {
+  PACRA_REGISTRATION
+  ZICTA_LICENCE
+  DATA_PROTECTION_REGISTRATION
+  OTHER
+}
+
+/// A business registration, licence or compliance registration. Only the
+/// facts are ever public; the document itself is stored privately.
+model OrganizationCredential {
+  id               String         @id @default(cuid())
+  organizationId   String
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type             CredentialType
+  title            String // exactly as printed on the document
+  authority        String // issuing body, e.g. "Patents and Companies Registration Agency (PACRA)"
+  referenceNumber  String
+  issuedAt         DateTime
+  expiresAt        DateTime?
+  verificationUrl  String?
+  verificationNote String?        @db.Text // how a visitor can check it with the authority
+  isPublic         Boolean        @default(false) // opt-in per item
+  displayOrder     Int            @default(0)
+  // Private original document (admin download only)
+  originalKey      String?
+  originalName     String?
+  originalMime     String?
+  originalSize     Int?
+  reminder60SentAt DateTime?
+  reminder30SentAt DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([organizationId])
+  @@index([expiresAt])
+  @@map("organization_credentials")
 }
 
 model Brand {
