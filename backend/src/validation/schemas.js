@@ -71,23 +71,12 @@ export const contactSchema = z.object({
   message: trimmed(5000).min(1),
 });
 
-export const testimonialSubmitSchema = z.object({
-  clientName: trimmed(120).min(1),
-  clientRole: optionalText(120),
-  clientCompany: optionalText(120),
-  content: trimmed(2000).min(10),
-  rating: z.coerce.number().int().min(1).max(5).default(5),
-});
 
+// Admins approve or feature; they never edit a client's words.
 export const testimonialModerateSchema = z.object({
   isApproved: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
-  clientName: trimmed(120).min(1).optional(),
-  clientRole: optionalText(120),
-  clientCompany: optionalText(120),
-  content: trimmed(2000).min(1).optional(),
-  rating: z.coerce.number().int().min(1).max(5).optional(),
-});
+}).refine((v) => v.isApproved !== undefined || v.isFeatured !== undefined, "Nothing to update.");
 
 export const pageViewSchema = z.object({
   path: trimmed(191).min(1).regex(/^\//, "Path must start with /."),
@@ -284,3 +273,26 @@ export const siteSettingSchemas = {
   technologies: z.array(shortText(60)).max(80),
   timeline: z.array(z.object({ year: shortText(40), title: shortText(160), org: shortText(160) })).max(40),
 };
+
+// ------------------------------------------------------- testimonial invites
+
+export const RELATIONSHIPS = ["Client", "Employer", "Colleague", "Partner", "Collaborator"];
+
+export const inviteCreateSchema = z.object({
+  clientName: trimmed(120).min(1, "Enter the client's name."),
+  clientEmail: z.string().trim().email("Enter a valid email address.").max(191),
+  brandId: id,
+  projectId: optionalId,
+  expiresInDays: z.coerce.number().int().min(1).max(90).default(30),
+  sendEmail: z.boolean().default(false),
+});
+
+export const inviteSubmitSchema = z.object({
+  clientRole: optionalText(120),
+  clientCompany: optionalText(160),
+  relationship: z.enum(RELATIONSHIPS),
+  content: trimmed(1500).min(20, "Write at least 20 characters."),
+  rating: z.coerce.number().int().min(1).max(5),
+  consentPublish: z.literal(true, { errorMap: () => ({ message: "Your consent is needed to publish the testimonial." }) }),
+  consentContact: z.boolean().default(false),
+});

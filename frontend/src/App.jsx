@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound/NotFound";
 import DevegenHome from "./pages/Devegen/DevegenHome";
 import Ventures from "./pages/Devegen/Ventures";
 import VentureDetail from "./pages/Devegen/VentureDetail";
+import TestimonialInvite from "./pages/Testimonial/TestimonialInvite";
 import SolutionsHome from "./pages/Solutions/SolutionsHome";
 
 // Admin, the TipTap editor and rich blog rendering are split out so
@@ -111,6 +112,7 @@ export default function App() {
       <Route element={<MainLayout />}>
         {siteKey === "devegen" ? DevegenRoutes() : StevenRoutes()}
         <Route path="/contact" element={<Contact />} />
+        <Route path="/testimonial/:token" element={<TestimonialInvite />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="*" element={<NotFound />} />

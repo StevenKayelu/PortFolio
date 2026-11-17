@@ -39,16 +39,17 @@ model User {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
-  refreshTokens     RefreshToken[]
-  blogPosts         BlogPost[]
-  auditLogs         AuditLog[]
-  projects          Project[]
-  comments          Comment[]
-  brandRoles        UserBrandRole[]
-  assignedLeads     Lead[]            @relation("LeadAssignee")
-  leadActivities    LeadActivity[]
-  authoredRevisions ContentRevision[] @relation("RevisionAuthor")
-  reviewedRevisions ContentRevision[] @relation("RevisionReviewer")
+  refreshTokens      RefreshToken[]
+  blogPosts          BlogPost[]
+  auditLogs          AuditLog[]
+  projects           Project[]
+  comments           Comment[]
+  brandRoles         UserBrandRole[]
+  assignedLeads      Lead[]              @relation("LeadAssignee")
+  leadActivities     LeadActivity[]
+  authoredRevisions  ContentRevision[]   @relation("RevisionAuthor")
+  testimonialInvites TestimonialInvite[] @relation("InviteCreator")
+  reviewedRevisions  ContentRevision[]   @relation("RevisionReviewer")
 
   @@index([email])
   @@map("users")
@@ -226,10 +227,12 @@ model Project {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  images       ProjectImage[]
-  technologies ProjectTechnology[]
-  contributors ProjectContributor[]
-  products     Product[]
+  images             ProjectImage[]
+  technologies       ProjectTechnology[]
+  contributors       ProjectContributor[]
+  products           Product[]
+  testimonials       Testimonial[]
+  testimonialInvites TestimonialInvite[]
 
   @@index([slug])
   @@index([categoryId])
@@ -512,7 +515,49 @@ model Testimonial {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // Verified, consented testimonials (invite links). Only rows with
+  // publication consent and no withdrawal are ever shown publicly.
+  verified         Boolean   @default(false) // came through a private invite link
+  clientEmail      String? // private: never returned by public endpoints
+  relationship     String? // e.g. "Client", "Employer", "Colleague"
+  consentPublishAt DateTime? // agreed to publish quote + name, role, organisation
+  consentContactAt DateTime? // agreed to be contacted about it at clientEmail
+  consentText      String?   @db.Text // exact wording they agreed to
+  withdrawnAt      DateTime?
+
+  brandId   String?
+  brand     Brand?             @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  inviteId  String?            @unique
+  invite    TestimonialInvite? @relation(fields: [inviteId], references: [id], onDelete: SetNull)
+
+  @@index([isApproved, withdrawnAt])
   @@map("testimonials")
+}
+
+/// A private, single-client link to leave (and later edit or withdraw) a testimonial.
+model TestimonialInvite {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique // sha256 of the link token; the token itself is never stored
+  clientName  String
+  clientEmail String
+  expiresAt   DateTime // for the first submission; a submitted link stays valid for withdrawal
+  submittedAt DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  brandId     String
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   User?    @relation("InviteCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  testimonial Testimonial?
+
+  @@index([brandId])
+  @@map("testimonial_invites")
 }
 
 // ---------------------------------------------------------
@@ -701,13 +746,15 @@ model Brand {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
-  childRelations  BrandRelationship[] @relation("ParentBrand")
-  parentRelations BrandRelationship[] @relation("ChildBrand")
-  ventures        Venture[]
-  projects        Project[]
-  userRoles       UserBrandRole[]
-  leads           Lead[]
-  seoMeta         SeoMeta[]
+  childRelations     BrandRelationship[] @relation("ParentBrand")
+  parentRelations    BrandRelationship[] @relation("ChildBrand")
+  ventures           Venture[]
+  projects           Project[]
+  userRoles          UserBrandRole[]
+  leads              Lead[]
+  seoMeta            SeoMeta[]
+  testimonials       Testimonial[]
+  testimonialInvites TestimonialInvite[]
 
   @@map("brands")
 }

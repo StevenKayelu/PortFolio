@@ -290,7 +290,8 @@ test("generic CRUD endpoints ignore id and timestamp fields", async () => {
 test("legacy endpoints validate input", async () => {
   assert.equal((await api("POST", "/contact", { body: { name: "A", email: "bad", message: "hi" } })).status, 400);
   assert.equal((await api("POST", "/admin/track", { body: { path: "x".repeat(500) } })).status, 400);
-  assert.equal((await api("POST", "/testimonials", { body: { clientName: "", content: "short" } })).status, 400);
+  // There is no open testimonial submission any more; only invite links.
+  assert.equal((await api("POST", "/testimonials", { body: { clientName: "Anyone", content: "Unverified quote" } })).status, 404);
 });
 
 test("unique-constraint conflicts return 409 instead of 500", async () => {

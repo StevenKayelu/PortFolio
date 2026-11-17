@@ -1,6 +1,6 @@
-import { Box, Container, Typography, Grid, Card, CardContent, Avatar, Stack, Skeleton, useTheme } from "@mui/material";
-import { FiStar } from "react-icons/fi";
+import { Box, Container, Typography, Grid, Skeleton, useTheme } from "@mui/material";
 import Reveal from "../../../components/common/Reveal";
+import TestimonialCard from "../../../components/common/TestimonialCard";
 import apiClient from "../../../services/apiClient";
 import { useFetch } from "../../../hooks/useFetch";
 
@@ -49,44 +49,7 @@ export default function Testimonials() {
             (testimonials || []).map((t, idx) => (
               <Grid item xs={12} md={6} key={t.id}>
                 <Reveal delay={idx * 0.1} style={{ height: "100%" }}>
-                  <Card elevation={0} sx={{ height: "100%" }}>
-                    <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-                      <Stack direction="row" spacing={0.5} sx={{ mb: 2 }}>
-                        {Array.from({ length: t.rating }).map((_, i) => (
-                          <FiStar key={i} size={14} color={theme.palette.primary.main} fill={theme.palette.primary.main} />
-                        ))}
-                      </Stack>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          mb: 3,
-                          fontStyle: "italic",
-                          fontSize: { xs: "0.9375rem", sm: "1rem" },
-                          lineHeight: 1.6,
-                          overflowWrap: "break-word",
-                        }}
-                      >
-                        "{t.content}"
-                      </Typography>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Avatar sx={{ bgcolor: "primary.main", fontFamily: theme.custom.fontMono, flexShrink: 0 }}>
-                          {t.clientName.charAt(0)}
-                        </Avatar>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                            {t.clientName}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: "block", overflowWrap: "break-word" }}
-                          >
-                            {t.clientRole} · {t.clientCompany}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </CardContent>
-                  </Card>
+                  <TestimonialCard t={t} />
                 </Reveal>
               </Grid>
             ))}

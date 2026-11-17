@@ -6,10 +6,12 @@ import {
   brandCreateSchema, brandUpdateSchema, organizationSchema, relationshipSchema, ventureSchema, ventureUpdateSchema,
   productSchema, productUpdateSchema, brandRolesSchema, leadQuerySchema, leadUpdateSchema, leadNoteSchema, convertMessageSchema,
   userCreateSchema, userUpdateSchema, passwordResetSchema, revisionQuerySchema, reviewSchema, seoSchema, seoUpdateSchema,
+  inviteCreateSchema,
 } from "../validation/schemas.js";
 import * as users from "../controllers/users.controller.js";
 import * as revisions from "../controllers/revision.controller.js";
 import * as seo from "../controllers/seo.controller.js";
+import * as invites from "../controllers/testimonialInvite.controller.js";
 import * as eco from "../controllers/ecosystem.controller.js";
 import * as leads from "../controllers/enquiry.controller.js";
 
@@ -60,6 +62,10 @@ router.get("/revisions", validate(revisionQuerySchema, "query"), revisions.listR
 router.post("/revisions/:id/approve", validate(reviewSchema), revisions.approveRevision);
 router.post("/revisions/:id/reject", validate(reviewSchema), revisions.rejectRevision);
 router.post("/revisions/:id/restore", revisions.restoreRevision);
+
+router.get("/testimonial-invites", invites.listInvites);
+router.post("/testimonial-invites", validate(inviteCreateSchema), invites.createInvite);
+router.post("/testimonial-invites/:id/revoke", invites.revokeInvite);
 
 router.get("/seo", seo.adminListSeo);
 router.post("/seo", validate(seoSchema), seo.adminSaveSeo);

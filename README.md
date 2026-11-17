@@ -187,6 +187,23 @@ devegenventures.com (DevGen Solutions redirects to `/solutions`) and a sitemap e
 and a page-view chart. Page views are recorded on the production domains only, as path
 and referrer; no IP address is stored.
 
+### Client testimonials (invite-only, with consent)
+
+There is no open "leave a testimonial" form. In **Admin → Testimonials → Invites**, staff
+create a private link for one client (name, email, brand, optional project) and send it
+themselves or have the API email it. Through that link only, the client:
+
+- writes their testimonial (role, organisation, how they worked together, quote, rating);
+- must tick consent to publish their quote with their name, role and organisation, and may
+  separately consent to their email being kept for contact;
+- can later edit it (which needs re-approval) or withdraw it, which unpublishes it and
+  deletes their words and details.
+
+The exact consent wording and time are stored with each testimonial. The public API
+returns a testimonial only if it is approved, has recorded consent and is not withdrawn,
+so older testimonials without consent are never shown. Admins can publish, feature or
+unpublish, but cannot edit a client's words. Link tokens are stored only as hashes.
+
 ### SEO per brand
 
 - Each brand has default meta tags, Open Graph and JSON-LD (`components/seo/SeoTags.jsx`).

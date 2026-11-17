@@ -7,6 +7,7 @@ import Band from "../../components/brand/Band";
 import HeadlineReveal from "../../components/common/HeadlineReveal";
 import SectionHeading from "../../components/common/SectionHeading";
 import Reveal from "../../components/common/Reveal";
+import TestimonialCard from "../../components/common/TestimonialCard";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 import { siteHref } from "../../brand/brands";
@@ -55,6 +56,7 @@ export default function SolutionsHome() {
   const band = theme.custom.band;
   const reduceMotion = useReducedMotion();
   const { data: services, loading: loadingServices, error: servicesError } = useFetch(() => apiClient.get("/services").then((r) => r.data), []);
+  const { data: testimonials } = useFetch(() => apiClient.get("/testimonials", { params: { brand: "solutions" } }).then((r) => r.data), []);
   const { data: projects } = useFetch(() => apiClient.get("/projects", { params: { featuredOnly: "true", pageSize: 3 } }).then((r) => r.data), []);
   const fade = (delay) => ({
     initial: reduceMotion ? false : { opacity: 0, y: 10 },
@@ -209,6 +211,18 @@ export default function SolutionsHome() {
           Full portfolio on stevenkayelu.online
         </Button>
       </Container>
+
+      {/* CLIENT TESTIMONIALS: verified, consented; hidden until there are any */}
+      {testimonials?.length > 0 && (
+        <Container maxWidth="lg" component="section" aria-labelledby="ds-clients" sx={{ pb: { xs: 8, md: 12 }, px: { xs: 2, sm: 3 } }}>
+          <SectionHeading id="ds-clients" eyebrow="From our clients" title="In their words." lede="Every testimonial comes from a client we worked with and is published with their consent." />
+          <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" } }}>
+            {testimonials.slice(0, 4).map((t, i) => (
+              <Reveal key={t.id} delay={i * 0.07} style={{ height: "100%" }}><TestimonialCard t={t} projectBase="/solutions/work" /></Reveal>
+            ))}
+          </Box>
+        </Container>
+      )}
 
       {/* QUOTE CTA */}
       <Band grid aria-labelledby="ds-cta" sx={{ py: { xs: 7, md: 10 } }}>
