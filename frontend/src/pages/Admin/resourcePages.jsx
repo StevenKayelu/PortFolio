@@ -81,6 +81,29 @@ const STATUS_OPTIONS = [
 ];
 const statusChip = (r) => <Chip size="small" color={r.status === "PUBLISHED" ? "success" : "default"} label={humanize(r.status)} />;
 
+export const ManageBrands = () => (
+  <ManageResource
+    title="Brands"
+    endpoint="/admin/brands"
+    canDelete={false}
+    canCreate={false}
+    intro="The name, tagline and description each site shows in its footer and to search engines and link previews. Keep the description under 200 characters."
+    columns={[
+      { key: "name", label: "Brand" },
+      { key: "logoUrl", label: "Logo", render: (b) => thumbnail(b.logoUrl) },
+      { key: "tagline", label: "Tagline", render: (b) => b.tagline || "—" },
+      { key: "status", label: "Status", render: statusChip },
+    ]}
+    fields={[
+      { name: "name", label: "Name", type: "text", required: true },
+      { name: "tagline", label: "Tagline (footer)", type: "text" },
+      { name: "description", label: "Description (search engines and link previews, under 200 characters)", type: "textarea" },
+      { name: "logoUrl", label: "Brand logo (optional)", type: "image", ratio: "1 / 1", fit: "contain",
+        helperText: "Square PNG with a transparent background, at least 512 × 512 pixels. The DevGen Ventures header uses the umbrella logo from Site content → Logo & favicon." },
+    ]}
+  />
+);
+
 export const ManageVentures = () => (
   <ManageResource
     title="Ventures"

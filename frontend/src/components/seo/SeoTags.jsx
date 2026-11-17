@@ -4,6 +4,7 @@ import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 import { useBrand } from "../../context/BrandContext";
 import { SITES, isProductionHost } from "../../brand/brands";
+import { usePublicBrands } from "../../brand/usePublicBrands";
 
 /**
  * Brand-level SEO (report §03). Defaults below apply to every page of a
@@ -18,9 +19,11 @@ import { SITES, isProductionHost } from "../../brand/brands";
 const DEFAULTS = {
   steven: {
     description: "Steven Kayelu is a full-stack software engineer in Kitwe, Zambia, and the founder of DevGen Ventures.",
-    jsonLd: (url) => ({
-      "@context": "https://schema.org", "@type": "Person", name: "Steven Kayelu", url,
-      jobTitle: "Software engineer", sameAs: ["https://github.com/StevenKayelu"],
+    jsonLd: (url, identity) => ({
+      "@context": "https://schema.org", "@type": "Person", name: identity?.name || "Steven Kayelu", url,
+      jobTitle: identity?.role || "Software engineer",
+      ...(identity?.location ? { address: { "@type": "PostalAddress", addressLocality: identity.location, addressCountry: "ZM" } } : {}),
+      sameAs: [identity?.github, identity?.linkedin, identity?.facebook].filter(Boolean),
     }),
   },
   devegen: {
@@ -47,20 +50,29 @@ export function SeoDefaults() {
   const { pathname } = useLocation();
   const d = DEFAULTS[brandKey];
   const url = canonicalFor(siteKey, pathname);
+  const { data: identity } = useFetch(() => apiClient.get("/site-settings/identity").then((r) => r.data).catch(() => null), []);
+  const brands = usePublicBrands();
+  // A short description saved on the brand (Admin → Brands) replaces the built-in one.
+  const saved = brands?.[brandKey]?.description;
+  const description = saved && saved.length <= 200 ? saved : d.description;
+  const ogImage = `https://${SITES[siteKey].domain}/og/${brandKey}.png`;
   const brandRoot = brandKey === "solutions" ? `https://${SITES.devegen.domain}/solutions` : `https://${SITES[siteKey].domain}`;
 
   return (
     <Helmet>
-      <meta name="description" content={d.description} />
+      <meta name="description" content={description} />
       <link rel="canonical" href={url} />
       <meta property="og:site_name" content={brandName} />
       <meta property="og:type" content={brandKey === "steven" ? "profile" : "website"} />
       <meta property="og:url" content={url} />
-      <meta property="og:description" content={d.description} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta name="twitter:card" content="summary_large_image" />
       {/* Preview and staging hosts must never compete with the real domains. */}
       {!isProductionHost() && <meta name="robots" content="noindex, nofollow" />}
-      <script type="application/ld+json">{JSON.stringify(d.jsonLd(brandRoot))}</script>
+      <script type="application/ld+json">{JSON.stringify(d.jsonLd(brandRoot, identity))}</script>
     </Helmet>
   );
 }

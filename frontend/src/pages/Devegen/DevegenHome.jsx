@@ -13,11 +13,30 @@ import { useFetch } from "../../hooks/useFetch";
 import { siteHref } from "../../brand/brands";
 
 // Hero index: a summary of the directory, not a live record list.
+// Shown only if the live ecosystem data can't be loaded.
 const INDEX = [
   { id: "ds", name: "DevGen Solutions LTD", detail: "Technology services brand", label: "Operating" },
   { id: "products", name: "Products", detail: "Listed after ownership review", label: "Under review" },
   { id: "fv", name: "Future ventures", detail: "Configurable venture profiles", label: "Open" },
 ];
+
+const STAGE_LABEL = { IDEA: "Idea", BUILDING: "Building", OPERATING: "Operating", PAUSED: "Paused" };
+
+/** The hero index from published ventures and products (Admin → Ventures / Products). */
+function liveIndex(data) {
+  if (!data) return INDEX;
+  const ventures = data.ventures.slice(0, 4).map((v) => ({
+    id: v.slug, name: v.name,
+    detail: v.verificationStatus === "VERIFIED" ? "Relationship verified" : "Relationship being verified",
+    label: STAGE_LABEL[v.stage] || v.stage,
+  }));
+  const products = data.ventures.reduce((n, v) => n + v.products.length, 0) + (data.unassignedProducts?.length || 0);
+  return [
+    ...ventures,
+    { id: "products", name: "Products", detail: products ? "Published after ownership review" : "Listed after ownership review", label: products ? `${products} listed` : "Under review" },
+    { id: "fv", name: "Future ventures", detail: "Added after ownership and legal checks", label: "Open" },
+  ];
+}
 
 /** Faint static constellation behind the hero; decorative only. */
 function Constellation() {
@@ -55,6 +74,7 @@ export default function DevegenHome() {
   const theme = useTheme();
   const band = theme.custom.band;
   const reduceMotion = useReducedMotion();
+  const { data: ecosystem } = useFetch(() => apiClient.get("/ecosystem").then((r) => r.data).catch(() => null), []);
   const { data: services } = useFetch(() => apiClient.get("/services").then((r) => r.data), []);
   const { data: identity } = useFetch(() => apiClient.get("/site-settings/identity").then((r) => r.data), []);
   const { data: about } = useFetch(() => apiClient.get("/site-settings/about").then((r) => r.data), []);
@@ -104,7 +124,7 @@ export default function DevegenHome() {
 
             <motion.div {...fade(0.35)} style={{ minWidth: 0 }}>
               <Box component="ol" aria-label="Venture index" sx={{ listStyle: "none", m: 0, p: 0, borderTop: `1px solid ${band.line}` }}>
-                {INDEX.map((n) => (
+                {liveIndex(ecosystem).map((n) => (
                   <Box component="li" key={n.id} sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 2, py: 1.75, borderBottom: `1px solid ${band.line}` }}>
                     <span>
                       <Box component="b" sx={{ display: "block", fontWeight: 600 }}>{n.name}</Box>

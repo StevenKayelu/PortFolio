@@ -143,7 +143,7 @@ function FieldInput({ field, value, onChange, selectOptions }) {
  * `fields` array describing the create/edit form, rather than writing
  * a bespoke form for each.
  */
-export default function ManageResource({ title, endpoint, listQuery, brandScoped = false, columns, fields = [], selectOptionsEndpoints = {}, canDelete = true }) {
+export default function ManageResource({ title, endpoint, listQuery, brandScoped = false, columns, fields = [], selectOptionsEndpoints = {}, canDelete = true, canCreate = true, intro }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { brandKey } = useAdminBrand();
@@ -260,13 +260,14 @@ export default function ManageResource({ title, endpoint, listQuery, brandScoped
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1.5} sx={{ mb: 3 }}>
         {title && <Typography variant="h2" sx={{ fontSize: { xs: "1.6rem", md: undefined }, minWidth: 0 }}>{title}</Typography>}
-        {fields.length > 0 && (
+        {fields.length > 0 && canCreate && (
           <Button variant="contained" startIcon={<FiPlus />} onClick={openCreate} sx={{ ml: "auto" }}>
             Add new
           </Button>
         )}
       </Stack>
 
+      {intro && <Typography color="text.secondary" sx={{ mt: -2, mb: 3, maxWidth: "70ch" }}>{intro}</Typography>}
       {loading && <CircularProgress size={24} />}
       {error && <Alert severity="warning" onClose={() => { setError(""); load(); }} sx={{ mb: 2 }}>{error}</Alert>}
       {notice && <Alert severity="info" onClose={() => setNotice("")} sx={{ mb: 2 }}>{notice} It will appear here once a brand admin approves it.</Alert>}

@@ -30,8 +30,38 @@
       "destination": "https://api.stevenkayelu.online/robots.txt?site=steven"
     },
     {
+      "source": "/solutions",
+      "has": [
+        {
+          "type": "host",
+          "value": "(www\\.)?devgenventures\\.com"
+        }
+      ],
+      "destination": "/solutions.html"
+    },
+    {
+      "source": "/solutions/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(www\\.)?devgenventures\\.com"
+        }
+      ],
+      "destination": "/solutions.html"
+    },
+    {
       "source": "/((?!assets/).*)",
-      "destination": "/index.html"
+      "has": [
+        {
+          "type": "host",
+          "value": "(www\\.)?devgenventures\\.com"
+        }
+      ],
+      "destination": "/devgen.html"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/steven.html"
     }
   ],
   "headers": [

@@ -49,6 +49,7 @@ const ManageGallery = resource("ManageGallery");
 const ManageAchievements = resource("ManageAchievements");
 const ManageFaq = resource("ManageFaq");
 const ManageVentures = resource("ManageVentures");
+const ManageBrands = resource("ManageBrands");
 const ManageProducts = resource("ManageProducts");
 const ManageLeads = lazy(() => import("./pages/Admin/ManageLeads"));
 const ManageApprovals = lazy(() => import("./pages/Admin/ManageApprovals"));
@@ -134,6 +135,7 @@ export default function App() {
           <Route path="account" element={<Account />} />
           <Route path="content" element={<ManageSiteContent />} />
           <Route path="compliance" element={<ManageCompliance />} />
+          <Route path="brands" element={<ManageBrands />} />
           <Route path="ventures" element={<ManageVentures />} />
           <Route path="products" element={<ManageProducts />} />
           <Route path="projects" element={<ManageProjects />} />

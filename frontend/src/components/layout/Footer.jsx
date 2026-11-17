@@ -1,5 +1,5 @@
 import { Box, Container, Grid, Stack, Typography, IconButton, useTheme } from "@mui/material";
-import { FiGithub, FiFacebook, FiMail, FiPhone, FiArrowUpRight } from "react-icons/fi";
+import { FiGithub, FiFacebook, FiLinkedin, FiMail, FiPhone, FiArrowUpRight } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
@@ -7,23 +7,11 @@ import { useBrand } from "../../context/BrandContext";
 import { siteHref } from "../../brand/brands";
 import Wordmark from "../brand/Wordmark";
 import { useCompliance } from "../../brand/useCompliance";
+import { usePublicBrands } from "../../brand/usePublicBrands";
 
-// Shown until /site-settings/identity responds (and if it fails).
-const FALLBACK_IDENTITY = {
-  name: "Steven Kayelu",
-  tagline: "I design and build reliable, user-focused digital products for web and mobile.",
-  location: "Kitwe, Copperbelt, Zambia",
-  email: "stevenkayelu1@gmail.com",
-  phone: "+260 964 626 286",
-  github: "https://github.com/StevenKayelu",
-  facebook: "https://www.facebook.com/profile.php?id=61592826819870",
-};
-
-const BRAND_LINE = {
-  steven: null,
-  devegen: "Building ideas into meaningful ventures.",
-  solutions: "Business systems, web and mobile applications, and IT support.",
-};
+// Contact details and links come only from Admin → Site content, so a
+// detail removed there disappears here too. Names are the only fallback.
+const FALLBACK_NAME = { steven: "Steven Kayelu", devegen: "DevGen Ventures", solutions: "DevGen Solutions LTD" };
 
 function Label({ children }) {
   const theme = useTheme();
@@ -52,10 +40,13 @@ export default function Footer() {
   const theme = useTheme();
   const { siteKey, brandKey, footer } = useBrand();
   const { data } = useFetch(() => apiClient.get("/site-settings/identity").then((r) => r.data), []);
-  const identity = { ...FALLBACK_IDENTITY, ...(data || {}) };
+  const identity = data || {};
+  const brands = usePublicBrands();
+  const brandLine = brandKey === "steven" ? identity.tagline : brands?.[brandKey]?.tagline;
 
   const socials = [
     { icon: FiGithub, href: identity.github, label: "GitHub", external: true },
+    { icon: FiLinkedin, href: identity.linkedin, label: "LinkedIn", external: true },
     { icon: FiFacebook, href: identity.facebook, label: "Facebook", external: true },
     { icon: FiMail, href: identity.email && `mailto:${identity.email}`, label: "Email" },
     { icon: FiPhone, href: identity.phone && `tel:${identity.phone.replace(/\s/g, "")}`, label: "Phone" },
@@ -74,7 +65,7 @@ export default function Footer() {
           <Grid item xs={12} md={4}>
             <Wordmark brandKey={brandKey} />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2, maxWidth: 340 }}>
-              {BRAND_LINE[brandKey] ?? identity.tagline}
+              {brandLine}
             </Typography>
             {siteKey === "steven" && identity.location && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontFamily: theme.custom.fontMono, fontSize: "0.78rem" }}>
@@ -142,7 +133,7 @@ export default function Footer() {
           color="text.secondary"
           sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: "divider", fontSize: "0.8125rem" }}
         >
-          © {new Date().getFullYear()} {siteKey === "steven" ? identity.name : "DevGen Ventures"}. All rights reserved.
+          © {new Date().getFullYear()} {siteKey === "steven" ? identity.name || FALLBACK_NAME.steven : brands?.devegen?.name || FALLBACK_NAME.devegen}. All rights reserved.
         </Typography>
         {siteKey === "devegen" && <RegistrationLine />}
       </Container>
