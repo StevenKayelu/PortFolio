@@ -27,7 +27,8 @@ fail() {
 trap 'fail "unexpected error on line $LINENO"' ERR
 trap cleanup EXIT
 
-NAME=$(docker exec devegen-api node scripts/offsite-backup.js list </dev/null | head -1 | awk '{print $1}')
+# awk reads the whole list (head -1 would close the pipe early, which strict mode treats as an error).
+NAME=$(docker exec devegen-api node scripts/offsite-backup.js list </dev/null | awk 'NR == 1 {print $1}')
 [ -n "$NAME" ] || fail "no off-server backup found"
 docker exec devegen-api node scripts/offsite-backup.js download "$NAME" </dev/null > "$WORK/$NAME" || fail "download of $NAME failed"
 log "downloaded $NAME from R2 ($(du -h "$WORK/$NAME" | cut -f1))"
