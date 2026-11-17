@@ -81,6 +81,12 @@ export const testimonialModerateSchema = z.object({
 export const pageViewSchema = z.object({
   path: trimmed(191).min(1).regex(/^\//, "Path must start with /."),
   referrer: optionalText(191),
+  site: z.enum(["steven", "devegen"]).optional(),
+});
+
+export const analyticsQuerySchema = z.object({
+  days: z.coerce.number().int().refine((d) => [7, 30, 90, 365].includes(d), "Choose 7, 30, 90 or 365 days.").default(30),
+  site: z.enum(["all", "steven", "devegen"]).default("all"),
 });
 
 // ---------------------------------------------------------------- ecosystem

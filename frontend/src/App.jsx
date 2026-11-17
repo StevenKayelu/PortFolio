@@ -36,6 +36,7 @@ const ProtectedRoute = lazy(() => import("./pages/Admin/ProtectedRoute"));
 const Dashboard = lazy(() => import("./pages/Admin/Dashboard"));
 const BlogEditor = lazy(() => import("./pages/Admin/BlogEditor"));
 const ManageMessages = lazy(() => import("./pages/Admin/ManageMessages"));
+const Analytics = lazy(() => import("./pages/Admin/Analytics"));
 const ManageTestimonials = lazy(() => import("./pages/Admin/ManageTestimonials"));
 const resource = (name) => lazy(() => import("./pages/Admin/resourcePages").then((m) => ({ default: m[name] })));
 const ManageProjects = resource("ManageProjects");
@@ -148,6 +149,7 @@ export default function App() {
           <Route path="achievements" element={<ManageAchievements />} />
           <Route path="faq" element={<ManageFaq />} />
           <Route path="messages" element={<ManageMessages />} />
+          <Route path="analytics" element={<Analytics />} />
         </Route>
       </Route>
     </Routes>

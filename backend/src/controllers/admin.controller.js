@@ -1,3 +1,5 @@
+import crypto from "crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
 import { SCOPES, brandFilter } from "../services/brandAccess.service.js";
 
@@ -78,13 +80,89 @@ export async function getPageViewSeries(req, res, next) {
   }
 }
 
+const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|headless|lighthouse|pingdom|uptime|monitor|curl|wget|python|node-fetch|axios/i;
+const OWN_HOSTS = /(^|\.)(stevenkayelu\.online|devgenventures\.com)$/i;
+
+export function deviceType(ua = "") {
+  if (/ipad|tablet/i.test(ua)) return "tablet";
+  if (/mobi|android|iphone/i.test(ua)) return "mobile";
+  return "desktop";
+}
+
+/** "https://www.google.com/search?q=…" → "google.com"; our own sites and junk → null. */
+export function referrerHost(referrer) {
+  try {
+    const host = new URL(referrer).hostname.replace(/^www\./, "").toLowerCase();
+    return host && !OWN_HOSTS.test(host) ? host.slice(0, 120) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Lusaka calendar day, so the visitor code rotates at local midnight. */
+const lusakaDay = () => new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 10);
+
 export async function recordPageView(req, res, next) {
   try {
-    const { path, referrer } = req.body;
+    const ua = req.headers["user-agent"] || "";
+    if (BOT_UA.test(ua) || req.body.path.startsWith("/admin")) return res.status(204).end();
+    const { path, referrer, site } = req.body;
+    const salt = process.env.LEAD_IP_SALT || process.env.JWT_ACCESS_SECRET || "";
+    const visitorHash = crypto.createHash("sha256").update(`${salt}|${lusakaDay()}|${req.ip}|${ua}`).digest("hex").slice(0, 32);
     await prisma.pageView.create({
-      data: { path, referrer, device: req.headers["user-agent"]?.slice(0, 255) },
+      data: { site: site || null, path, referrer: referrerHost(referrer), device: deviceType(ua), visitorHash },
     });
+    // Keep about 13 months; pruned now and then rather than on a schedule.
+    if (Math.random() < 0.01) {
+      prisma.pageView.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 400 * 86400000) } } }).catch(() => {});
+    }
     res.status(201).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Visits report for the admin Analytics page: totals with the previous
+ * period for comparison, daily counts per site (Lusaka days), top pages,
+ * referring sites and device types.
+ */
+export async function getAnalytics(req, res, next) {
+  try {
+    const { days, site } = req.validQuery;
+    const now = new Date();
+    const since = new Date(now.getTime() - days * 86400000);
+    const before = new Date(since.getTime() - days * 86400000);
+    const siteSql = site === "all" ? Prisma.empty : Prisma.sql`AND "site" = ${site}`;
+
+    const totals = (from, to) => prisma.$queryRaw`
+      SELECT COUNT(*)::int AS views, COUNT(DISTINCT "visitorHash")::int AS visitors
+      FROM "page_views" WHERE "createdAt" >= ${from} AND "createdAt" < ${to} ${siteSql}`;
+
+    const [[current], [previous], daily, pages, referrers, devices] = await Promise.all([
+      totals(since, now),
+      totals(before, since),
+      prisma.$queryRaw`
+        SELECT to_char(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Africa/Lusaka', 'YYYY-MM-DD') AS day,
+               COALESCE("site", 'unknown') AS site, COUNT(*)::int AS views, COUNT(DISTINCT "visitorHash")::int AS visitors
+        FROM "page_views" WHERE "createdAt" >= ${since} ${siteSql}
+        GROUP BY 1, 2 ORDER BY 1`,
+      prisma.$queryRaw`
+        SELECT COALESCE("site", 'unknown') AS site, "path", COUNT(*)::int AS views, COUNT(DISTINCT "visitorHash")::int AS visitors
+        FROM "page_views" WHERE "createdAt" >= ${since} ${siteSql}
+        GROUP BY 1, 2 ORDER BY views DESC LIMIT 15`,
+      prisma.$queryRaw`
+        SELECT "referrer" AS host, COUNT(*)::int AS views
+        FROM "page_views" WHERE "createdAt" >= ${since} AND "referrer" IS NOT NULL ${siteSql}
+        GROUP BY 1 ORDER BY views DESC LIMIT 10`,
+      prisma.$queryRaw`
+        SELECT COALESCE("device", 'unknown') AS device, COUNT(*)::int AS views
+        FROM "page_views" WHERE "createdAt" >= ${since} ${siteSql}
+        GROUP BY 1 ORDER BY views DESC`,
+    ]);
+
+    res.set("Cache-Control", "no-store");
+    res.json({ days, site, current, previous, daily, pages, referrers, devices });
   } catch (err) {
     next(err);
   }

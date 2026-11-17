@@ -1,9 +1,9 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { validate } from "../middleware/validate.middleware.js";
-import { pageViewSchema } from "../validation/schemas.js";
+import { pageViewSchema, analyticsQuerySchema } from "../validation/schemas.js";
 import { requireAuth, requireRole } from "../middleware/auth.middleware.js";
-import { getDashboardSummary, getInboxCounts, getPageViewSeries, recordPageView } from "../controllers/admin.controller.js";
+import { getAnalytics, getDashboardSummary, getInboxCounts, getPageViewSeries, recordPageView } from "../controllers/admin.controller.js";
 import { loadBrandAccess } from "../services/brandAccess.service.js";
 import { upload } from "../middleware/upload.middleware.js";
 import { handleUpload } from "../services/upload.service.js";
@@ -25,6 +25,7 @@ router.post("/uploads/image", requireAuth, requireRole("SUPER_ADMIN", "ADMIN", "
     next(err);
   }
 });
+router.get("/analytics", requireAuth, requireRole("SUPER_ADMIN", "ADMIN"), validate(analyticsQuerySchema, "query"), getAnalytics);
 router.get("/inbox-counts", requireAuth, requireRole("SUPER_ADMIN", "ADMIN", "EDITOR"), loadBrandAccess, getInboxCounts);
 router.get("/page-views", requireAuth, requireRole("SUPER_ADMIN", "ADMIN", "EDITOR"), getPageViewSeries);
 

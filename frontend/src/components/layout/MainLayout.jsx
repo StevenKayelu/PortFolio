@@ -49,11 +49,12 @@ function BackToTopFab() {
  */
 function usePageViewTracking() {
   const { pathname } = useLocation();
+  const { siteKey } = useBrand();
   useEffect(() => {
     if (!isProductionHost()) return;
     const referrer = document.referrer && !document.referrer.startsWith(window.location.origin) ? document.referrer.slice(0, 191) : undefined;
-    apiClient.post("/admin/track", { path: pathname.slice(0, 191), referrer }).catch(() => {});
-  }, [pathname]);
+    apiClient.post("/admin/track", { path: pathname.slice(0, 191), referrer, site: siteKey }).catch(() => {});
+  }, [pathname, siteKey]);
 }
 
 /** New pages start at the top; links with a #hash scroll to that section. */

@@ -3,7 +3,7 @@ import { Container, Typography, Stack, useTheme } from "@mui/material";
 import Reveal from "../../components/common/Reveal";
 
 const sections = [
-  { title: "Information we collect", body: "Contact form submissions (name, email, message) and basic, anonymized analytics (page views, referrer) — no third-party ad trackers." },
+  { title: "Information we collect", body: "Contact form submissions (name, email, message) and anonymous visit statistics: the page visited, the website that linked to it, and the device type (phone, tablet or computer). Visitors are counted with a code that changes every day; no cookies are used, IP addresses are not stored, and the statistics are deleted after about 13 months. No third-party ad trackers." },
   { title: "How it's used", body: "Solely to respond to inquiries and understand which content is useful. Never sold or shared with advertisers." },
   { title: "Cookies", body: "Only what's required for the theme preference (local storage, not a cookie) and, if enabled, essential session cookies for the admin dashboard." },
   { title: "Your rights", body: "You can request a copy or deletion of any data associated with your email by reaching out via the contact page." },

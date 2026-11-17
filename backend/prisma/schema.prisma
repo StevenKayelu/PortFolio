@@ -659,15 +659,21 @@ model Faq {
 // ---------------------------------------------------------
 
 model PageView {
-  id        String   @id @default(cuid())
-  path      String
-  referrer  String?
-  country   String?
-  device    String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  site        String? // "steven" | "devegen" (null for views recorded before sites were tracked)
+  path        String
+  referrer    String? // the referring site's host only, e.g. "google.com"
+  country     String?
+  device      String? // "mobile" | "tablet" | "desktop"
+  // Daily-rotating anonymous visitor code: hash of a secret salt, the day,
+  // the IP and the browser. No cookie; the IP itself is never stored, and
+  // the same person can't be linked across days.
+  visitorHash String?
+  createdAt   DateTime @default(now())
 
   @@index([path])
   @@index([createdAt])
+  @@index([site, createdAt])
   @@map("page_views")
 }
 
