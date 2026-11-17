@@ -1,30 +1,27 @@
-# Add these two site blocks to MotoGo's production Caddyfile
-# (motogo repo: infrastructure/production/Caddyfile), then rebuild and
-# restart MotoGo's Caddy the way you normally deploy it. Caddy obtains
-# HTTPS certificates for both names automatically once DNS points here.
+# Devegen API: add this block to MotoGo's Caddyfile IN THE MOTOGO REPOSITORY
+# (infrastructure/production/Caddyfile), after the www.{$SITE_DOMAIN} block,
+# then release MotoGo the usual way. MotoGo's Caddy image is built from that
+# file, so an edit made only on the server would be lost at the next release.
 #
-# DNS (A records → the server's IPv4, AAAA → IPv6 if it has one):
-#   api.stevenkayelu.online
-#   api.devegenventures.com
+# Caddy gets HTTPS certificates for both names automatically once their DNS
+# A records point at the server. It uses MotoGo's existing (compress) snippet.
 
+# Devegen Ventures / Steven Kayelu API (separate project on this server:
+# github.com/StevenKayelu/PortFolio, deploy/). Reached on motolink_internal.
 api.stevenkayelu.online, api.devegenventures.com {
-	encode gzip zstd
-
-	# Uploads are at most 10 MB per file (two files for certificates).
+	import compress
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	# Certificate uploads: up to two files of 10 MB each.
 	request_body {
 		max_size 25MB
 	}
-
 	reverse_proxy devegen-api:5000 {
-		header_up X-Forwarded-Proto {scheme}
 		health_uri /api/v1/health
 		health_interval 30s
-	}
-
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options nosniff
-		Referrer-Policy strict-origin-when-cross-origin
-		-Server
 	}
 }

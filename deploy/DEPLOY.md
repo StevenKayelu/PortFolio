@@ -7,7 +7,8 @@ MotoGo's PostgreSQL, behind MotoGo's Caddy. The website itself stays on Vercel.
 ```
 Browser ──► stevenkayelu.online / devegenventures.com      (Vercel, static)
    └────► api.stevenkayelu.online / api.devegenventures.com (MotoGo's Caddy, HTTPS)
-               └──► devegen-api container (320 MB limit) ──► Postgres DB "devegen"
+               └──► devegen-api (320 MB limit; motolink_internal + motolink_public)
+                       └──► MotoGo's Postgres, database "devegen" (own login)
 ```
 
 Render and TiDB stay untouched as a fallback until step 11. In the commands
@@ -28,16 +29,12 @@ below, `motogo-vps` is the SSH alias for the server.
 
 ```bash
 ssh motogo-vps
-docker network ls | grep motolink              # expect motolink_default
-docker exec motolink-postgres-1 printenv POSTGRES_USER     # Postgres superuser name
-docker exec motolink-postgres-1 psql -U <that user> -d postgres -c \
-  "SELECT datname, pg_get_userbyid(datdba) AS owner FROM pg_database;"
+docker network ls | grep motolink    # motolink_internal and motolink_public
 free -m
 ```
 
-If the network isn't `motolink_default`, change `networks.motolink.name` in
-`deploy/docker-compose.yml`. MotoGo must connect as the **owner** of `motolink`
-(step 3 removes everyone else's default access).
+MotoGo's PostgreSQL superuser is `motolink` (its compose file's `POSTGRES_USER`),
+which also owns MotoGo's database. The commands below use it as `-U motolink`.
 
 ## 2. Get the code onto the server
 
@@ -52,7 +49,7 @@ cd /root/devegen && git checkout infra/postgres-vultr   # `main` once merged
 cd /root/devegen/deploy
 PW=$(openssl rand -hex 24); echo "Save this password: $PW"
 sed "s/CHANGE_ME/$PW/" postgres-setup.sql \
-  | docker exec -i motolink-postgres-1 psql -U <superuser> -d postgres -v ON_ERROR_STOP=1
+  | docker exec -i motolink-postgres-1 psql -U motolink -d postgres -v ON_ERROR_STOP=1
 ```
 
 Check MotoGo still works (open the app, or `docker logs --tail 20 motolink-backend-1`).
@@ -98,9 +95,16 @@ docker stats --no-stream                # devegen-api well under 320 MiB; MotoGo
 
 ## 8. HTTPS and DNS
 
-1. Add the block in `deploy/Caddyfile.devegen` to MotoGo's
-   `infrastructure/production/Caddyfile`, then rebuild and restart MotoGo's Caddy
-   your usual way.
+1. In the **MotoGo repository**, add the block from `deploy/Caddyfile.devegen` to
+   `infrastructure/production/Caddyfile` (after the `www.{$SITE_DOMAIN}` block),
+   commit it, and release MotoGo the usual way. Its Caddy image is built from that
+   file, so editing it only on the server would be undone by the next MotoGo release.
+   Once the release is on the server, rebuild and restart just Caddy:
+   ```bash
+   cd /root/motogo/app/infrastructure/production
+   docker compose build caddy && docker compose up -d caddy
+   ```
+   Caddy restarts in a second or two; MotoGo's apps reconnect on their own.
 2. DNS: `A` records for `api.stevenkayelu.online` and `api.devegenventures.com`
    pointing to the server (plus `AAAA` if it has IPv6).
 3. Test from your computer:
@@ -136,11 +140,11 @@ chmod +x /root/devegen/deploy/backup-devegen.sh
 Test a restore once (into a scratch database, never over the live one):
 
 ```bash
-docker exec motolink-postgres-1 createdb -U <superuser> restore_test
+docker exec motolink-postgres-1 createdb -U motolink restore_test
 gunzip -c /root/backups/devegen/$(ls -t /root/backups/devegen | head -1) \
-  | docker exec -i motolink-postgres-1 psql -U <superuser> -d restore_test -q
-docker exec motolink-postgres-1 psql -U <superuser> -d restore_test -c "SELECT count(*) FROM projects;"
-docker exec motolink-postgres-1 dropdb -U <superuser> restore_test
+  | docker exec -i motolink-postgres-1 psql -U motolink -d restore_test -q
+docker exec motolink-postgres-1 psql -U motolink -d restore_test -c "SELECT count(*) FROM projects;"
+docker exec motolink-postgres-1 dropdb -U motolink restore_test
 ```
 
 Optional off-server copies: install `rclone`, add a remote named `r2-private` for
