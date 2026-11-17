@@ -34,30 +34,6 @@
       "destination": "/index.html"
     }
   ],
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.stevenkayelu.online"
-        }
-      ],
-      "destination": "https://stevenkayelu.online/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.devgenventures.com"
-        }
-      ],
-      "destination": "https://devgenventures.com/:path*",
-      "permanent": true
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
