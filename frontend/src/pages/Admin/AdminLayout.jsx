@@ -8,7 +8,7 @@ import {
 import {
   FiGrid, FiFolder, FiEdit3, FiBriefcase, FiAward, FiUsers, FiImage,
   FiMail, FiMenu, FiLogOut, FiExternalLink, FiClock, FiSliders, FiHelpCircle, FiInbox, FiLayers, FiPackage,
-  FiCheckSquare, FiSearch, FiShield, FiKey,
+  FiCheckSquare, FiSearch, FiShield, FiKey, FiType,
 } from "react-icons/fi";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AdminBrandProvider, useAdminBrand } from "../../context/AdminBrandContext";
@@ -18,6 +18,7 @@ const DRAWER_WIDTH = 240;
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/admin", icon: FiGrid, end: true },
+  { label: "Site content", to: "/admin/content", icon: FiType, roles: ["SUPER_ADMIN", "ADMIN"] },
   { label: "Leads", to: "/admin/leads", icon: FiInbox },
   { label: "Ventures", to: "/admin/ventures", icon: FiLayers },
   { label: "Products", to: "/admin/products", icon: FiPackage },
@@ -90,7 +91,7 @@ function AdminShell() {
         </Stack>
       </Toolbar>
       <List sx={{ flex: 1, px: 1 }}>
-        {NAV_ITEMS.filter((item) => !item.superOnly || user?.role === "SUPER_ADMIN").map((item) => {
+        {NAV_ITEMS.filter((item) => (!item.superOnly || user?.role === "SUPER_ADMIN") && (!item.roles || item.roles.includes(user?.role))).map((item) => {
           const active = item.end ? location.pathname === item.to : location.pathname.startsWith(item.to);
           const Icon = item.icon;
           return (

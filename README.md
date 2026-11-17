@@ -69,6 +69,10 @@ there. The Hero/About/Stats/Timeline content currently has no dedicated admin UI
 
 ## Editing hero/about copy
 
+**Admin → Site content** edits the profile (including uploading Steven's photo), About,
+Stats, Tech stack and Timeline, with validation per section. The API route below still
+works for scripts.
+
 `SiteSetting` is a deliberate escape hatch — a JSON blob per key — for content that doesn't
 warrant its own relational table. Update it directly via the API (authenticated as admin):
 
@@ -176,6 +180,13 @@ skipped. The API never emails addresses typed into public forms.
 **Passwords.** Everyone can change their own password under **Account & password**
 (other sessions are signed out). Super admins can reset anyone's password.
 
+**Venture pages.** Every published venture gets a page at `/ventures/:slug` on
+devegenventures.com (DevGen Solutions redirects to `/solutions`) and a sitemap entry.
+
+**Dashboard.** Shows real counts only (new and open leads, pending approvals, messages…)
+and a page-view chart. Page views are recorded on the production domains only, as path
+and referrer; no IP address is stored.
+
 ### SEO per brand
 
 - Each brand has default meta tags, Open Graph and JSON-LD (`components/seo/SeoTags.jsx`).
@@ -222,9 +233,8 @@ Then update that user's `passwordHash` column directly (`npx prisma studio` is t
 
 ## Suggested next steps
 
-1. Add an admin UI for editing `SiteSetting` content (Hero/About/Stats/Timeline) instead of
-   curl/Postman — currently the only gap in "everything is admin-editable."
-2. Change the seeded admin password under **Account & password** before launch.
+1. Change the seeded admin password under **Account & password** before launch.
+2. Upload Steven's real photo under **Admin → Site content → Profile**.
 3. Republish the three seeded blog posts through the TipTap editor so they're rich content
    instead of the plain-text placeholder they were seeded with.
 4. Point `STORAGE_DRIVER=r2` at real Cloudflare R2 credentials before launch if you'd rather not

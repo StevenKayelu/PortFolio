@@ -273,6 +273,8 @@ test("project contributors are saved and replaced wholesale", async () => {
   assert.equal(res.body.contributors.length, 2);
   const bad = await api("PATCH", `/projects/${project.id}`, { token: tokens.super, body: { visibility: "SECRET" } });
   assert.equal(bad.status, 400);
+  const script = await api("PATCH", `/projects/${project.id}`, { token: tokens.super, body: { liveDemoUrl: "javascript:alert(document.cookie)" } });
+  assert.equal(script.status, 400, "script URLs rejected on project links");
 });
 
 test("generic CRUD endpoints ignore id and timestamp fields", async () => {

@@ -47,7 +47,9 @@ async function main() {
   };
 
   for (const [key, value] of Object.entries(settings)) {
-    await prisma.siteSetting.upsert({ where: { key }, update: { value }, create: { key, value } });
+    // Create-only: re-running the seed must never overwrite real content
+    // edited in the admin (it used to replace it with these samples).
+    await prisma.siteSetting.upsert({ where: { key }, update: {}, create: { key, value } });
   }
 
   // ---------- Skills ----------

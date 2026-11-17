@@ -6,6 +6,8 @@ import { useLocation, Outlet } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet-async";
 import { useBrand } from "../../context/BrandContext";
+import { isProductionHost } from "../../brand/brands";
+import apiClient from "../../services/apiClient";
 import { SeoDefaults, SeoOverrides } from "../seo/SeoTags";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -38,6 +40,19 @@ function BackToTopFab() {
   );
 }
 
+/**
+ * Counts a page view on the live domains only (path + referrer; the API
+ * stores no IP address). Feeds the admin dashboard chart.
+ */
+function usePageViewTracking() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (!isProductionHost()) return;
+    const referrer = document.referrer && !document.referrer.startsWith(window.location.origin) ? document.referrer.slice(0, 191) : undefined;
+    apiClient.post("/admin/track", { path: pathname.slice(0, 191), referrer }).catch(() => {});
+  }, [pathname]);
+}
+
 /** New pages start at the top; links with a #hash scroll to that section. */
 function useScrollOnNavigate() {
   const { pathname, hash } = useLocation();
@@ -61,6 +76,7 @@ export default function MainLayout() {
   const progress = useSpring(scrollYProgress, { stiffness: 200, damping: 40, restDelta: 0.001 });
   const { brandName } = useBrand();
   useScrollOnNavigate();
+  usePageViewTracking();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>

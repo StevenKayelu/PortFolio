@@ -24,11 +24,14 @@ function getR2Client() {
   return r2Client;
 }
 
-// async function saveLocal({ buffer, filename }) {
-//   await fs.mkdir(uploadDir, { recursive: true });
-//   await fs.writeFile(path.join(uploadDir, filename), buffer);
-//   return { url: `/uploads/${filename}`, key: filename, driver: "local" };
-// }
+// The frontend usually lives on another domain, so local URLs are made
+// absolute with API_PUBLIC_URL (e.g. https://api.example.com) when set.
+async function saveLocal({ buffer, filename }) {
+  await fs.mkdir(uploadDir, { recursive: true });
+  await fs.writeFile(path.join(uploadDir, filename), buffer);
+  const base = (process.env.API_PUBLIC_URL || "").replace(/\/$/, "");
+  return { url: `${base}/uploads/${filename}`, key: filename, driver: "local" };
+}
 
 async function saveR2({ buffer, filename, mimetype }) {
   if (!process.env.R2_BUCKET || !process.env.R2_ACCOUNT_ID) {
@@ -64,7 +67,7 @@ export async function saveFile(file) {
 export async function deleteFile(keyOrUrl) {
   const key = keyOrUrl.startsWith(process.env.R2_PUBLIC_URL || "\0")
     ? keyOrUrl.replace(`${process.env.R2_PUBLIC_URL}/`, "")
-    : keyOrUrl.replace(/^\/uploads\//, "");
+    : keyOrUrl.replace(/^.*\/uploads\//, "");
 
   if (driver === "r2") {
     await getR2Client()

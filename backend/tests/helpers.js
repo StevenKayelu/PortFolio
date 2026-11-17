@@ -43,5 +43,5 @@ export async function startApp({ mail = false } = {}) {
     return { token: res.body.accessToken, cookie: res.headers.get("set-cookie")?.split(";")[0] };
   }
 
-  return { prisma, api, login, close: () => server.close() };
+  return { prisma, api, login, base, close: () => server.close() };
 }

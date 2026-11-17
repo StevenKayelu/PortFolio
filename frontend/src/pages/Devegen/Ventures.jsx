@@ -9,24 +9,52 @@ import { useEcosystem } from "../../brand/useEcosystem";
 
 const FILTERS = [
   { key: "all", label: "All", test: () => true },
-  { key: "ok", label: "Operating", test: (n) => n.kind === "service" && n.status.tone !== "open" },
-  { key: "pending", label: "Under review", test: (n) => n.kind === "product" },
+  { key: "ventures", label: "Ventures", test: (n) => n.kind === "service" },
+  { key: "products", label: "Products", test: (n) => n.kind === "product" },
   { key: "open", label: "Open slots", test: (n) => n.kind === "slot" },
 ];
+
+const titleCase = (v) => v.charAt(0) + v.slice(1).toLowerCase();
+
+/**
+ * Every published venture and product from GET /ecosystem, plus the open
+ * slot. Falls back to the static map nodes when the API is unavailable.
+ */
+function directoryEntries(data, nodes) {
+  const openSlot = nodes.find((n) => n.kind === "slot") || {
+    id: "fv", name: "Future ventures", short: "Open slot", kind: "slot",
+    status: { tone: "open", label: "Open" }, visit: "New businesses are added after ownership and legal checks.",
+  };
+  if (!data) return nodes.filter((n) => n.id !== "sk" && n.id !== "dv");
+  const ventures = data.ventures.map((v) => ({
+    id: v.slug, name: v.name, short: titleCase(v.stage), kind: "service", visit: v.summary,
+    status: v.verificationStatus === "VERIFIED" ? { tone: "ok", label: "Verified" } : { tone: "pending", label: "Verification pending" },
+    link: v.slug === "devgen-solutions"
+      ? { site: "devegen", path: "/solutions", label: "Explore DevGen Solutions" }
+      : { site: "devegen", path: `/ventures/${v.slug}`, label: `About ${v.name}` },
+  }));
+  const products = [...data.ventures.flatMap((v) => v.products.map((p) => ({ ...p, venture: v }))), ...(data.unassignedProducts || [])].map((p) => ({
+    id: `product-${p.slug}`, name: p.name, short: p.lifecycle ? `Product · ${p.lifecycle}` : "Product", kind: "product",
+    visit: p.summary || "Details coming soon.",
+    status: p.ownershipStatus === "CONFIRMED" ? { tone: "ok", label: "Ownership confirmed" } : { tone: "pending", label: "Ownership under review" },
+    link: p.venture && p.venture.slug !== "devgen-solutions" ? { site: "devegen", path: `/ventures/${p.venture.slug}`, label: `Part of ${p.venture.name}` } : null,
+  }));
+  return [...ventures, ...products, { ...openSlot, link: null }];
+}
 
 export default function Ventures() {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const [filter, setFilter] = useState("all");
-  const { nodes } = useEcosystem();
-  const ENTRIES = nodes.filter((n) => n.id !== "sk" && n.id !== "dv");
+  const { nodes, data } = useEcosystem();
+  const ENTRIES = directoryEntries(data, nodes);
   const visible = ENTRIES.filter(FILTERS.find((f) => f.key === filter).test);
   const toneColor = { ok: theme.palette.success.main, pending: theme.palette.warning.main, open: theme.palette.primary.main };
 
   return (
     <>
       <Helmet>
-        <title>Ventures — Devegen Ventures</title>
+        <title>Ventures</title>
         <meta name="description" content="The businesses and products presented under the Devegen Ventures umbrella, with their verification status." />
       </Helmet>
 

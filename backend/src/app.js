@@ -69,9 +69,10 @@ app.use(
 
 app.use(
   "/uploads",
-  express.static(
-    process.env.UPLOAD_DIR || "./src/uploads"
-  )
+  express.static(process.env.UPLOAD_DIR || "./src/uploads", {
+    // Uploaded images are shown on the frontend's own domains.
+    setHeaders: (res) => res.set("Cross-Origin-Resource-Policy", "cross-origin"),
+  })
 );
 
 app.get("/sitemap.xml", getSitemap);

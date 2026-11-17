@@ -38,7 +38,7 @@ function ProfileCard({ identity, about }) {
         }}
       >
         {identity?.photo ? (
-          <Box component="img" src={identity.photo} alt={`Portrait of ${identity.name}`} loading="eager" sx={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
+          <Box component="img" src={identity.photo} alt={identity.photoAlt || `Portrait of ${identity.name}`} loading="eager" sx={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
         ) : (
           <Box aria-hidden="true" sx={{ fontFamily: theme.custom.fontSerif, fontSize: "3.5rem", color: "text.secondary", lineHeight: 1 }}>{initials}</Box>
         )}

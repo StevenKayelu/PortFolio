@@ -8,7 +8,10 @@ import { z } from "zod";
 
 const trimmed = (max) => z.string().trim().max(max);
 const optionalText = (max) => trimmed(max).optional().nullable().transform((v) => (v === "" ? null : v));
-const url = z.string().trim().url().max(500).optional().nullable().or(z.literal("").transform(() => null));
+// http(s) only: z.string().url() alone also accepts javascript: and data: URLs,
+// which would run script when a visitor clicks the link.
+const httpUrl = z.string().trim().url().max(500).regex(/^https?:\/\//i, "Use a link starting with https://");
+const url = httpUrl.optional().nullable().or(z.literal("").transform(() => null));
 const slug = z.string().trim().min(2).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers and hyphens.");
 const id = z.string().trim().min(1).max(64);
 // Admin forms send "" for an empty select; treat it as "no link".
@@ -176,6 +179,11 @@ export const contributorSchema = z.object({
 });
 
 export const projectAttributionSchema = {
+  githubUrl: url,
+  liveDemoUrl: url,
+  videoDemoUrl: url,
+  documentationUrl: url,
+  coverImage: url,
   visibility: z.enum(["PUBLIC", "UNLISTED", "PRIVATE"]).optional(),
   ownershipStatus: z.enum(["NEEDS_REVIEW", "CONFIRMED", "NOT_OWNED"]).optional(),
   ownerName: optionalText(191),
@@ -241,3 +249,38 @@ export const seoSchema = z.object({
   noIndex: z.boolean().optional(),
 });
 export const seoUpdateSchema = seoSchema.partial();
+
+// -------------------------------------------------------- site settings (CMS)
+
+const shortText = (max) => trimmed(max).min(1);
+const optionalUrl = url;
+
+/** One schema per SiteSetting key, so the admin can't store malformed content. */
+export const siteSettingSchemas = {
+  identity: z.object({
+    name: shortText(120),
+    role: shortText(120),
+    tagline: shortText(300),
+    location: optionalText(120),
+    availability: optionalText(160),
+    brand: optionalText(120),
+    email: z.string().trim().email().max(191).optional().or(z.literal("").transform(() => undefined)),
+    phone: optionalText(40),
+    github: optionalUrl,
+    linkedin: optionalUrl,
+    facebook: optionalUrl,
+    photo: optionalUrl,
+    photoAlt: optionalText(200),
+  }),
+  about: z.object({
+    bio: shortText(4000),
+    mission: optionalText(1000),
+    vision: optionalText(1000),
+    goals: optionalText(2000),
+    values: z.array(z.object({ title: shortText(120), detail: shortText(600) })).max(12).default([]),
+    education: z.array(z.object({ degree: shortText(160), institution: shortText(160), year: shortText(40) })).max(12).default([]),
+  }),
+  stats: z.array(z.object({ label: shortText(60), value: shortText(20) })).max(8),
+  technologies: z.array(shortText(60)).max(80),
+  timeline: z.array(z.object({ year: shortText(40), title: shortText(160), org: shortText(160) })).max(40),
+};

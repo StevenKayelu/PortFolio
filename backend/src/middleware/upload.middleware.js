@@ -16,7 +16,7 @@ const ALLOWED_MIME = new Set([
 
 function fileFilter(req, file, cb) {
   if (!ALLOWED_MIME.has(file.mimetype)) {
-    return cb(new Error("Unsupported file type."));
+    return cb(Object.assign(new Error("Unsupported file type."), { status: 400, publicMessage: "That file type isn't supported." }));
   }
   cb(null, true);
 }

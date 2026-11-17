@@ -89,7 +89,7 @@ export function buildEcosystem(api) {
       where: other.website?.replace(/^https?:\/\//, "") || `devegenventures.com/ventures/${other.slug}`,
       relationship: other.summary, visit: other.description || other.summary,
       status: other.verificationStatus === "VERIFIED" ? { tone: "ok", label: "Verified venture" } : { tone: "pending", label: "Verification pending" },
-      link: null,
+      link: { site: "devegen", path: `/ventures/${other.slug}`, label: `About ${other.name}` },
     };
   }
 

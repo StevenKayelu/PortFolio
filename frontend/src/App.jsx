@@ -22,6 +22,7 @@ import PrivacyPolicy from "./pages/Legal/PrivacyPolicy";
 import NotFound from "./pages/NotFound/NotFound";
 import DevegenHome from "./pages/Devegen/DevegenHome";
 import Ventures from "./pages/Devegen/Ventures";
+import VentureDetail from "./pages/Devegen/VentureDetail";
 import SolutionsHome from "./pages/Solutions/SolutionsHome";
 
 // Admin, the TipTap editor and rich blog rendering are split out so
@@ -50,6 +51,7 @@ const ManageLeads = lazy(() => import("./pages/Admin/ManageLeads"));
 const ManageApprovals = lazy(() => import("./pages/Admin/ManageApprovals"));
 const ManageUsers = lazy(() => import("./pages/Admin/ManageUsers"));
 const Account = lazy(() => import("./pages/Admin/Account"));
+const ManageSiteContent = lazy(() => import("./pages/Admin/ManageSiteContent"));
 const ManageSeo = resource("ManageSeo");
 
 function RouteFallback() {
@@ -90,6 +92,7 @@ function DevegenRoutes() {
     <>
       <Route path="/" element={<DevegenHome />} />
       <Route path="/ventures" element={<Ventures />} />
+      <Route path="/ventures/:slug" element={<VentureDetail />} />
       <Route path="/solutions" element={<SolutionsHome />} />
       <Route path="/solutions/services" element={<Services />} />
       <Route path="/solutions/work" element={<Projects />} />
@@ -123,6 +126,7 @@ export default function App() {
           <Route path="seo" element={<ManageSeo />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="account" element={<Account />} />
+          <Route path="content" element={<ManageSiteContent />} />
           <Route path="ventures" element={<ManageVentures />} />
           <Route path="products" element={<ManageProducts />} />
           <Route path="projects" element={<ManageProjects />} />

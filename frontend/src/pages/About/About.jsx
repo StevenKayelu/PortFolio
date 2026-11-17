@@ -18,7 +18,7 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About — DevGen Solutions</title>
+        <title>About</title>
         <meta name="description" content="Background, mission, values, and career journey." />
       </Helmet>
 

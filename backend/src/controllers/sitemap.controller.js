@@ -54,12 +54,15 @@ export async function getSitemap(req, res, next) {
     const base = await siteUrl(site);
     const publicProject = { deletedAt: null, status: { not: "DRAFT" }, visibility: "PUBLIC" };
 
-    const [projects, posts, hidden] = await Promise.all([
+    const [projects, posts, hidden, ventures] = await Promise.all([
       prisma.project.findMany({ where: publicProject, select: { slug: true, updatedAt: true } }),
       site === "steven"
         ? prisma.blogPost.findMany({ where: { deletedAt: null, status: "PUBLISHED" }, select: { slug: true, updatedAt: true } })
         : [],
       prisma.seoMeta.findMany({ where: { noIndex: true }, select: { route: true, brand: { select: { key: true } } } }),
+      site === "devegen"
+        ? prisma.venture.findMany({ where: { status: "PUBLISHED", deletedAt: null, slug: { not: "devgen-solutions" } }, select: { slug: true, updatedAt: true } })
+        : [],
     ]);
     const noIndex = new Set(hidden.map((h) => `${h.brand?.key}:${h.route}`));
     const indexable = (path) => !noIndex.has(`${brandKeyFor(site, path)}:${path}`);
@@ -69,6 +72,7 @@ export async function getSitemap(req, res, next) {
       ...ROUTES[site].filter(([path]) => indexable(path)).map(([path, priority]) => urlEntry(`${base}${path}`, priority)),
       ...projects.map((p) => urlEntry(`${base}${projectBase}/${p.slug}`, "0.7", p.updatedAt.toISOString())),
       ...posts.map((p) => urlEntry(`${base}/blog/${p.slug}`, "0.7", p.updatedAt.toISOString())),
+      ...ventures.filter((v) => indexable(`/ventures/${v.slug}`)).map((v) => urlEntry(`${base}/ventures/${v.slug}`, "0.7", v.updatedAt.toISOString())),
     ];
 
     res.set("Content-Type", "application/xml");

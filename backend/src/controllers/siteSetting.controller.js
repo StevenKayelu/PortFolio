@@ -1,4 +1,6 @@
 import { prisma } from "../config/prisma.js";
+import { audit } from "../services/audit.service.js";
+import { handleUpload } from "../services/upload.service.js";
 
 // SiteSetting is a deliberate escape hatch: a key/value JSON store for
 // content that doesn't warrant its own relational table (hero copy,
@@ -37,7 +39,30 @@ export async function upsertSetting(req, res, next) {
       update: { value: req.body.value },
       create: { key: req.params.key, value: req.body.value },
     });
+    await audit(req, "UPDATE", "SiteSetting", req.params.key);
     res.json(setting);
+  } catch (err) {
+    next(err);
+  }
+}
+
+const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+/**
+ * Uploads Steven's portrait (re-encoded to WebP, EXIF stripped) and stores
+ * its URL on the identity setting. Photos only: no SVG or PDF here.
+ */
+export async function uploadIdentityPhoto(req, res, next) {
+  try {
+    if (!req.file || !PHOTO_TYPES.has(req.file.mimetype)) {
+      return res.status(400).json({ error: "Choose a JPEG, PNG or WebP photo." });
+    }
+    const saved = await handleUpload(req.file);
+    const current = await prisma.siteSetting.findUnique({ where: { key: "identity" } });
+    const value = { ...(current?.value || {}), photo: saved.url, ...(req.body?.photoAlt ? { photoAlt: String(req.body.photoAlt).slice(0, 200) } : {}) };
+    await prisma.siteSetting.upsert({ where: { key: "identity" }, update: { value }, create: { key: "identity", value } });
+    await audit(req, "UPLOAD", "SiteSetting", "identity.photo");
+    res.status(201).json({ photo: saved.url });
   } catch (err) {
     next(err);
   }
