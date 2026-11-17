@@ -5,7 +5,11 @@ import { loadBrandAccess, requireSuperAdmin } from "../services/brandAccess.serv
 import {
   brandCreateSchema, brandUpdateSchema, organizationSchema, relationshipSchema, ventureSchema, ventureUpdateSchema,
   productSchema, productUpdateSchema, brandRolesSchema, leadQuerySchema, leadUpdateSchema, leadNoteSchema, convertMessageSchema,
+  userCreateSchema, userUpdateSchema, passwordResetSchema, revisionQuerySchema, reviewSchema, seoSchema, seoUpdateSchema,
 } from "../validation/schemas.js";
+import * as users from "../controllers/users.controller.js";
+import * as revisions from "../controllers/revision.controller.js";
+import * as seo from "../controllers/seo.controller.js";
 import * as eco from "../controllers/ecosystem.controller.js";
 import * as leads from "../controllers/enquiry.controller.js";
 
@@ -47,6 +51,19 @@ router.post("/leads/:id/notes", validate(leadNoteSchema), leads.addLeadNote);
 router.post("/leads/from-message/:messageId", validate(convertMessageSchema), leads.convertContactMessage);
 
 router.get("/users", requireSuperAdmin, eco.adminListUsers);
+router.post("/users", requireSuperAdmin, validate(userCreateSchema), users.adminCreateUser);
+router.patch("/users/:id", requireSuperAdmin, validate(userUpdateSchema), users.adminUpdateUser);
+router.post("/users/:id/password", requireSuperAdmin, validate(passwordResetSchema), users.adminResetPassword);
 router.put("/users/:id/brand-roles", requireSuperAdmin, validate(brandRolesSchema), eco.adminSetBrandRoles);
+
+router.get("/revisions", validate(revisionQuerySchema, "query"), revisions.listRevisions);
+router.post("/revisions/:id/approve", validate(reviewSchema), revisions.approveRevision);
+router.post("/revisions/:id/reject", validate(reviewSchema), revisions.rejectRevision);
+router.post("/revisions/:id/restore", revisions.restoreRevision);
+
+router.get("/seo", seo.adminListSeo);
+router.post("/seo", validate(seoSchema), seo.adminSaveSeo);
+router.patch("/seo/:id", validate(seoUpdateSchema), seo.adminSaveSeo);
+router.delete("/seo/:id", seo.adminDeleteSeo);
 
 export default router;

@@ -94,7 +94,7 @@ const PRODUCTION_HOSTS = {
 
 const OVERRIDE_KEY = "devegen.site-override";
 
-function isProductionHost() {
+export function isProductionHost() {
   return typeof window !== "undefined" && Boolean(PRODUCTION_HOSTS[window.location.hostname.toLowerCase()]);
 }
 

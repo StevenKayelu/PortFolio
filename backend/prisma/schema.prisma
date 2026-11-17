@@ -39,14 +39,16 @@ model User {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
-  refreshTokens  RefreshToken[]
-  blogPosts      BlogPost[]
-  auditLogs      AuditLog[]
-  projects       Project[]
-  comments       Comment[]
-  brandRoles     UserBrandRole[]
-  assignedLeads  Lead[]          @relation("LeadAssignee")
-  leadActivities LeadActivity[]
+  refreshTokens     RefreshToken[]
+  blogPosts         BlogPost[]
+  auditLogs         AuditLog[]
+  projects          Project[]
+  comments          Comment[]
+  brandRoles        UserBrandRole[]
+  assignedLeads     Lead[]            @relation("LeadAssignee")
+  leadActivities    LeadActivity[]
+  authoredRevisions ContentRevision[] @relation("RevisionAuthor")
+  reviewedRevisions ContentRevision[] @relation("RevisionReviewer")
 
   @@index([email])
   @@map("users")
@@ -111,16 +113,21 @@ model ThemePreference {
 
 model SeoMeta {
   id             String   @id @default(cuid())
-  route          String   @unique // e.g. "/", "/blog/:slug" resolved path
+  // Same path can exist on both sites ("/"), so routes are unique per brand.
+  route          String // e.g. "/", "/about", "/solutions"
+  brandId        String?
+  brand          Brand?   @relation(fields: [brandId], references: [id], onDelete: Cascade)
   title          String
   description    String   @db.Text
   keywords       String?  @db.Text
   ogImage        String?
   canonicalUrl   String?
   structuredData Json?
+  noIndex        Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@unique([brandId, route])
   @@map("seo_meta")
 }
 
@@ -700,6 +707,7 @@ model Brand {
   projects        Project[]
   userRoles       UserBrandRole[]
   leads           Lead[]
+  seoMeta         SeoMeta[]
 
   @@map("brands")
 }
@@ -889,4 +897,45 @@ model LeadActivity {
 
   @@index([leadId])
   @@map("lead_activities")
+}
+
+// ---------------------------------------------------------
+// EDITORIAL REVISIONS (report §06, §08: "publishing by approval",
+// "auditable revisions and rollback"). Every applied change to a
+// venture or product is recorded; editors' changes to published
+// records wait as PENDING until a brand admin approves them.
+// ---------------------------------------------------------
+
+enum RevisionEntity {
+  VENTURE
+  PRODUCT
+}
+
+enum RevisionStatus {
+  PENDING
+  APPLIED
+  REJECTED
+}
+
+model ContentRevision {
+  id         String         @id @default(cuid())
+  entityType RevisionEntity
+  entityId   String
+  brandId    String? // for scoping; null = super admin only
+  status     RevisionStatus
+  changes    Json // { field: newValue }
+  previous   Json? // { field: oldValue } captured when applied
+  note       String?        @db.Text // author's explanation
+  reviewNote String?        @db.Text
+  createdAt  DateTime       @default(now())
+  reviewedAt DateTime?
+
+  authorId   String?
+  author     User?   @relation("RevisionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewerId String?
+  reviewer   User?   @relation("RevisionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([status, brandId])
+  @@map("content_revisions")
 }

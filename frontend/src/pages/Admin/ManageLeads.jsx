@@ -7,6 +7,7 @@ import { FiX, FiSearch, FiMail, FiPhone, FiUserCheck } from "react-icons/fi";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import apiClient from "../../services/apiClient";
 import { useAuth } from "../../context/AuthContext";
+import { useAdminBrand } from "../../context/AdminBrandContext";
 
 const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "PROPOSAL", "WON", "LOST", "ARCHIVED", "SPAM"];
 const TYPE_LABEL = { CAREER: "Career", COLLABORATION: "Collaboration", QUOTE: "Quote", PARTNERSHIP: "Partnership", GENERAL: "General" };
@@ -136,13 +137,14 @@ export default function ManageLeads() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState(null);
+  const { brandKey } = useAdminBrand();
 
   const load = useCallback(() => {
-    const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
+    const params = Object.fromEntries(Object.entries({ ...filters, brand: brandKey }).filter(([, v]) => v));
     apiClient.get("/admin/leads", { params })
       .then((r) => { setData(r.data); setError(""); })
       .catch((err) => setError(err.response?.status === 404 ? "The leads API isn't deployed yet." : "Leads couldn't be loaded. Check your connection and try again."));
-  }, [filters]);
+  }, [filters, brandKey]);
 
   useEffect(() => {
     const t = setTimeout(load, filters.search ? 300 : 0); // debounce typing

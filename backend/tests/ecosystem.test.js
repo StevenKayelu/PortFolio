@@ -74,6 +74,13 @@ before(async () => {
   ids.editor = editor.id;
   ids.leadManager = leadManager.id;
 
+  // Own fixture instead of the seeded products, which an admin may have edited.
+  const solutionsVenture = await prisma.venture.findUnique({ where: { slug: "devgen-solutions" } });
+  await prisma.product.deleteMany({ where: { slug: "test-draft-product" } });
+  ids.product = (await prisma.product.create({
+    data: { name: "Test Draft Product", slug: "test-draft-product", status: "DRAFT", ventureId: solutionsVenture.id },
+  })).id;
+
   tokens.super = await login("admin@example.com", "ChangeMe123!");
   tokens.editor = await login(TEST_EMAILS[0], "Test-password-1");
   tokens.leads = await login(TEST_EMAILS[1], "Test-password-1");
@@ -81,9 +88,12 @@ before(async () => {
 
 after(async () => {
   await prisma.lead.deleteMany({ where: { email: { endsWith: "@example.com" } } });
+  const testVentures = await prisma.venture.findMany({ where: { slug: { startsWith: "test-" } }, select: { id: true } });
+  await prisma.contentRevision.deleteMany({ where: { entityId: { in: testVentures.map((v) => v.id) } } });
   await prisma.venture.deleteMany({ where: { slug: { startsWith: "test-" } } });
   await prisma.project.deleteMany({ where: { slug: { startsWith: "test-" } } });
   await prisma.service.deleteMany({ where: { slug: { startsWith: "test-" } } });
+  await prisma.product.deleteMany({ where: { slug: "test-draft-product" } });
   await prisma.user.deleteMany({ where: { email: { in: TEST_EMAILS } } });
   await prisma.$disconnect();
   server.close();
@@ -97,8 +107,8 @@ test("public ecosystem exposes published records only, without internal notes", 
   assert.deepEqual(body.brands.map((b) => b.key).sort(), ["devegen", "solutions", "steven"]);
   assert.equal(body.relationships.length, 2);
   assert.ok(body.ventures.some((v) => v.slug === "devgen-solutions"));
-  // Products are DRAFT until ownership is confirmed, so none are public.
-  assert.equal(body.ventures.flatMap((v) => v.products).length, 0);
+  // Draft products (the default until ownership is confirmed) are never public.
+  assert.ok(!body.ventures.flatMap((v) => v.products).some((p) => p.slug === "test-draft-product"));
   const raw = JSON.stringify(body);
   assert.ok(!raw.includes("internalNote") && !raw.includes("PACRA before"), "internal notes leaked");
 });
@@ -200,17 +210,18 @@ test("editors can draft ventures for their brand but cannot publish or cross bra
   const pub = await api("GET", "/ventures");
   assert.ok(!pub.body.items.some((v) => v.slug === "test-draft"), "draft venture must not be public");
 
-  // Once a brand admin (here the super admin) publishes it, the editor can no longer change it.
+  // Once a brand admin (here the super admin) publishes it, editor changes wait for approval.
   assert.equal((await api("PATCH", `/admin/ventures/${draft.body.id}`, { token: tokens.super, body: { status: "PUBLISHED" } })).status, 200);
-  assert.equal((await api("PATCH", `/admin/ventures/${draft.body.id}`, { token: tokens.editor, body: { summary: "Sneaky edit" } })).status, 403);
+  const proposal = await api("PATCH", `/admin/ventures/${draft.body.id}`, { token: tokens.editor, body: { summary: "Edit after publishing" } });
+  assert.equal(proposal.status, 202);
+  assert.equal((await prisma.venture.findUnique({ where: { id: draft.body.id } })).summary, "Edited");
 });
 
 test("only a super admin can confirm product ownership or manage relationships", async () => {
   const products = await api("GET", "/admin/products", { token: tokens.editor });
   assert.equal(products.status, 200);
-  const motogo = products.body.items.find((p) => p.slug === "motogo");
-  assert.ok(motogo, "editor on solutions should see solutions products");
-  const confirm = await api("PATCH", `/admin/products/${motogo.id}`, { token: tokens.editor, body: { ownershipStatus: "CONFIRMED" } });
+  assert.ok(products.body.items.some((p) => p.id === ids.product), "editor on solutions should see solutions products");
+  const confirm = await api("PATCH", `/admin/products/${ids.product}`, { token: tokens.editor, body: { ownershipStatus: "CONFIRMED" } });
   assert.equal(confirm.status, 403);
 
   assert.equal((await api("GET", "/admin/relationships", { token: tokens.editor })).status, 403);

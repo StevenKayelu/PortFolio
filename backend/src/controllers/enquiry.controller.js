@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { prisma } from "../config/prisma.js";
 import { audit } from "../services/audit.service.js";
+import { notifyNewLead, notifyAssignment } from "../services/mail.service.js";
 import { SCOPES, assertBrandScope, brandFilter, forbidden } from "../services/brandAccess.service.js";
 
 /**
@@ -56,9 +57,10 @@ export async function submitEnquiry(req, res, next) {
         brandId: brand.id,
         activities: { create: { kind: "CREATED", body: `Received via ${SOURCE[site]}` } },
       },
-      select: { reference: true },
+      select: { reference: true, type: true, name: true, email: true, organization: true, details: true, message: true },
     });
 
+    notifyNewLead(lead, brand);
     res.status(201).json({ message: "Enquiry received.", reference: lead.reference });
   } catch (err) {
     next(err);
@@ -142,11 +144,12 @@ export async function updateLead(req, res, next) {
       // The assignee must be able to see this brand's leads.
       const assignee = await prisma.user.findUnique({
         where: { id: assignedToId },
-        select: { id: true, name: true, role: true, isActive: true, brandRoles: { where: { brandId: lead.brandId } } },
+        select: { id: true, name: true, email: true, role: true, isActive: true, brandRoles: { where: { brandId: lead.brandId } } },
       });
       const allowed = assignee?.isActive && (assignee.role === "SUPER_ADMIN" || SCOPES.leads.includes(assignee.brandRoles[0]?.scope));
       if (!allowed) throw Object.assign(forbidden("That person can't be assigned leads for this brand."), { status: 400 });
       activities.push({ kind: "ASSIGNMENT", userId: req.user.sub, body: `Assigned to ${assignee.name}` });
+      if (assignee.id !== lead.assignedToId) notifyAssignment(lead, assignee, req.user.sub);
     } else if (assignedToId === null && lead.assignedToId) {
       activities.push({ kind: "ASSIGNMENT", userId: req.user.sub, body: "Unassigned" });
     }

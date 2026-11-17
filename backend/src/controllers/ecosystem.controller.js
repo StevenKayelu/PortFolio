@@ -1,6 +1,7 @@
 import slugify from "slugify";
 import { prisma } from "../config/prisma.js";
 import { audit } from "../services/audit.service.js";
+import { pickChanges, applyChanges, proposeChanges } from "../services/revision.service.js";
 import { SCOPES, assertBrandScope, brandFilter, forbidden, hasBrandScope } from "../services/brandAccess.service.js";
 
 /**
@@ -190,13 +191,32 @@ function changedKeys(body, existing = {}) {
 }
 
 /**
- * Editors work on drafts only; publishing, archiving and editing
- * published content need a brand ADMIN (report §08, "publishing by approval").
+ * Editors cannot publish or archive (report §08). On create, that means
+ * DRAFT only; on update, any status change needs a brand ADMIN.
  */
 function assertEditorRules(access, brandId, body, existing) {
   if (hasBrandScope(access, brandId, SCOPES.manage)) return;
-  if (existing && existing.status !== "DRAFT") throw forbidden("This is published. Ask a brand admin to change it.");
-  if (body.status && body.status !== "DRAFT") throw forbidden("Only a brand admin can publish or archive.");
+  const target = body.status;
+  if (!existing && target && target !== "DRAFT") throw forbidden("Only a brand admin can publish or archive.");
+  if (existing && target && target !== existing.status) throw forbidden("Only a brand admin can publish or archive.");
+}
+
+/**
+ * Applies `changes` directly, or — for an editor touching published
+ * content — records them for approval and answers 202 (report §08,
+ * "publishing by approval").
+ */
+async function saveOrPropose(req, res, { entityType, entity, brandId, changes, label }) {
+  if (!Object.keys(changes).length) return res.json(entity);
+  const note = typeof req.query.note === "string" ? req.query.note.slice(0, 1000) : undefined;
+  if (entity.status !== "DRAFT" && !hasBrandScope(req.brandAccess, brandId, SCOPES.manage)) {
+    const revision = await proposeChanges({ entityType, entity, brandId, changes, userId: req.user.sub, note });
+    await audit(req, "PROPOSE", label, entity.id, { revisionId: revision.id, fields: Object.keys(changes) });
+    return res.status(202).json({ message: "Sent to a brand admin for approval.", revision });
+  }
+  const updated = await applyChanges({ entityType, entity, brandId, changes, userId: req.user.sub, note });
+  await audit(req, "UPDATE", label, entity.id, { fields: Object.keys(changes) });
+  return res.json(updated);
 }
 
 function assertSuperForVerification(access, body, existing) {
@@ -208,8 +228,9 @@ function assertSuperForVerification(access, body, existing) {
 
 export async function adminListVentures(req, res, next) {
   try {
+    const brandKey = typeof req.query.brand === "string" ? req.query.brand : null;
     const ventures = await prisma.venture.findMany({
-      where: { deletedAt: null, ...brandFilter(req.brandAccess, SCOPES.edit) },
+      where: { deletedAt: null, ...brandFilter(req.brandAccess, SCOPES.edit), ...(brandKey ? { brand: { key: brandKey } } : {}) },
       orderBy: { displayOrder: "asc" },
       include: { brand: { select: { id: true, key: true, name: true } }, organization: { select: { id: true, legalName: true } }, _count: { select: { products: true } } },
     });
@@ -243,9 +264,9 @@ export async function adminUpdateVenture(req, res, next) {
     }
     assertEditorRules(req.brandAccess, venture.brandId, req.body, venture);
     assertSuperForVerification(req.brandAccess, req.body, venture);
-    const updated = await prisma.venture.update({ where: { id: venture.id }, data: req.body });
-    await audit(req, "UPDATE", "Venture", venture.id, { fields: Object.keys(req.body) });
-    res.json(updated);
+    await saveOrPropose(req, res, {
+      entityType: "VENTURE", entity: venture, brandId: venture.brandId, changes: pickChanges(req.body, venture), label: "Venture",
+    });
   } catch (err) {
     next(err);
   }
@@ -282,8 +303,13 @@ function assertSuperForOwnership(access, body, existing = { ownershipStatus: "NE
 
 export async function adminListProducts(req, res, next) {
   try {
+    const brandKey = typeof req.query.brand === "string" ? req.query.brand : null;
     const products = await prisma.product.findMany({
-      where: { deletedAt: null, ...(req.brandAccess.all ? {} : { venture: brandFilter(req.brandAccess, SCOPES.edit) }) },
+      where: {
+        deletedAt: null,
+        ...(req.brandAccess.all ? {} : { venture: brandFilter(req.brandAccess, SCOPES.edit) }),
+        ...(brandKey ? { AND: [{ venture: { brand: { key: brandKey } } }] } : {}),
+      },
       orderBy: { displayOrder: "asc" },
       include: { venture: { select: { id: true, name: true, brandId: true } }, project: { select: { id: true, title: true, slug: true } } },
     });
@@ -319,9 +345,9 @@ export async function adminUpdateProduct(req, res, next) {
     }
     assertEditorRules(req.brandAccess, brandId, req.body, product);
     assertSuperForOwnership(req.brandAccess, req.body, product);
-    const updated = await prisma.product.update({ where: { id: product.id }, data: req.body });
-    await audit(req, "UPDATE", "Product", product.id, { fields: Object.keys(req.body) });
-    res.json(updated);
+    await saveOrPropose(req, res, {
+      entityType: "PRODUCT", entity: product, brandId, changes: pickChanges(req.body, product), label: "Product",
+    });
   } catch (err) {
     next(err);
   }

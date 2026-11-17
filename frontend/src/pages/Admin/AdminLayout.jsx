@@ -3,13 +3,15 @@ import { useFetch } from "../../hooks/useFetch";
 import apiClient from "../../services/apiClient";
 import {
   Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar,
-  AppBar, IconButton, Typography, useTheme, useMediaQuery, Stack, Avatar, Menu, MenuItem,
+  AppBar, IconButton, Typography, useTheme, useMediaQuery, Stack, Avatar, Menu, MenuItem, TextField, ListSubheader,
 } from "@mui/material";
 import {
   FiGrid, FiFolder, FiEdit3, FiBriefcase, FiAward, FiUsers, FiImage,
   FiMail, FiMenu, FiLogOut, FiExternalLink, FiClock, FiSliders, FiHelpCircle, FiInbox, FiLayers, FiPackage,
+  FiCheckSquare, FiSearch, FiShield, FiKey,
 } from "react-icons/fi";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { AdminBrandProvider, useAdminBrand } from "../../context/AdminBrandContext";
 import { useAuth } from "../../context/AuthContext";
 
 const DRAWER_WIDTH = 240;
@@ -19,6 +21,8 @@ const NAV_ITEMS = [
   { label: "Leads", to: "/admin/leads", icon: FiInbox },
   { label: "Ventures", to: "/admin/ventures", icon: FiLayers },
   { label: "Products", to: "/admin/products", icon: FiPackage },
+  { label: "Approvals", to: "/admin/approvals", icon: FiCheckSquare },
+  { label: "SEO", to: "/admin/seo", icon: FiSearch },
   { label: "Projects", to: "/admin/projects", icon: FiFolder },
   { label: "Blog", to: "/admin/blog", icon: FiEdit3 },
   { label: "Services", to: "/admin/services", icon: FiBriefcase },
@@ -30,15 +34,42 @@ const NAV_ITEMS = [
   { label: "Achievements", to: "/admin/achievements", icon: FiAward },
   { label: "FAQ", to: "/admin/faq", icon: FiHelpCircle },
   { label: "Messages", to: "/admin/messages", icon: FiMail },
+  { label: "Users & access", to: "/admin/users", icon: FiShield, superOnly: true },
 ];
 
+/** Narrows admin lists to one brand. The API still enforces access. */
+function BrandSwitcher() {
+  const { brands, brandKey, setBrandKey } = useAdminBrand();
+  if (brands.length < 2) return null;
+  return (
+    <TextField
+      id="admin-brand" select size="small" label="Brand" value={brandKey}
+      onChange={(e) => setBrandKey(e.target.value)} sx={{ minWidth: { xs: 140, sm: 220 } }}
+      SelectProps={{ displayEmpty: true }} InputLabelProps={{ shrink: true }}
+    >
+      <MenuItem value="">All my brands</MenuItem>
+      <ListSubheader>Brands</ListSubheader>
+      {brands.map((b) => <MenuItem key={b.key} value={b.key}>{b.name}</MenuItem>)}
+    </TextField>
+  );
+}
+
 export default function AdminLayout() {
+  return (
+    <AdminBrandProvider>
+      <AdminShell />
+    </AdminBrandProvider>
+  );
+}
+
+function AdminShell() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState(null);
   const location = useLocation();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
    const { data: identity, loading } = useFetch(
     () => apiClient.get("/site-settings/identity").then((r) => r.data),
@@ -59,7 +90,7 @@ export default function AdminLayout() {
         </Stack>
       </Toolbar>
       <List sx={{ flex: 1, px: 1 }}>
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => !item.superOnly || user?.role === "SUPER_ADMIN").map((item) => {
           const active = item.end ? location.pathname === item.to : location.pathname.startsWith(item.to);
           const Icon = item.icon;
           return (
@@ -101,6 +132,7 @@ export default function AdminLayout() {
               <FiMenu />
             </IconButton>
           )}
+          <BrandSwitcher />
           <Box sx={{ flex: 1 }} />
           <Stack direction="row" spacing={1} alignItems="center" onClick={(e) => setMenuAnchor(e.currentTarget)} sx={{ cursor: "pointer" }}>
             <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: "0.85rem" }}>
@@ -109,6 +141,9 @@ export default function AdminLayout() {
             <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>{user?.name}</Typography>
           </Stack>
           <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
+            <MenuItem onClick={() => { setMenuAnchor(null); navigate("/admin/account"); }}>
+              <FiKey size={16} style={{ marginRight: 8 }} /> Account &amp; password
+            </MenuItem>
             <MenuItem onClick={logout}>
               <FiLogOut size={16} style={{ marginRight: 8 }} /> Sign out
             </MenuItem>

@@ -184,3 +184,60 @@ export const projectAttributionSchema = {
   showcaseBrandId: optionalId,
   contributors: z.array(contributorSchema).max(30).optional(),
 };
+
+// --------------------------------------------------------- users + passwords
+
+const password = z.string().min(12, "Use at least 12 characters.").max(128);
+const STAFF_ROLE = z.enum(["SUPER_ADMIN", "ADMIN", "EDITOR"]);
+
+export const userCreateSchema = z.object({
+  name: trimmed(120).min(1),
+  email: z.string().trim().toLowerCase().email().max(191),
+  role: STAFF_ROLE.default("EDITOR"),
+  password,
+}).refine((v) => v.password.toLowerCase() !== v.email, { message: "The password can't be the email address.", path: ["password"] });
+
+export const userUpdateSchema = z.object({
+  name: trimmed(120).min(1).optional(),
+  role: STAFF_ROLE.optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const passwordResetSchema = z.object({ password });
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Enter your current password.").max(128),
+  newPassword: password,
+}).refine((v) => v.currentPassword !== v.newPassword, { message: "Choose a password you haven't used here.", path: ["newPassword"] });
+
+// ---------------------------------------------------------------- revisions
+
+export const revisionQuerySchema = z.object({
+  status: z.enum(["PENDING", "APPLIED", "REJECTED"]).optional(),
+  entityType: z.enum(["VENTURE", "PRODUCT"]).optional(),
+  entityId: z.string().max(64).optional(),
+});
+
+export const reviewSchema = z.object({ reviewNote: optionalText(1000) });
+
+// ---------------------------------------------------------------------- SEO
+
+const route = z.string().trim().min(1).max(191).regex(/^\/[^\s?#]*$/, "Use a path like /about (no query string).");
+
+export const seoQuerySchema = z.object({
+  site: z.enum(SITES),
+  path: route,
+});
+
+export const seoSchema = z.object({
+  brandId: id,
+  route,
+  title: trimmed(191).min(1),
+  description: trimmed(500).min(1),
+  keywords: optionalText(500),
+  ogImage: url,
+  canonicalUrl: url,
+  structuredData: z.record(z.unknown()).nullable().optional(),
+  noIndex: z.boolean().optional(),
+});
+export const seoUpdateSchema = seoSchema.partial();

@@ -5,7 +5,7 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import routes from "./routes/index.js";
-import { getSitemap } from "./controllers/sitemap.controller.js";
+import { getSitemap, getRobots } from "./controllers/sitemap.controller.js";
 import {
   notFoundHandler,
   errorHandler,
@@ -75,6 +75,7 @@ app.use(
 );
 
 app.get("/sitemap.xml", getSitemap);
+app.get("/robots.txt", getRobots);
 
 app.use("/api/v1", routes);
 

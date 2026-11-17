@@ -21,3 +21,9 @@ services:
         sync: false
       - key: LEAD_IP_SALT
         generateValue: true
+      - key: ADMIN_URL
+        value: https://stevenkayelu.online
+      - key: SMTP_URL
+        sync: false
+      - key: MAIL_FROM
+        sync: false

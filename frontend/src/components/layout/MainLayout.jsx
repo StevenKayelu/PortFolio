@@ -6,6 +6,7 @@ import { useLocation, Outlet } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { Helmet } from "react-helmet-async";
 import { useBrand } from "../../context/BrandContext";
+import { SeoDefaults, SeoOverrides } from "../seo/SeoTags";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
@@ -64,6 +65,7 @@ export default function MainLayout() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <Helmet titleTemplate={`%s — ${brandName}`} defaultTitle={brandName} />
+      <SeoDefaults />
       <Box
         component="a"
         href="#main"
@@ -96,6 +98,7 @@ export default function MainLayout() {
           style={{ flex: 1, outline: "none" }}
         >
           <Outlet />
+          <SeoOverrides />
         </motion.main>
       </AnimatePresence>
 

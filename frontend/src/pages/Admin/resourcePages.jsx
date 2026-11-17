@@ -63,6 +63,7 @@ export const ManageVentures = () => (
   <ManageResource
     title="Ventures"
     endpoint="/admin/ventures"
+    brandScoped
     selectOptionsEndpoints={{ brandId: "/admin/brands" }}
     columns={[
       { key: "name", label: "Venture" },
@@ -93,6 +94,7 @@ export const ManageProducts = () => (
   <ManageResource
     title="Products"
     endpoint="/admin/products"
+    brandScoped
     selectOptionsEndpoints={{ ventureId: "/admin/ventures", projectId: "/projects?includeHidden=true&pageSize=50" }}
     columns={[
       { key: "name", label: "Product" },
@@ -282,6 +284,29 @@ export const ManageFaq = () => (
       { name: "answer", label: "Answer", type: "textarea", required: true },
       { name: "category", label: "Category", type: "text" },
       { name: "isPublished", label: "Published", type: "boolean", default: true },
+    ]}
+  />
+);
+export const ManageSeo = () => (
+  <ManageResource
+    title="SEO by brand"
+    endpoint="/admin/seo"
+    brandScoped
+    selectOptionsEndpoints={{ brandId: "/admin/brands" }}
+    columns={[
+      { key: "brand", label: "Brand", render: (m) => m.brand?.name },
+      { key: "route", label: "Path" },
+      { key: "title", label: "Title" },
+      { key: "noIndex", label: "Search engines", render: (m) => (m.noIndex ? <Chip size="small" label="Hidden" /> : "Indexed") },
+    ]}
+    fields={[
+      { name: "brandId", label: "Brand", type: "select", required: true },
+      { name: "route", label: "Path (e.g. / or /solutions)", type: "text", required: true },
+      { name: "title", label: "Page title (about 60 characters)", type: "text", required: true },
+      { name: "description", label: "Description (about 155 characters)", type: "textarea", required: true },
+      { name: "ogImage", label: "Social share image URL", type: "text" },
+      { name: "canonicalUrl", label: "Canonical URL (leave empty for the default)", type: "text" },
+      { name: "noIndex", label: "Hide this page from search engines", type: "boolean" },
     ]}
   />
 );

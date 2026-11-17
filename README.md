@@ -160,8 +160,32 @@ never overwrites admin edits; the Render build runs it after migrations.
 `ADMIN` (publish, manage), `EDITOR` (drafts only; can't edit published records),
 `LEAD_MANAGER` (leads only). Only a super admin can mark relationships verified, link legal
 entities or confirm product ownership. Grants are re-checked on every request, so
-deactivating a user takes effect immediately. Assign roles with
-`PUT /admin/users/:id/brand-roles` (no UI yet).
+deactivating a user takes effect immediately. Manage people and grants in
+**Admin → Users & access** (super admins only).
+
+**Approvals.** An editor's change to a *published* venture or product is saved as a
+pending revision (HTTP 202) and appears in **Admin → Approvals**, where a brand admin
+sees a before/after diff and approves or declines it. Every applied change is kept
+(`ContentRevision`), so any change can be rolled back from the Applied tab.
+
+**Lead emails.** New enquiries email the brand's lead handlers (super admins plus
+brand `ADMIN`/`LEAD_MANAGER`), with Reply-To set to the sender. Set `SMTP_URL` (or
+`SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`) and `MAIL_FROM`; without them mail is
+skipped. The API never emails addresses typed into public forms.
+
+**Passwords.** Everyone can change their own password under **Account & password**
+(other sessions are signed out). Super admins can reset anyone's password.
+
+### SEO per brand
+
+- Each brand has default meta tags, Open Graph and JSON-LD (`components/seo/SeoTags.jsx`).
+  Non-production hosts get `noindex`, and canonical URLs always point at the real domain.
+- **Admin → SEO** overrides the title, description, share image, canonical URL or
+  indexing for one path on one brand (`GET /seo?site=&path=`).
+- `GET /sitemap.xml?site=steven|devegen` and `GET /robots.txt?site=…` are generated per
+  site; `frontend/vercel.json` proxies each domain's `/sitemap.xml` and `/robots.txt` to
+  them, adds the SPA fallback, redirects `www` to the apex domain and sets security headers.
+  **Update the backend URL in `vercel.json` if the API moves.**
 
 `POST /contact` still works; convert old messages with `POST /admin/leads/from-message/:id`.
 
@@ -200,7 +224,7 @@ Then update that user's `passwordHash` column directly (`npx prisma studio` is t
 
 1. Add an admin UI for editing `SiteSetting` content (Hero/About/Stats/Timeline) instead of
    curl/Postman — currently the only gap in "everything is admin-editable."
-2. Add an in-app "change password" screen for the seeded admin account.
+2. Change the seeded admin password under **Account & password** before launch.
 3. Republish the three seeded blog posts through the TipTap editor so they're rich content
    instead of the plain-text placeholder they were seeded with.
 4. Point `STORAGE_DRIVER=r2` at real Cloudflare R2 credentials before launch if you'd rather not
