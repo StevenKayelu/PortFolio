@@ -82,7 +82,7 @@ export default function SingleBlogPost() {
   return (
     <>
       <Helmet>
-        <title>{post.title} — Blog — Your Name</title>
+        <title>{post.title} — Blog</title>
         <meta name="description" content={post.excerpt} />
         <meta property="og:title" content={post.title} />
         <meta property="og:type" content="article" />

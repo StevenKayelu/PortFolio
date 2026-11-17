@@ -20,7 +20,7 @@ export default function Experience() {
   return (
     <>
       <Helmet>
-        <title>Experience — Your Name</title>
+        <title>Experience</title>
         <meta name="description" content="Employment history, freelance work, and how it all started." />
       </Helmet>
 

@@ -30,7 +30,7 @@ export default function Certificates() {
   return (
     <>
       <Helmet>
-        <title>Certificates — Your Name</title>
+        <title>Certificates</title>
         <meta name="description" content="Professional certifications and credentials." />
       </Helmet>
 

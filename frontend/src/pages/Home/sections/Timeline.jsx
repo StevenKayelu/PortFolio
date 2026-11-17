@@ -11,7 +11,7 @@ export default function Timeline() {
   );
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 6, sm: 8, md: 10 }, px: { xs: 2, sm: 3 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 6, sm: 8, md: 10 }, px: { xs: 2, sm: 3 } }}>
       <Reveal>
         <Typography
           variant="caption"

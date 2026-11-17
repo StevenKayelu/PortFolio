@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useParams, Navigate, NavLink } from "react-router-dom";
+import { useParams, Navigate, NavLink, useLocation } from "react-router-dom";
 import { Box, Container, Typography, Grid, Chip, Stack, Button, Divider, Skeleton, useTheme } from "@mui/material";
 import { FiGithub, FiExternalLink, FiArrowLeft } from "react-icons/fi";
 import Reveal from "../../components/common/Reveal";
@@ -7,6 +7,7 @@ import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
 export default function ProjectDetails() {
+  const basePath = useLocation().pathname.startsWith("/solutions") ? "/solutions/work" : "/projects";
   const { slug } = useParams();
   const theme = useTheme();
 
@@ -16,7 +17,7 @@ export default function ProjectDetails() {
   );
 
   console.log("Project data:", project);
-  if (!loading && (error || !project)) return <Navigate to="/projects" replace />;
+  if (!loading && (error || !project)) return <Navigate to={basePath} replace />;
 
   if (loading) {
     return (
@@ -31,14 +32,14 @@ export default function ProjectDetails() {
   return (
     <>
       <Helmet>
-        <title>{project.title} — Projects — Your Name</title>
+        <title>{project.title} — Projects</title>
         <meta name="description" content={project.summary} />
       </Helmet>
 
       <Box sx={{ background: theme.custom.gradient, pt: { xs: 8, md: 10 }, pb: 6 }}>
         <Container maxWidth="md">
           <Reveal>
-            <Button component={NavLink} to="/projects" startIcon={<FiArrowLeft />} sx={{ mb: 3, color: "text.secondary" }}>
+            <Button component={NavLink} to={basePath} startIcon={<FiArrowLeft />} sx={{ mb: 3, color: "text.secondary" }}>
               All projects
             </Button>
             <Typography variant="h1" sx={{ mb: 2, fontSize: { xs: "2rem", md: "2.75rem" } }}>{project.title}</Typography>

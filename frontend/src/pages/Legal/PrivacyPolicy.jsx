@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy — Your Name</title>
+        <title>Privacy Policy</title>
       </Helmet>
 
       <Container maxWidth="sm" sx={{ py: { xs: 8, md: 12 } }}>

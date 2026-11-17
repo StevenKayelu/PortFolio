@@ -1,29 +1,18 @@
 import { useEffect, useState } from "react";
-import { Box, Fab, Zoom, LinearProgress } from "@mui/material";
+import { Box, Fab, Zoom } from "@mui/material";
 import { FiArrowUp } from "react-icons/fi";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 import { useLocation, Outlet } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
+import { Helmet } from "react-helmet-async";
+import { useBrand } from "../../context/BrandContext";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-
-function useScrollProgress() {
-  const [progress, setProgress] = useState(0);
-  useEffect(() => {
-    const onScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      const max = scrollHeight - clientHeight;
-      setProgress(max > 0 ? (scrollTop / max) * 100 : 0);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  return progress;
-}
 
 function BackToTopFab() {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 480);
+    const onScroll = () => setVisible(window.scrollY > 900);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -35,7 +24,12 @@ function BackToTopFab() {
         color="primary"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Back to top"
-        sx={{ position: "fixed", bottom: 28, right: 28, zIndex: 1200 }}
+        sx={{
+          position: "fixed", zIndex: 1200,
+          bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
+          right: "calc(20px + env(safe-area-inset-right, 0px))",
+          boxShadow: 3,
+        }}
       >
         <FiArrowUp />
       </Fab>
@@ -43,31 +37,63 @@ function BackToTopFab() {
   );
 }
 
+/** New pages start at the top; links with a #hash scroll to that section. */
+function useScrollOnNavigate() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) {
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)));
+      if (el) {
+        requestAnimationFrame(() => el.scrollIntoView({ block: "start" }));
+        return;
+      }
+    }
+    window.scrollTo(0, 0);
+  }, [pathname, hash]);
+}
+
 export default function MainLayout() {
   const location = useLocation();
-  const progress = useScrollProgress();
+  const theme = useTheme();
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 200, damping: 40, restDelta: 0.001 });
+  const { brandName } = useBrand();
+  useScrollOnNavigate();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <LinearProgress
-        variant="determinate"
-        value={progress}
+      <Helmet titleTemplate={`%s — ${brandName}`} defaultTitle={brandName} />
+      <Box
+        component="a"
+        href="#main"
         sx={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 1301,
-          height: 2, bgcolor: "transparent",
-          "& .MuiLinearProgress-bar": { bgcolor: "primary.main" },
+          position: "absolute", left: 16, top: -60, zIndex: 1400, px: 2, py: 1.25,
+          bgcolor: "primary.main", color: "primary.contrastText", borderRadius: 1, textDecoration: "none",
+          "&:focus": { top: 12 },
+        }}
+      >
+        Skip to content
+      </Box>
+      <motion.div
+        aria-hidden="true"
+        style={{
+          scaleX: progress, transformOrigin: "0 50%", position: "fixed", top: 0, left: 0, right: 0,
+          height: 2, zIndex: 1301, background: theme.palette.primary.main,
         }}
       />
       <Navbar />
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         <motion.main
+          id="main"
+          tabIndex={-1}
           key={location.pathname}
-          initial={{ opacity: 0, y: 8 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          style={{ flex: 1 }}
+          exit={reduceMotion ? undefined : { opacity: 0 }}
+          transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+          style={{ flex: 1, outline: "none" }}
         >
           <Outlet />
         </motion.main>

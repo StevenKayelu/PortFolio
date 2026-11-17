@@ -11,9 +11,12 @@ export default function Testimonials() {
     []
   );
 
+  // An empty section reads as a broken page; hide it until real testimonials exist.
+  if (!loading && !(testimonials || []).length) return null;
+
   return (
     <Box sx={{ bgcolor: "background.paper", py: { xs: 6, sm: 8, md: 10 } }}>
-      <Container maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <Reveal>
           <Typography
             variant="caption"

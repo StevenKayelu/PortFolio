@@ -16,7 +16,7 @@ export default function Achievements() {
   return (
     <>
       <Helmet>
-        <title>Achievements — Your Name</title>
+        <title>Achievements</title>
         <meta name="description" content="Awards, recognitions, and milestones." />
       </Helmet>
 

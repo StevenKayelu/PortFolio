@@ -15,7 +15,7 @@ export default function TestimonialsPage() {
   return (
     <>
       <Helmet>
-        <title>Testimonials — Your Name</title>
+        <title>Testimonials</title>
         <meta name="description" content="What clients and collaborators say." />
       </Helmet>
 
