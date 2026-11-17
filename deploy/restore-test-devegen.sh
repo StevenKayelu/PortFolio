@@ -13,8 +13,8 @@ log() { echo "$(date -u +%FT%TZ) restore-test: $*"; }
 psql_super() { docker exec -i motolink-postgres-1 psql -U motolink -d postgres -v ON_ERROR_STOP=1 -Atq "$@"; }
 counts() {
   docker exec motolink-postgres-1 psql -U motolink -d "$1" -Atq -c \
-    "select format('select %L || '' '' || count(*) from %I', table_name, table_name) from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE' and table_name <> '_prisma_migrations' order by 1" </dev/null \
-    | docker exec -i motolink-postgres-1 psql -U motolink -d "$1" -Atq | sort
+    "select format('select %L || '' '' || count(*) from %I;', table_name, table_name) from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE' and table_name <> '_prisma_migrations' order by 1" </dev/null \
+    | docker exec -i motolink-postgres-1 psql -U motolink -d "$1" -v ON_ERROR_STOP=1 -Atq | sort
 }
 cleanup() { psql_super -c "DROP DATABASE IF EXISTS $TEST_DB WITH (FORCE)" </dev/null >/dev/null 2>&1 || true; rm -rf "$WORK"; }
 fail() {
@@ -36,8 +36,8 @@ psql_super -c "DROP DATABASE IF EXISTS $TEST_DB WITH (FORCE)" </dev/null
 psql_super -c "CREATE DATABASE $TEST_DB" </dev/null
 docker exec -i motolink-postgres-1 pg_restore -U motolink -d "$TEST_DB" --no-owner --exit-on-error < "$WORK/$NAME" || fail "pg_restore failed"
 
-counts "$TEST_DB" > "$WORK/restored.txt"
-counts devegen > "$WORK/live.txt"
+counts "$TEST_DB" > "$WORK/restored.txt" || fail "couldn't count the restored tables"
+counts devegen > "$WORK/live.txt" || fail "couldn't count the live tables"
 TABLES=$(wc -l < "$WORK/restored.txt")
 ROWS=$(awk '{s += $2} END {print s + 0}' "$WORK/restored.txt")
 LIVE_ROWS=$(awk '{s += $2} END {print s + 0}' "$WORK/live.txt")
@@ -45,6 +45,9 @@ LIVE_ROWS=$(awk '{s += $2} END {print s + 0}' "$WORK/live.txt")
 # backup and now (new visits and leads, pruned records), so only a large shortfall fails.
 MISSING=$(cut -d' ' -f1 "$WORK/live.txt" | comm -23 - <(cut -d' ' -f1 "$WORK/restored.txt") | tr '
 ' ' ')
+# Never report success on an empty or unreadable comparison.
+[ "$TABLES" -ge 30 ] || fail "only $TABLES tables were counted in the restore"
+[ "$LIVE_ROWS" -gt 0 ] || fail "the live row count came back empty"
 [ -z "$MISSING" ] || fail "tables missing from the restore: $MISSING"
 [ "$ROWS" -ge $(( LIVE_ROWS * 9 / 10 )) ] || fail "the restore has $ROWS rows but the live database has $LIVE_ROWS"
 CHANGED=$(join "$WORK/live.txt" "$WORK/restored.txt" | awk '$2 != $3 {printf "%s %+d, ", $1, $2 - $3}')

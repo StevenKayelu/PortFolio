@@ -1,7 +1,7 @@
 # Devegen API — production image (runs next to MotoGo on the shared server).
 # Debian slim rather than Alpine: Prisma's engines and sharp's prebuilt
 # binaries are most reliable on glibc.
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl ca-certificates \
