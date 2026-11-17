@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
  * process; files run one at a time (see package.json) because they share
  * one disposable database.
  */
-export async function startApp({ mail = false } = {}) {
+export async function startApp({ mail = false, realtime = false } = {}) {
   process.env.JWT_ACCESS_SECRET ||= "test-access-secret";
   process.env.JWT_REFRESH_SECRET ||= "test-refresh-secret";
   process.env.TRUST_PROXY = "1"; // lets each request present its own client IP
@@ -18,7 +18,17 @@ export async function startApp({ mail = false } = {}) {
 
   const { default: app } = await import("../src/app.js");
   const { prisma } = await import("../src/config/prisma.js");
-  const server = app.listen(0);
+  let server;
+  if (realtime) {
+    const { createServer } = await import("http");
+    const { initRealtime } = await import("../src/services/realtime.service.js");
+    const { allowedOrigins } = await import("../src/app.js");
+    server = createServer(app);
+    initRealtime(server, allowedOrigins);
+    await new Promise((resolve) => server.listen(0, resolve));
+  } else {
+    server = app.listen(0);
+  }
   const base = `http://127.0.0.1:${server.address().port}`;
   let ip = 0;
 
@@ -43,5 +53,10 @@ export async function startApp({ mail = false } = {}) {
     return { token: res.body.accessToken, cookie: res.headers.get("set-cookie")?.split(";")[0] };
   }
 
-  return { prisma, api, login, base, close: () => server.close() };
+  async function close() {
+    if (realtime) (await import("../src/services/realtime.service.js")).closeRealtime();
+    server.close();
+  }
+
+  return { prisma, api, login, base, close };
 }

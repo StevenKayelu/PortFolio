@@ -16,7 +16,7 @@ const app = express();
 // CLIENT_URLS is a comma-separated list, e.g.
 // "https://stevenkayelu.online,https://devgenventures.com"; CLIENT_URL is
 // still honoured for existing deployments.
-const allowedOrigins = [
+export const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   process.env.CLIENT_URL,

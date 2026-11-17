@@ -37,6 +37,23 @@ export async function getDashboardSummary(req, res, next) {
   }
 }
 
+/** Badge counts for the admin menu. */
+export async function getInboxCounts(req, res, next) {
+  try {
+    const canReadMessages = ["SUPER_ADMIN", "ADMIN"].includes(req.user.role);
+    const [leads, messages, approvals, testimonials] = await Promise.all([
+      prisma.lead.count({ where: { status: "NEW", deletedAt: null, ...brandFilter(req.brandAccess, SCOPES.leads) } }),
+      canReadMessages ? prisma.contactMessage.count({ where: { status: "NEW", deletedAt: null } }) : 0,
+      prisma.contentRevision.count({ where: { status: "PENDING", ...brandFilter(req.brandAccess, SCOPES.manage) } }),
+      prisma.testimonial.count({ where: { isApproved: false, withdrawnAt: null, consentPublishAt: { not: null }, ...brandFilter(req.brandAccess, SCOPES.manage) } }),
+    ]);
+    res.set("Cache-Control", "no-store");
+    res.json({ leads, messages, approvals, testimonials });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getPageViewSeries(req, res, next) {
   try {
     // Simple day-bucketed count over the last 30 days. Swappable for a

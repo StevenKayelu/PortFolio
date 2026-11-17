@@ -1,6 +1,8 @@
 import "dotenv/config";
 import sharp from "sharp";
-import app from "./app.js";
+import { createServer } from "http";
+import app, { allowedOrigins } from "./app.js";
+import { initRealtime } from "./services/realtime.service.js";
 import { scheduleComplianceReminders } from "./services/complianceReminders.service.js";
 
 const PORT = process.env.PORT || 5000;
@@ -14,6 +16,8 @@ if (process.env.SHARP_LOW_MEMORY === "true") {
 
 scheduleComplianceReminders();
 
-app.listen(PORT, () => {
+const server = createServer(app);
+initRealtime(server, allowedOrigins);
+server.listen(PORT, () => {
   console.log(`API listening on http://localhost:${PORT}/api/v1`);
 });

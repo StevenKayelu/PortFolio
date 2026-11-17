@@ -24,6 +24,16 @@ let accessToken = null;
 export function setAccessToken(token) {
   accessToken = token;
 }
+export const getAccessToken = () => accessToken;
+
+// One refresh at a time, shared by the API client and the live connection.
+let refreshPromise = null;
+export function refreshAccessToken() {
+  refreshPromise ??= apiClient.post("/auth/refresh")
+    .then(({ data }) => { setAccessToken(data.accessToken); return data.accessToken; })
+    .finally(() => { refreshPromise = null; });
+  return refreshPromise;
+}
 
 apiClient.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
@@ -31,7 +41,6 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // On a 401, try one silent refresh, then replay the original request.
-let refreshPromise = null;
 apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -40,12 +49,8 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry && !original.url?.startsWith("/auth/")) {
       original._retry = true;
       try {
-        refreshPromise ??= apiClient.post("/auth/refresh").finally(() => {
-          refreshPromise = null;
-        });
-        const { data } = await refreshPromise;
-        setAccessToken(data.accessToken);
-        original.headers.Authorization = `Bearer ${data.accessToken}`;
+        const token = await refreshAccessToken();
+        original.headers.Authorization = `Bearer ${token}`;
         return apiClient(original);
       } catch {
         setAccessToken(null);

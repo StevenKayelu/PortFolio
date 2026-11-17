@@ -255,6 +255,7 @@ export const siteSettingSchemas = {
     brand: optionalText(120),
     email: z.string().trim().email().max(191).optional().or(z.literal("").transform(() => undefined)),
     phone: optionalText(40),
+    whatsapp: optionalText(40),
     github: optionalUrl,
     linkedin: optionalUrl,
     facebook: optionalUrl,

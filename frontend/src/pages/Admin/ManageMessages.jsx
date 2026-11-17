@@ -4,6 +4,7 @@ import {
 } from "@mui/material";
 import { FiChevronDown, FiChevronUp, FiCornerUpLeft } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
+import { useLiveRefresh } from "../../context/AdminRealtimeContext";
 import { formatDateTime } from "../../utils/format";
 
 const STATUS_COLORS = { NEW: "primary", READ: "default", REPLIED: "success", ARCHIVED: "default", SPAM: "error" };
@@ -29,6 +30,7 @@ export default function ManageMessages() {
   };
 
   useEffect(load, []);
+  useLiveRefresh("message", load);
 
   const updateStatus = async (id, status) => {
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, status } : m)));

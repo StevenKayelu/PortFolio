@@ -4,6 +4,7 @@ import {
 } from "@mui/material";
 import { FiCheck, FiX, FiRotateCcw } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
+import { useLiveRefresh } from "../../context/AdminRealtimeContext";
 import { useAdminBrand } from "../../context/AdminBrandContext";
 
 import { formatDateTime } from "../../utils/format";
@@ -54,6 +55,7 @@ export default function ManageApprovals() {
       .catch(() => setError("Changes couldn't be loaded. Try again."));
   }, [tab]);
   useEffect(load, [load]);
+  useLiveRefresh("approval", load);
 
   const act = async (id, action) => {
     setBusy(id); setError("");

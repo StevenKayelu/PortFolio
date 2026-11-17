@@ -4,25 +4,27 @@ import apiClient from "../../services/apiClient";
 import {
   Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Toolbar,
   AppBar, IconButton, Typography, useTheme, useMediaQuery, Stack, Avatar, Menu, MenuItem, TextField, ListSubheader,
+  Badge, Snackbar, Alert, Button, Tooltip,
 } from "@mui/material";
 import {
   FiGrid, FiFolder, FiEdit3, FiBriefcase, FiAward, FiUsers, FiImage,
   FiMail, FiMenu, FiLogOut, FiExternalLink, FiClock, FiSliders, FiHelpCircle, FiInbox, FiLayers, FiPackage,
-  FiCheckSquare, FiSearch, FiShield, FiKey, FiType, FiFileText,
+  FiCheckSquare, FiSearch, FiShield, FiKey, FiType, FiFileText, FiVolume2, FiVolumeX,
 } from "react-icons/fi";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AdminBrandProvider, useAdminBrand } from "../../context/AdminBrandContext";
 import { useAuth } from "../../context/AuthContext";
+import { AdminRealtimeProvider, useAdminRealtime } from "../../context/AdminRealtimeContext";
 
 const DRAWER_WIDTH = 240;
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/admin", icon: FiGrid, end: true },
   { label: "Site content", to: "/admin/content", icon: FiType, roles: ["SUPER_ADMIN", "ADMIN"] },
-  { label: "Leads", to: "/admin/leads", icon: FiInbox },
+  { label: "Leads", to: "/admin/leads", icon: FiInbox, badge: "leads" },
   { label: "Ventures", to: "/admin/ventures", icon: FiLayers },
   { label: "Products", to: "/admin/products", icon: FiPackage },
-  { label: "Approvals", to: "/admin/approvals", icon: FiCheckSquare },
+  { label: "Approvals", to: "/admin/approvals", icon: FiCheckSquare, badge: "approvals" },
   { label: "SEO", to: "/admin/seo", icon: FiSearch },
   { label: "Projects", to: "/admin/projects", icon: FiFolder },
   { label: "Blog", to: "/admin/blog", icon: FiEdit3 },
@@ -30,11 +32,11 @@ const NAV_ITEMS = [
   { label: "Experience", to: "/admin/experience", icon: FiClock },
   { label: "Certificates", to: "/admin/certificates", icon: FiAward },
   { label: "Skills", to: "/admin/skills", icon: FiSliders },
-  { label: "Testimonials", to: "/admin/testimonials", icon: FiUsers },
+  { label: "Testimonials", to: "/admin/testimonials", icon: FiUsers, badge: "testimonials" },
   { label: "Gallery", to: "/admin/gallery", icon: FiImage },
   { label: "Achievements", to: "/admin/achievements", icon: FiAward },
   { label: "FAQ", to: "/admin/faq", icon: FiHelpCircle },
-  { label: "Messages", to: "/admin/messages", icon: FiMail },
+  { label: "Messages", to: "/admin/messages", icon: FiMail, badge: "messages", roles: ["SUPER_ADMIN", "ADMIN"] },
   { label: "Legal & compliance", to: "/admin/compliance", icon: FiFileText, superOnly: true },
   { label: "Users & access", to: "/admin/users", icon: FiShield, superOnly: true },
 ];
@@ -59,8 +61,38 @@ function BrandSwitcher() {
 export default function AdminLayout() {
   return (
     <AdminBrandProvider>
-      <AdminShell />
+      <AdminRealtimeProvider>
+        <AdminShell />
+      </AdminRealtimeProvider>
     </AdminBrandProvider>
+  );
+}
+
+/** Pop-up for a live event, with a link to where it can be handled. */
+function LiveToast() {
+  const { lastEvent } = useAdminRealtime();
+  const [shown, setShown] = useState(null);
+  const navigate = useNavigate();
+  const [seen, setSeen] = useState(null);
+  if (lastEvent && lastEvent.id !== seen) {
+    setSeen(lastEvent.id);
+    setShown(lastEvent);
+  }
+  return (
+    <Snackbar
+      open={Boolean(shown)} autoHideDuration={8000} onClose={(_, reason) => reason !== "clickaway" && setShown(null)}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }} sx={{ maxWidth: { xs: "calc(100% - 16px)", sm: 420 } }}
+    >
+      <Alert
+        severity="info" variant="filled" onClose={() => setShown(null)} sx={{ width: "100%", alignItems: "center" }}
+        action={shown?.link && (
+          <Button color="inherit" size="small" onClick={() => { navigate(shown.link); setShown(null); }}>Open</Button>
+        )}
+      >
+        <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>{shown?.title}</Typography>
+        {shown?.body && <Typography sx={{ fontSize: "0.82rem", opacity: 0.9, overflowWrap: "anywhere" }}>{shown.body}</Typography>}
+      </Alert>
+    </Snackbar>
   );
 }
 
@@ -72,6 +104,7 @@ function AdminShell() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { counts, connected, muted, setMuted } = useAdminRealtime();
 
    const { data: identity, loading } = useFetch(
     () => apiClient.get("/site-settings/identity").then((r) => r.data),
@@ -105,7 +138,9 @@ function AdminShell() {
               sx={{ borderRadius: `${theme.custom.radii.md}px`, mb: 0.5 }}
             >
               <ListItemIcon sx={{ minWidth: 36, color: active ? "primary.main" : "text.secondary" }}>
-                <Icon size={18} />
+                <Badge color="error" badgeContent={item.badge ? counts[item.badge] : 0} max={99} sx={{ "& .MuiBadge-badge": { fontSize: "0.65rem", height: 16, minWidth: 16 } }}>
+                  <Icon size={18} />
+                </Badge>
               </ListItemIcon>
               <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: "0.9rem" }} />
             </ListItemButton>
@@ -131,11 +166,21 @@ function AdminShell() {
         <Toolbar>
           {isMobile && (
             <IconButton onClick={() => setMobileOpen(true)} sx={{ mr: 1 }} aria-label="Open menu">
-              <FiMenu />
+              <Badge color="error" variant="dot" invisible={!(counts.leads + counts.messages + counts.approvals + counts.testimonials)}>
+                <FiMenu />
+              </Badge>
             </IconButton>
           )}
           <BrandSwitcher />
           <Box sx={{ flex: 1 }} />
+          <Tooltip title={connected ? "Live: new enquiries and messages appear instantly" : "Reconnecting… lists still refresh when you open them"}>
+            <Stack direction="row" alignItems="center" gap={0.75} sx={{ mr: { xs: 1, sm: 2 } }} aria-live="polite">
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: connected ? "success.main" : "text.disabled" }} />
+              <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+                {connected ? "Live" : "Offline"}
+              </Typography>
+            </Stack>
+          </Tooltip>
           <Stack direction="row" spacing={1} alignItems="center" onClick={(e) => setMenuAnchor(e.currentTarget)} sx={{ cursor: "pointer" }}>
             <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: "0.85rem" }}>
               {user?.name?.charAt(0) || "A"}
@@ -145,6 +190,10 @@ function AdminShell() {
           <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
             <MenuItem onClick={() => { setMenuAnchor(null); navigate("/admin/account"); }}>
               <FiKey size={16} style={{ marginRight: 8 }} /> Account &amp; password
+            </MenuItem>
+            <MenuItem onClick={() => setMuted(!muted)}>
+              {muted ? <FiVolume2 size={16} style={{ marginRight: 8 }} /> : <FiVolumeX size={16} style={{ marginRight: 8 }} />}
+              {muted ? "Turn alert sound on" : "Mute alert sound"}
             </MenuItem>
             <MenuItem onClick={logout}>
               <FiLogOut size={16} style={{ marginRight: 8 }} /> Sign out
@@ -171,6 +220,7 @@ function AdminShell() {
           <Outlet />
         </Box>
       </Box>
+      <LiveToast />
     </Box>
   );
 }

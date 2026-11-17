@@ -11,6 +11,7 @@ import apiClient from "../../services/apiClient";
 import { SeoDefaults, SeoOverrides } from "../seo/SeoTags";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import WhatsAppButton from "./WhatsAppButton";
 
 function BackToTopFab() {
   const [visible, setVisible] = useState(false);
@@ -29,8 +30,9 @@ function BackToTopFab() {
         aria-label="Back to top"
         sx={{
           position: "fixed", zIndex: 1200,
-          bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
-          right: "calc(20px + env(safe-area-inset-right, 0px))",
+          // Sits above the WhatsApp button.
+          bottom: "calc(92px + env(safe-area-inset-bottom, 0px))",
+          right: "calc(24px + env(safe-area-inset-right, 0px))",
           boxShadow: 3,
         }}
       >
@@ -120,6 +122,7 @@ export default function MainLayout() {
 
       <Footer />
       <BackToTopFab />
+      <WhatsAppButton />
     </Box>
   );
 }

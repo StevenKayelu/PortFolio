@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { prisma } from "../config/prisma.js";
+import { notifyStaff } from "../services/realtime.service.js";
 import { audit } from "../services/audit.service.js";
 import { notifyNewLead, notifyAssignment } from "../services/mail.service.js";
 import { SCOPES, assertBrandScope, brandFilter, forbidden } from "../services/brandAccess.service.js";
@@ -61,6 +62,10 @@ export async function submitEnquiry(req, res, next) {
     });
 
     notifyNewLead(lead, brand);
+    notifyStaff({
+      kind: "lead", brandId: brand.id, scopes: SCOPES.leads,
+      title: `New ${lead.type.toLowerCase()} enquiry · ${brand.name}`, body: `${lead.name}: ${lead.message}`, link: "/admin/leads",
+    });
     res.status(201).json({ message: "Enquiry received.", reference: lead.reference });
   } catch (err) {
     next(err);

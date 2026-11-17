@@ -5,6 +5,7 @@ import {
 } from "@mui/material";
 import { FiPlus, FiCopy, FiCheck, FiCheckCircle, FiAlertTriangle } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
+import { useLiveRefresh } from "../../context/AdminRealtimeContext";
 import { useAdminBrand } from "../../context/AdminBrandContext";
 
 import { formatDate } from "../../utils/format";
@@ -62,6 +63,7 @@ function TestimonialsTab() {
     apiClient.get("/testimonials/admin/all").then((r) => setItems(r.data)).catch(() => setError("Testimonials couldn't be loaded. Try again."));
   }, []);
   useEffect(load, [load]);
+  useLiveRefresh("testimonial", load);
 
   const patch = async (id, body) => {
     setError("");

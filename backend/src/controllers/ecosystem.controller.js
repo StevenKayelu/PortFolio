@@ -1,5 +1,6 @@
 import slugify from "slugify";
 import { prisma } from "../config/prisma.js";
+import { notifyStaff } from "../services/realtime.service.js";
 import { audit } from "../services/audit.service.js";
 import { pickChanges, applyChanges, proposeChanges } from "../services/revision.service.js";
 import { SCOPES, assertBrandScope, brandFilter, forbidden, hasBrandScope } from "../services/brandAccess.service.js";
@@ -204,6 +205,10 @@ async function saveOrPropose(req, res, { entityType, entity, brandId, changes, l
   if (entity.status !== "DRAFT" && !hasBrandScope(req.brandAccess, brandId, SCOPES.manage)) {
     const revision = await proposeChanges({ entityType, entity, brandId, changes, userId: req.user.sub, note });
     await audit(req, "PROPOSE", label, entity.id, { revisionId: revision.id, fields: Object.keys(changes) });
+    notifyStaff({
+      kind: "approval", brandId, scopes: SCOPES.manage,
+      title: "Change waiting for approval", body: `${label}: ${entity.name || entity.title || ""}`.trim(), link: "/admin/approvals",
+    });
     return res.status(202).json({ message: "Sent to a brand admin for approval.", revision });
   }
   const updated = await applyChanges({ entityType, entity, brandId, changes, userId: req.user.sub, note });

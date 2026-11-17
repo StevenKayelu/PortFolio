@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma.js";
+import { notifyStaff } from "../services/realtime.service.js";
 
 export async function submitContactMessage(req, res, next) {
   try {
@@ -6,6 +7,7 @@ export async function submitContactMessage(req, res, next) {
     await prisma.contactMessage.create({
       data: { name, email, subject, message, ipAddress: req.ip },
     });
+    notifyStaff({ kind: "message", rooms: ["messages"], title: `New message from ${name}`, body: subject || message, link: "/admin/messages" });
     res.status(201).json({ message: "Thanks for reaching out — I'll reply within a day." });
   } catch (err) {
     next(err);

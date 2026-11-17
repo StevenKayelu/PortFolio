@@ -114,7 +114,7 @@ export default function ManageSiteContent() {
   const field = (key, label, props = {}) => (
     <TextField
       id={`${tab}-${key}`} label={label} value={value?.[key] || ""} onChange={(e) => set({ [key]: e.target.value })}
-      error={Boolean(status[tab]?.fields?.[key])} helperText={status[tab]?.fields?.[key]?.[0] || props.helperText} fullWidth {...props}
+      fullWidth {...props} error={Boolean(status[tab]?.fields?.[key])} helperText={status[tab]?.fields?.[key]?.[0] || props.helperText}
     />
   );
 
@@ -159,6 +159,7 @@ export default function ManageSiteContent() {
               <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" } }}>
                 {field("email", "Email")}
                 {field("phone", "Phone")}
+                {field("whatsapp", "WhatsApp number", { helperText: "e.g. +260 97 123 4567. Leave empty to use the phone number for the WhatsApp button." })}
                 {field("github", "GitHub URL")}
                 {field("linkedin", "LinkedIn URL")}
                 {field("facebook", "Facebook URL")}

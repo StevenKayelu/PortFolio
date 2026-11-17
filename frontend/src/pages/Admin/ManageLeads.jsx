@@ -6,6 +6,7 @@ import {
 import { FiX, FiSearch, FiMail, FiPhone, FiUserCheck } from "react-icons/fi";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import apiClient from "../../services/apiClient";
+import { useLiveRefresh } from "../../context/AdminRealtimeContext";
 import { useAuth } from "../../context/AuthContext";
 import { useAdminBrand } from "../../context/AdminBrandContext";
 
@@ -146,6 +147,7 @@ export default function ManageLeads() {
       .then((r) => { setData(r.data); setError(""); })
       .catch((err) => setError(err.response?.status === 404 ? "The leads API isn't deployed yet." : "Leads couldn't be loaded. Check your connection and try again."));
   }, [filters, brandKey]);
+  useLiveRefresh("lead", load);
 
   useEffect(() => {
     const t = setTimeout(load, filters.search ? 300 : 0); // debounce typing

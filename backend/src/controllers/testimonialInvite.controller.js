@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { prisma } from "../config/prisma.js";
 import { audit } from "../services/audit.service.js";
 import { sendMail } from "../services/mail.service.js";
+import { notifyStaff } from "../services/realtime.service.js";
 import { SCOPES, assertBrandScope, brandFilter } from "../services/brandAccess.service.js";
 
 /**
@@ -213,6 +214,10 @@ export async function submitViaInvite(req, res, next) {
       text: `${invite.clientName}${clientCompany ? `, ${clientCompany}` : ""} ${firstTime ? "left" : "updated"} a testimonial:\n\n"${content}"\n\nIt is waiting for approval in Admin → Testimonials.`,
     })).catch((e) => console.error("Testimonial notification failed:", e.message));
 
+    notifyStaff({
+      kind: "testimonial", brandId: invite.brandId, scopes: SCOPES.manage,
+      title: `${firstTime ? "New" : "Updated"} testimonial · ${invite.brand.name}`, body: `${invite.clientName}: ${content}`, link: "/admin/testimonials",
+    });
     res.status(firstTime ? 201 : 200).json({ status: "AWAITING_APPROVAL" });
   } catch (e) {
     next(e);
