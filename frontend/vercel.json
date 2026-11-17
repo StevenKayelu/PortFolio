@@ -6,7 +6,7 @@
       "has": [
         {
           "type": "host",
-          "value": "devgenventures.com"
+          "value": "(www\\.)?devgenventures\\.com"
         }
       ],
       "destination": "https://api.devgenventures.com/sitemap.xml?site=devegen"
@@ -16,7 +16,7 @@
       "has": [
         {
           "type": "host",
-          "value": "devgenventures.com"
+          "value": "(www\\.)?devgenventures\\.com"
         }
       ],
       "destination": "https://api.devgenventures.com/robots.txt?site=devegen"
