@@ -1,25 +1,26 @@
 import { IconButton, Tooltip } from "@mui/material";
-import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
+import { FiSun, FiMoon } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThemeSwitcher } from "../../context/ThemeContext";
 
-const META = {
-  system: { icon: FiMonitor, label: "Theme follows your device", next: "light" },
-  light: { icon: FiSun, label: "Light theme", next: "dark" },
-  dark: { icon: FiMoon, label: "Dark theme", next: "your device setting" },
-};
-
-/** Cycles system → light → dark. The icon shows the current setting. */
+/**
+ * Light ⇄ dark switch. Every click visibly changes the theme (the old
+ * system → light → dark cycle looked broken when "system" was already light).
+ * Until someone clicks, the site follows the device setting. The icon shows
+ * what a click switches to.
+ */
 export default function ThemeSwitcher() {
-  const { preference, cyclePreference } = useThemeSwitcher();
-  const { icon: Icon, label, next } = META[preference];
+  const { mode, setPreference } = useThemeSwitcher();
+  const next = mode === "dark" ? "light" : "dark";
+  const Icon = next === "dark" ? FiMoon : FiSun;
+  const label = `Switch to ${next} theme`;
 
   return (
-    <Tooltip title={`${label}. Switch to ${next}.`}>
-      <IconButton onClick={cyclePreference} aria-label={`${label}. Switch to ${next}.`} sx={{ width: 44, height: 44 }}>
+    <Tooltip title={label}>
+      <IconButton onClick={() => setPreference(next)} aria-label={label} sx={{ width: 44, height: 44 }}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
-            key={preference}
+            key={mode}
             initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
             animate={{ opacity: 1, rotate: 0, scale: 1 }}
             exit={{ opacity: 0, rotate: 45, scale: 0.8 }}

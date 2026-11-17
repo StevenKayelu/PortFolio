@@ -18,6 +18,7 @@ RUN npx prisma generate
 
 COPY src ./src
 COPY scripts ./scripts
+COPY assets ./assets
 
 # Run as the unprivileged "node" user; uploads (local driver) and private
 # files live in volumes owned by it.

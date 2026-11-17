@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Container, Typography, Stack, Box, Button, Divider, LinearProgress, Grid, Skeleton, useTheme } from "@mui/material";
 import { FiDownload } from "react-icons/fi";
 import Reveal from "../../components/common/Reveal";
-import apiClient from "../../services/apiClient";
+import apiClient, { API_BASE_URL } from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
 
 const CATEGORY_LABELS = {
@@ -45,7 +45,7 @@ export default function Resume() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 8, md: 12 } }}>
         <Reveal>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 5 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems="flex-start" gap={2} sx={{ mb: 5 }}>
             <Box>
               <Typography variant="caption" sx={{ fontFamily: theme.custom.fontMono, color: "text.secondary", letterSpacing: 1 }}>
                 RÉSUMÉ
@@ -55,12 +55,20 @@ export default function Resume() {
               </Typography>
               <Typography variant="body1" color="text.secondary">{identity?.role}</Typography>
             </Box>
-            <Button
-              variant="contained" endIcon={<FiDownload />} sx={{ whiteSpace: "nowrap" }}
-              href={resume?.fileUrl || "#"} disabled={!resume?.fileUrl} target="_blank" rel="noreferrer"
-            >
-              Download PDF
-            </Button>
+            {/* Built by the API from the live portfolio data, so it always matches this page. */}
+            <Stack gap={0.5} alignItems={{ xs: "flex-start", sm: "flex-end" }}>
+              <Button variant="contained" endIcon={<FiDownload />} sx={{ whiteSpace: "nowrap" }} href={`${API_BASE_URL}/resume/pdf?download=1`}>
+                Download PDF
+              </Button>
+              <Button size="small" href={`${API_BASE_URL}/resume/pdf`} target="_blank" rel="noopener" sx={{ whiteSpace: "nowrap" }}>
+                View in browser
+              </Button>
+              {resume?.fileUrl && (
+                <Button size="small" href={resume.fileUrl} target="_blank" rel="noopener" sx={{ whiteSpace: "nowrap" }}>
+                  Uploaded version
+                </Button>
+              )}
+            </Stack>
           </Stack>
         </Reveal>
 
