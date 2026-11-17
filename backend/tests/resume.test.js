@@ -39,3 +39,26 @@ test("the résumé is a PDF built from published data only", async () => {
   const inline = await fetch(`${base}/api/v1/resume/pdf`);
   assert.match(inline.headers.get("content-disposition"), /^inline;/);
 });
+
+test("referees are admin-only and only ticked ones reach the résumé", async () => {
+  const { api, login } = t;
+  const { token } = await login("admin@example.com", "ChangeMe123!");
+  assert.equal((await api("GET", "/admin/referees")).status, 401, "not public");
+  assert.equal((await api("GET", "/referees")).status, 404, "no public route");
+  assert.equal((await api("POST", "/admin/referees", { token, body: { name: "Test Referee", position: "Lecturer", organization: "Test University" } })).status, 400, "needs email or phone");
+
+  const shown = await api("POST", "/admin/referees", { token, body: { name: "Test Referee Shown", position: "Lecturer", organization: "Test University", phone: "+260 971 000 000" } });
+  const hidden = await api("POST", "/admin/referees", { token, body: { name: "Test Referee Hidden", position: "Manager", organization: "Test Ltd", email: "hidden@example.com", showOnResume: false } });
+  assert.equal(shown.status, 201);
+  assert.equal(hidden.status, 201);
+
+  const { loadResumeData } = await import("../src/services/resumePdf.service.js");
+  const names = (await loadResumeData()).referees.map((r) => r.name);
+  assert.ok(names.includes("Test Referee Shown"));
+  assert.ok(!names.includes("Test Referee Hidden"));
+
+  clearResumeCache();
+  assert.equal((await fetch(`${base}/api/v1/resume/pdf`)).status, 200, "the PDF renders with referees");
+  assert.equal((await api("DELETE", `/admin/referees/${shown.body.id}`, { token })).status, 204);
+  assert.equal((await api("DELETE", `/admin/referees/${hidden.body.id}`, { token })).status, 204);
+});

@@ -17,6 +17,7 @@ import siteSettingRoutes from "./siteSetting.routes.js";
 import adminRoutes from "./admin.routes.js";
 import ecosystemRoutes from "./ecosystem.routes.js";
 import adminEcosystemRoutes from "./adminEcosystem.routes.js";
+import refereeRoutes from "./referee.routes.js";
 
 const router = Router();
 
@@ -37,6 +38,7 @@ router.use("/contact", contactRoutes);
 router.use("/newsletter", newsletterRoutes);
 router.use("/resume", resumeRoutes);
 router.use("/site-settings", siteSettingRoutes);
+router.use("/admin/referees", refereeRoutes);
 router.use("/admin", adminRoutes);
 router.use("/admin", adminEcosystemRoutes);
 router.use("/", ecosystemRoutes);

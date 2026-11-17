@@ -9,7 +9,7 @@ import {
 import {
   FiGrid, FiFolder, FiEdit3, FiBriefcase, FiAward, FiUsers, FiImage,
   FiMail, FiMenu, FiLogOut, FiExternalLink, FiClock, FiSliders, FiHelpCircle, FiInbox, FiLayers, FiPackage,
-  FiCheckSquare, FiSearch, FiShield, FiKey, FiType, FiFileText, FiVolume2, FiVolumeX, FiBarChart2, FiFlag,
+  FiCheckSquare, FiSearch, FiShield, FiKey, FiType, FiFileText, FiVolume2, FiVolumeX, FiBarChart2, FiFlag, FiUserCheck,
 } from "react-icons/fi";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AdminBrandProvider, useAdminBrand } from "../../context/AdminBrandContext";
@@ -33,6 +33,7 @@ const NAV_ITEMS = [
   { label: "Blog", to: "/admin/blog", icon: FiEdit3 },
   { label: "Services", to: "/admin/services", icon: FiBriefcase },
   { label: "Experience", to: "/admin/experience", icon: FiClock },
+  { label: "Referees", to: "/admin/referees", icon: FiUserCheck, roles: ["SUPER_ADMIN", "ADMIN"] },
   { label: "Certificates", to: "/admin/certificates", icon: FiAward },
   { label: "Skills", to: "/admin/skills", icon: FiSliders },
   { label: "Testimonials", to: "/admin/testimonials", icon: FiUsers, badge: "testimonials" },

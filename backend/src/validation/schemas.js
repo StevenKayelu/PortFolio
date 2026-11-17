@@ -353,3 +353,16 @@ const credentialFields = {
 const credentialDates = (v) => !v.expiresAt || !v.issuedAt || v.expiresAt > v.issuedAt;
 export const credentialSchema = z.object(credentialFields).refine(credentialDates, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });
 export const credentialUpdateSchema = z.object(credentialFields).partial().refine(credentialDates, { message: "The expiry date must be after the issue date.", path: ["expiresAt"] });
+
+// ---------------------------------------------------------------- referees
+
+export const refereeSchema = z.object({
+  name: trimmed(120).min(1),
+  position: trimmed(160).min(1),
+  organization: trimmed(160).min(1),
+  email: z.string().trim().email("Enter a valid email address.").max(191).optional().nullable().or(z.literal("").transform(() => null)),
+  phone: z.string().trim().max(40).regex(/^[+0-9 ()-]*$/, "Use digits, spaces and + only.").optional().nullable().or(z.literal("").transform(() => null)),
+  showOnResume: z.boolean().optional(),
+  displayOrder: z.coerce.number().int().optional(),
+}).refine((r) => r.email || r.phone, { message: "Add an email address or a phone number.", path: ["email"] });
+export const refereeUpdateSchema = z.object(refereeSchema._def.schema.shape).partial();

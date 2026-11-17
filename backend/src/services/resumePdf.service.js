@@ -28,7 +28,7 @@ const clean = (s) => String(s || "").replace(/<[^>]+>/g, "").replace(/\r/g, "").
 const host = (url) => String(url || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 
 export async function loadResumeData() {
-  const [settings, experience, skills, projects, certificates, achievements] = await Promise.all([
+  const [settings, experience, skills, projects, certificates, achievements, referees] = await Promise.all([
     prisma.siteSetting.findMany({ where: { key: { in: ["identity", "about"] } } }),
     prisma.experience.findMany({ where: { deletedAt: null }, orderBy: [{ isCurrent: "desc" }, { startDate: "desc" }] }),
     prisma.skill.findMany({ where: { deletedAt: null }, orderBy: [{ displayOrder: "asc" }, { proficiency: "desc" }] }),
@@ -40,13 +40,14 @@ export async function loadResumeData() {
     }),
     prisma.certificate.findMany({ where: { deletedAt: null, isPublished: true }, orderBy: [{ displayOrder: "asc" }, { issueDate: "desc" }] }),
     prisma.achievement.findMany({ orderBy: { date: "desc" }, take: 8 }),
+    prisma.referee.findMany({ where: { showOnResume: true }, orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }] }),
   ]);
   const byKey = Object.fromEntries(settings.map((s) => [s.key, s.value || {}]));
-  return { identity: byKey.identity || {}, about: byKey.about || {}, experience, skills, projects, certificates, achievements };
+  return { identity: byKey.identity || {}, about: byKey.about || {}, experience, skills, projects, certificates, achievements, referees };
 }
 
 export function renderResumePdf(data, { siteUrl = "https://stevenkayelu.online" } = {}) {
-  const { identity, about, experience, skills, projects, certificates, achievements } = data;
+  const { identity, about, experience, skills, projects, certificates, achievements, referees = [] } = data;
   const name = identity.name || "Steven Kayelu";
   const doc = new PDFDocument({
     size: "A4", margins: { top: PAGE.margin, bottom: PAGE.margin + 18, left: PAGE.margin, right: PAGE.margin },
@@ -210,6 +211,35 @@ export function renderResumePdf(data, { siteUrl = "https://stevenkayelu.online" 
       paragraph(a.description);
       doc.moveDown(0.5);
     });
+  }
+
+  if (referees.length) {
+    // Two per row; a row moves to the next page as a whole.
+    const colW = (CONTENT_W - 24) / 2;
+    const block = (r) => [
+      { font: "sans-bold", size: 10.4, color: C.ink, text: r.name },
+      { font: "sans", size: 9.2, color: C.body, text: r.position },
+      { font: "sans", size: 9.2, color: C.body, text: r.organization },
+      r.phone && { font: "sans", size: 9.2, color: C.muted, text: r.phone, link: `tel:${r.phone.replace(/[^+0-9]/g, "")}` },
+      r.email && { font: "sans", size: 9.2, color: C.accent, text: r.email, link: `mailto:${r.email}` },
+    ].filter(Boolean);
+    const heightOf = (lines) => lines.reduce((h, l) => h + doc.font(l.font).fontSize(l.size).heightOfString(l.text, { width: colW, lineGap: 1.5 }) + 1.5, 0);
+    section("Referees", heightOf(block(referees[0])) + 10);
+    for (let i = 0; i < referees.length; i += 2) {
+      const row = referees.slice(i, i + 2).map(block);
+      const rowH = Math.max(...row.map(heightOf));
+      ensure(rowH + 12);
+      const top = doc.y;
+      row.forEach((lines, col) => {
+        let y = top;
+        for (const l of lines) {
+          doc.font(l.font).fontSize(l.size).fillColor(l.color).text(l.text, PAGE.margin + col * (colW + 24), y, { width: colW, lineGap: 1.5, link: l.link || null });
+          y = doc.y + 1.5;
+        }
+      });
+      doc.x = PAGE.margin;
+      doc.y = top + rowH + 12;
+    }
   }
 
   // --------------------------------------------------- footer on every page

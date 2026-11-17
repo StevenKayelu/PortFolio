@@ -104,6 +104,29 @@ export const ManageBrands = () => (
   />
 );
 
+export const ManageReferees = () => (
+  <ManageResource
+    title="Referees"
+    endpoint="/admin/referees"
+    intro="Printed on the résumé PDF only; never shown on the websites. The résumé can be downloaded by anyone, so ask each referee's permission before adding their contact details, and untick “Show on résumé” to keep someone on file without printing them."
+    columns={[
+      { key: "name", label: "Name" },
+      { key: "position", label: "Position", render: (r) => `${r.position}, ${r.organization}` },
+      { key: "contact", label: "Contact", render: (r) => [r.phone, r.email].filter(Boolean).join(" · ") },
+      { key: "showOnResume", label: "On résumé", render: (r) => (r.showOnResume ? "Yes" : "No") },
+    ]}
+    fields={[
+      { name: "name", label: "Name (e.g. Dr. Jane Banda)", type: "text", required: true },
+      { name: "position", label: "Position", type: "text", required: true },
+      { name: "organization", label: "Organisation", type: "text", required: true },
+      { name: "phone", label: "Phone (e.g. +260 97 123 4567)", type: "text" },
+      { name: "email", label: "Email", type: "text" },
+      { name: "showOnResume", label: "Show on résumé", type: "boolean", default: true },
+      { name: "displayOrder", label: "Order on the résumé (lower first)", type: "number", default: 0 },
+    ]}
+  />
+);
+
 export const ManageVentures = () => (
   <ManageResource
     title="Ventures"

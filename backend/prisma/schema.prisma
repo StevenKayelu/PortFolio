@@ -1053,3 +1053,20 @@ model ContentRevision {
   @@index([status, brandId])
   @@map("content_revisions")
 }
+
+// Referees for the résumé PDF. Admin-only: never returned by a public
+// endpoint or shown on the websites.
+model Referee {
+  id           String   @id @default(cuid())
+  name         String
+  position     String
+  organization String
+  email        String?
+  phone        String?
+  showOnResume Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("referees")
+}
