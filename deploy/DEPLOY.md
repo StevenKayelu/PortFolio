@@ -141,6 +141,7 @@ Set up once (already done on the server):
 |---|---|---|
 | Every night 00:30 | 02:30 | `backup-devegen.sh`: dump, check it can be read, keep 14 days in `/root/backups/devegen`, copy to the private R2 bucket (`backups/devegen/`, 30 recent + 12 monthly) |
 | 1st of the month 01:30 | 03:30 | `restore-test-devegen.sh`: restore the newest **off-server** copy into a temporary database, compare tables and row counts with the live one, delete the temporary database |
+| Every day 09:30 | 11:30 | `offsite-motogo.sh`: copies MotoGo's own daily backups (database and documents, made by its backup container at about 08:38 UTC) to the separate private `motogo-backups` R2 bucket; alerts if MotoGo's backup is over 30 hours old |
 
 Failures are emailed to the super admins. The log is `/var/log/devegen-backup.log`.
 
@@ -150,7 +151,8 @@ Useful commands:
 /root/devegen/deploy/backup-devegen.sh            # back up now
 /root/devegen/deploy/restore-test-devegen.sh      # prove a restore works now
 tail -20 /var/log/devegen-backup.log              # recent runs
-docker exec devegen-api node scripts/offsite-backup.js list   # copies in R2
+docker exec devegen-api node scripts/offsite-backup.js list   # DevGen copies in R2
+docker exec -e OFFSITE_SET=motogo devegen-api node scripts/offsite-backup.js list   # MotoGo copies
 ```
 
 ### Restoring for real (only after data loss)
