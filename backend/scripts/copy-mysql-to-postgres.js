@@ -5,8 +5,13 @@
  *   SOURCE_DATABASE_URL  mysql://user:pass@host:4000/portfolio   (read only)
  *   DATABASE_URL         postgresql://…  (migrated with `prisma migrate deploy`, still empty)
  *
- *   node scripts/copy-mysql-to-postgres.js            # copy, then verify row counts
- *   node scripts/copy-mysql-to-postgres.js --dry-run  # report what would be copied
+ *   node scripts/copy-mysql-to-postgres.js            # check, copy, verify row counts
+ *   node scripts/copy-mysql-to-postgres.js --dry-run  # check and report; writes nothing
+ *   node scripts/copy-mysql-to-postgres.js --reset    # empty the target first, then copy
+ *
+ * Every row is checked against the new schema BEFORE anything is written
+ * (also in --dry-run): values the new database would reject are listed by
+ * table, row id and field, and nothing is copied until they're fixed.
  *
  * Run it BEFORE `node prisma/seed-ecosystem.js` (the seed only fills gaps).
  * It refuses to write into a database that already has data.
@@ -24,6 +29,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import mysql from "mysql2/promise";
 
 const DRY_RUN = process.argv.includes("--dry-run");
+const RESET = process.argv.includes("--reset");
 const BATCH = 500;
 const SKIP_TABLES = new Set(["refresh_tokens"]);
 // Template sample content, skipped by exact title only: anything the owner
@@ -100,21 +106,16 @@ async function main() {
   const sourceTables = new Set(tableRows.map((r) => Object.values(r)[0]));
   const models = modelsInDependencyOrder();
 
-  // Never merge into a database that already has content.
-  if (!DRY_RUN) {
-    for (const model of models) {
-      if (await delegate(model).count()) {
-        throw new Error(`Target table ${model.dbName || model.name} already has rows. Use a fresh, migrated, unseeded database.`);
-      }
-    }
-  }
+  const enumValues = Object.fromEntries(Prisma.dmmf.datamodel.enums.map((e) => [e.name, new Set(e.values.map((v) => v.name))]));
+  const plan = [];
+  const problems = [];
 
-  const report = [];
+  // Pass 1: read and check everything; write nothing.
   for (const model of models) {
     const table = model.dbName || model.name;
     const scalars = model.fields.filter((f) => f.kind === "scalar" || f.kind === "enum");
-    if (SKIP_TABLES.has(table)) { report.push({ table, source: "-", copied: 0, note: "not copied (sessions)" }); continue; }
-    if (!sourceTables.has(table)) { report.push({ table, source: "-", copied: 0, note: "new table" }); continue; }
+    if (SKIP_TABLES.has(table)) { plan.push({ model, table, data: [], report: { table, source: "-", copied: 0, note: "not copied (sessions)" } }); continue; }
+    if (!sourceTables.has(table)) { plan.push({ model, table, data: [], report: { table, source: "-", copied: 0, note: "new table" } }); continue; }
 
     const [columnRows] = await source.query(`SHOW COLUMNS FROM \`${table}\``);
     const sourceColumns = new Set(columnRows.map((c) => c.Field));
@@ -129,7 +130,6 @@ async function main() {
       rows = rows.filter((r) => !PLACEHOLDER_CERTS.some((p) => p.title === r.title && p.credentialId === r.credentialId));
       if (rows.length !== sourceCount) note = `skipped ${sourceCount - rows.length} placeholder certificate(s)`;
     }
-
     if (TEMPLATE_TITLES[table]) {
       const before = rows.length;
       rows = rows.filter((r) => !TEMPLATE_TITLES[table].includes(r.title));
@@ -137,11 +137,70 @@ async function main() {
     }
 
     const data = rows.map((r) => Object.fromEntries(shared.map((f) => [f.name, convert(f, r[f.dbName || f.name])])));
-    if (!DRY_RUN) {
-      for (let i = 0; i < data.length; i += BATCH) await delegate(model).createMany({ data: data.slice(i, i + BATCH) });
+    for (const row of data) {
+      for (const f of shared) {
+        const v = row[f.name];
+        const where = { table, row: String(row.id ?? JSON.stringify(Object.values(row).slice(0, 2))).slice(0, 40), field: f.name };
+        if (v === null || v === undefined) {
+          if (f.isRequired && !f.hasDefaultValue) problems.push({ ...where, value: "(empty)", reason: "required in the new schema" });
+          continue;
+        }
+        if (f.kind === "enum" && !enumValues[f.type].has(v)) {
+          problems.push({ ...where, value: String(v).slice(0, 40), reason: `not one of: ${[...enumValues[f.type]].join(", ")}` });
+        } else if (f.type === "Int" && !Number.isInteger(v)) {
+          problems.push({ ...where, value: String(v).slice(0, 40), reason: "not a whole number" });
+        } else if (f.type === "DateTime" && Number.isNaN(v.getTime())) {
+          problems.push({ ...where, value: "(invalid date)", reason: "not a valid date" });
+        }
+      }
     }
     const missing = scalars.filter((f) => !sourceColumns.has(f.dbName || f.name)).map((f) => f.name);
-    report.push({ table, source: sourceCount, copied: DRY_RUN ? `(${data.length})` : await delegate(model).count(), note: [note, missing.length ? `new columns use defaults: ${missing.join(", ")}` : ""].filter(Boolean).join("; ") });
+    plan.push({ model, table, data, report: { table, source: sourceCount, copied: `(${data.length})`, note: [note, missing.length ? `new columns use defaults: ${missing.join(", ")}` : ""].filter(Boolean).join("; ") } });
+  }
+
+  if (problems.length) {
+    console.error(`\n${problems.length} value(s) the new database would reject. Nothing was written.`);
+    console.table(problems.slice(0, 50));
+    process.exitCode = 1;
+    return;
+  }
+
+  if (DRY_RUN) {
+    console.table(plan.map((p) => p.report));
+    console.log("All rows passed the checks. Dry run complete. Nothing was written.");
+    return;
+  }
+
+  // Pass 2: write.
+  if (RESET) {
+    const dbName = new URL(process.env.DATABASE_URL).pathname.slice(1);
+    if (dbName === "motolink") throw new Error("Refusing to reset MotoGo's database.");
+    const tables = Prisma.dmmf.datamodel.models.map((m) => `"${m.dbName || m.name}"`).join(", ");
+    await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE`);
+    console.log(`Emptied every table in "${dbName}" before copying.`);
+  } else {
+    for (const { model, table } of plan) {
+      if (await delegate(model).count()) {
+        throw new Error(`Target table ${table} already has rows. Run again with --reset to empty the target first.`);
+      }
+    }
+  }
+
+  const report = [];
+  for (const { model, table, data, report: r } of plan) {
+    try {
+      for (let i = 0; i < data.length; i += BATCH) await delegate(model).createMany({ data: data.slice(i, i + BATCH) });
+    } catch (err) {
+      // Find the first row that fails, to name it precisely.
+      for (const row of data) {
+        try { await delegate(model).create({ data: row }); } catch (rowErr) {
+          const reason = String(rowErr.message).split("\n").map((l) => l.trim()).filter(Boolean).slice(-3).join(" ");
+          throw new Error(`Copying ${table} failed at row ${row.id ?? "?"}: ${reason.slice(0, 400)}`);
+        }
+      }
+      throw new Error(`Copying ${table} failed: ${String(err.message).split("\n").filter(Boolean).slice(-2).join(" ").slice(0, 400)}`);
+    }
+    report.push({ ...r, copied: await delegate(model).count() });
   }
   console.table(report);
   const mismatched = report.filter((r) => typeof r.source === "number" && !DRY_RUN && r.copied !== r.source && !/placeholder|template/.test(r.note));

@@ -3,8 +3,8 @@
  * ---------------------------------------------------------
  * One React app serves two public sites (Digital Ecosystem report §03):
  *   stevenkayelu.online   -> "steven"  (personal profile)
- *   devegenventures.com   -> "devegen" (umbrella brand)
- * and the /solutions branch of devegenventures.com uses the
+ *   devgenventures.com   -> "devegen" (umbrella brand)
+ * and the /solutions branch of devgenventures.com uses the
  * "solutions" preset (DevGen Solutions LTD).
  *
  * This is frontend presentation config only. Brand selection here is
@@ -47,7 +47,7 @@ export const SITES = {
   devegen: {
     key: "devegen",
     name: "Devegen Ventures",
-    domain: "devegenventures.com",
+    domain: "devgenventures.com",
     nav: [
       { label: "Ventures", to: "/ventures" },
       { label: "DevGen Solutions", to: "/solutions" },
@@ -89,8 +89,8 @@ export const SOLUTIONS_NAV = {
 const PRODUCTION_HOSTS = {
   "stevenkayelu.online": "steven",
   "www.stevenkayelu.online": "steven",
-  "devegenventures.com": "devegen",
-  "www.devegenventures.com": "devegen",
+  "devgenventures.com": "devegen",
+  "www.devgenventures.com": "devegen",
 };
 
 const OVERRIDE_KEY = "devegen.site-override";

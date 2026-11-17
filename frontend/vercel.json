@@ -6,20 +6,20 @@
       "has": [
         {
           "type": "host",
-          "value": "devegenventures.com"
+          "value": "devgenventures.com"
         }
       ],
-      "destination": "https://api.devegenventures.com/sitemap.xml?site=devegen"
+      "destination": "https://api.devgenventures.com/sitemap.xml?site=devegen"
     },
     {
       "source": "/robots.txt",
       "has": [
         {
           "type": "host",
-          "value": "devegenventures.com"
+          "value": "devgenventures.com"
         }
       ],
-      "destination": "https://api.devegenventures.com/robots.txt?site=devegen"
+      "destination": "https://api.devgenventures.com/robots.txt?site=devegen"
     },
     {
       "source": "/sitemap.xml",
@@ -51,10 +51,10 @@
       "has": [
         {
           "type": "host",
-          "value": "www.devegenventures.com"
+          "value": "www.devgenventures.com"
         }
       ],
-      "destination": "https://devegenventures.com/:path*",
+      "destination": "https://devgenventures.com/:path*",
       "permanent": true
     }
   ],

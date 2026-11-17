@@ -201,14 +201,14 @@ test("each site gets its own sitemap and robots.txt", async () => {
   await api("POST", "/admin/seo", { token: tok.super, body: { brandId: ids.brands.devegen, route: "/ventures", title: "Test SEO hidden", description: "x", noIndex: true } });
   const devegen = await api("GET", "/sitemap.xml?site=devegen", { raw: true });
   assert.equal(devegen.status, 200);
-  assert.ok(devegen.body.includes("https://devegenventures.com/solutions/work"));
+  assert.ok(devegen.body.includes("https://devgenventures.com/solutions/work"));
   assert.ok(!devegen.body.includes("stevenkayelu.online"));
-  assert.ok(!devegen.body.includes("devegenventures.com/ventures<"), "noIndex routes are left out");
+  assert.ok(!devegen.body.includes("devgenventures.com/ventures<"), "noIndex routes are left out");
 
   const steven = await api("GET", "/sitemap.xml?site=steven", { raw: true });
   assert.ok(steven.body.includes("https://stevenkayelu.online/projects"));
 
   const robots = await api("GET", "/robots.txt?site=devegen", { raw: true });
   assert.match(robots.body, /Disallow: \/admin/);
-  assert.match(robots.body, /Sitemap: https:\/\/devegenventures\.com\/sitemap\.xml/);
+  assert.match(robots.body, /Sitemap: https:\/\/devgenventures\.com\/sitemap\.xml/);
 });

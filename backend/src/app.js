@@ -14,7 +14,7 @@ import {
 const app = express();
 
 // CLIENT_URLS is a comma-separated list, e.g.
-// "https://stevenkayelu.online,https://devegenventures.com"; CLIENT_URL is
+// "https://stevenkayelu.online,https://devgenventures.com"; CLIENT_URL is
 // still honoured for existing deployments.
 const allowedOrigins = [
   "http://localhost:5173",

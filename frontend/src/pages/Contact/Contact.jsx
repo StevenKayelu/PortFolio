@@ -146,7 +146,7 @@ export default function Contact() {
     return apiClient.post("/contact", {
       name: form.name.trim(),
       email: form.email.trim(),
-      subject: `[${typeMeta.subject}] ${siteKey === "steven" ? "stevenkayelu.online" : "devegenventures.com"}`,
+      subject: `[${typeMeta.subject}] ${siteKey === "steven" ? "stevenkayelu.online" : "devgenventures.com"}`,
       message: [...details, details.length ? "" : null, form.message.trim()].filter((l) => l !== null).join("\n"),
     });
   };

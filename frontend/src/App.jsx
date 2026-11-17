@@ -89,7 +89,7 @@ function StevenRoutes() {
   );
 }
 
-/** Routes for devegenventures.com, including the /solutions branch. */
+/** Routes for devgenventures.com, including the /solutions branch. */
 function DevegenRoutes() {
   return (
     <>

@@ -21,7 +21,7 @@ const consentWording = (brandName) => ({
 });
 
 const SITE_FOR_BRAND = { steven: "steven", devegen: "devegen", solutions: "devegen" };
-const DOMAIN = { steven: "https://stevenkayelu.online", devegen: "https://devegenventures.com" };
+const DOMAIN = { steven: "https://stevenkayelu.online", devegen: "https://devgenventures.com" };
 
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
 const err = (status, message) => Object.assign(new Error(message), { status, publicMessage: message });

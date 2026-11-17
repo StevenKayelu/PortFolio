@@ -134,7 +134,7 @@ placeholder backend URL in that rewrite** once you know your Render domain.
 
 ## Devegen ecosystem: brands, ventures, leads
 
-One app serves **stevenkayelu.online** (personal) and **devegenventures.com** (umbrella,
+One app serves **stevenkayelu.online** (personal) and **devgenventures.com** (umbrella,
 with DevGen Solutions under `/solutions`). The frontend picks the site from the hostname;
 on any other host, add `?site=devegen` or `?site=steven` to review a site.
 
@@ -182,7 +182,7 @@ skipped. The API never emails addresses typed into public forms.
 (other sessions are signed out). Super admins can reset anyone's password.
 
 **Venture pages.** Every published venture gets a page at `/ventures/:slug` on
-devegenventures.com (DevGen Solutions redirects to `/solutions`) and a sitemap entry.
+devgenventures.com (DevGen Solutions redirects to `/solutions`) and a sitemap entry.
 
 **Dashboard.** Shows real counts only (new and open leads, pending approvals, messages…)
 and a page-view chart. Page views are recorded on the production domains only, as path
@@ -222,7 +222,7 @@ verification link is the real proof.
 **Admin → Legal & compliance** (super admins only) holds each organisation's exact legal
 details and its registrations and licences: title as printed, issuing authority, number,
 issue/expiry dates and how to verify. Each item is shown on
-**devegenventures.com/compliance** only when switched on, and **only as facts**: the
+**devgenventures.com/compliance** only when switched on, and **only as facts**: the
 documents (which can list directors, shareholders and ID numbers) are stored privately
 and never published. Expired items disappear from the site automatically; super admins
 are emailed 60 and 30 days before expiry, and the dashboard flags them. Published PACRA
@@ -270,7 +270,7 @@ Then update that user's `passwordHash` column directly (`npx prisma studio` is t
 | Layer     | Target                                                    | Config                         |
 |-----------|-----------------------------------------------------------|--------------------------------|
 | Frontend  | Vercel (both domains)                                     | `frontend/vercel.json`         |
-| API       | Docker container on the MotoGo server (Johannesburg), behind MotoGo's Caddy at `api.stevenkayelu.online` / `api.devegenventures.com` | `deploy/`                      |
+| API       | Docker container on the MotoGo server (Johannesburg), behind MotoGo's Caddy at `api.stevenkayelu.online` / `api.devgenventures.com` | `deploy/`                      |
 | Database  | PostgreSQL 15: its own `devegen` database and login on MotoGo's Postgres | `deploy/postgres-setup.sql`    |
 | Files     | Cloudflare R2 (public bucket + private bucket)            | `backend/src/services/storage.service.js` |
 

@@ -8,10 +8,10 @@ import { brandKeyFor } from "./seo.controller.js";
  * proxy forwards the public hostname (report §09).
  */
 
-const DEFAULT_URLS = { steven: "https://stevenkayelu.online", devegen: "https://devegenventures.com" };
+const DEFAULT_URLS = { steven: "https://stevenkayelu.online", devegen: "https://devgenventures.com" };
 const HOSTS = {
   "stevenkayelu.online": "steven", "www.stevenkayelu.online": "steven",
-  "devegenventures.com": "devegen", "www.devegenventures.com": "devegen",
+  "devgenventures.com": "devegen", "www.devgenventures.com": "devegen",
 };
 
 const ROUTES = {

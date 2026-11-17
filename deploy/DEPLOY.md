@@ -5,8 +5,8 @@ To: a container on the MotoGo server in Johannesburg, using its own database on
 MotoGo's PostgreSQL, behind MotoGo's Caddy. The website itself stays on Vercel.
 
 ```
-Browser ──► stevenkayelu.online / devegenventures.com      (Vercel, static)
-   └────► api.stevenkayelu.online / api.devegenventures.com (MotoGo's Caddy, HTTPS)
+Browser ──► stevenkayelu.online / devgenventures.com      (Vercel, static)
+   └────► api.stevenkayelu.online / api.devgenventures.com (MotoGo's Caddy, HTTPS)
                └──► devegen-api (320 MB limit; motolink_internal + motolink_public)
                        └──► MotoGo's Postgres, database "devegen" (own login)
 ```
@@ -105,12 +105,12 @@ docker stats --no-stream                # devegen-api well under 320 MiB; MotoGo
    docker compose build caddy && docker compose up -d caddy
    ```
    Caddy restarts in a second or two; MotoGo's apps reconnect on their own.
-2. DNS: `A` records for `api.stevenkayelu.online` and `api.devegenventures.com`
+2. DNS: `A` records for `api.stevenkayelu.online` and `api.devgenventures.com`
    pointing to the server (plus `AAAA` if it has IPv6).
 3. Test from your computer:
    ```
    curl https://api.stevenkayelu.online/api/v1/health
-   curl https://api.devegenventures.com/api/v1/ecosystem
+   curl https://api.devgenventures.com/api/v1/ecosystem
    ```
 
 ## 9. Switch the website over

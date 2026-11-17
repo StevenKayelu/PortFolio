@@ -6,8 +6,8 @@ import axios from "axios";
 const SITE_APIS = {
   "stevenkayelu.online": "https://api.stevenkayelu.online/api/v1",
   "www.stevenkayelu.online": "https://api.stevenkayelu.online/api/v1",
-  "devegenventures.com": "https://api.devegenventures.com/api/v1",
-  "www.devegenventures.com": "https://api.devegenventures.com/api/v1",
+  "devgenventures.com": "https://api.devgenventures.com/api/v1",
+  "www.devgenventures.com": "https://api.devgenventures.com/api/v1",
 };
 
 export const API_BASE_URL =

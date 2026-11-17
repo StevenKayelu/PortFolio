@@ -8,7 +8,7 @@
 
 # Devegen Ventures / Steven Kayelu API (separate project on this server:
 # github.com/StevenKayelu/PortFolio, deploy/). Reached on motolink_internal.
-api.stevenkayelu.online, api.devegenventures.com {
+api.stevenkayelu.online, api.devgenventures.com {
 	import compress
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
