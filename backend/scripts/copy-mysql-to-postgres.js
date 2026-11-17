@@ -15,6 +15,8 @@
  *  - refresh_tokens: sessions are not carried over; everyone signs in again
  *  - the two template placeholder certificates (AWS-000000, PSM-000000),
  *    matching the MySQL migration that deletes them
+ *  - the template's sample gallery items and achievements (a conference
+ *    talk and a hackathon win that never happened), matched by exact title
  * Tables that exist only in the new schema start empty; new columns take
  * their defaults (e.g. projects start as ownership NEEDS_REVIEW).
  */
@@ -24,6 +26,12 @@ import mysql from "mysql2/promise";
 const DRY_RUN = process.argv.includes("--dry-run");
 const BATCH = 500;
 const SKIP_TABLES = new Set(["refresh_tokens"]);
+// Template sample content, skipped by exact title only: anything the owner
+// added or renamed is copied normally.
+const TEMPLATE_TITLES = {
+  gallery_items: ["Conference talk, 2025", "Hackathon win, 2023", "Workstation setup"],
+  achievements: ["Speaker, Regional Dev Conference", "Hackathon Winner"],
+};
 const PLACEHOLDER_CERTS = [
   { title: "AWS Certified Solutions Architect", credentialId: "AWS-000000" },
   { title: "Professional Scrum Master I", credentialId: "PSM-000000" },
@@ -122,6 +130,12 @@ async function main() {
       if (rows.length !== sourceCount) note = `skipped ${sourceCount - rows.length} placeholder certificate(s)`;
     }
 
+    if (TEMPLATE_TITLES[table]) {
+      const before = rows.length;
+      rows = rows.filter((r) => !TEMPLATE_TITLES[table].includes(r.title));
+      if (rows.length !== before) note = `skipped ${before - rows.length} template item(s)`;
+    }
+
     const data = rows.map((r) => Object.fromEntries(shared.map((f) => [f.name, convert(f, r[f.dbName || f.name])])));
     if (!DRY_RUN) {
       for (let i = 0; i < data.length; i += BATCH) await delegate(model).createMany({ data: data.slice(i, i + BATCH) });
@@ -130,7 +144,7 @@ async function main() {
     report.push({ table, source: sourceCount, copied: DRY_RUN ? `(${data.length})` : await delegate(model).count(), note: [note, missing.length ? `new columns use defaults: ${missing.join(", ")}` : ""].filter(Boolean).join("; ") });
   }
   console.table(report);
-  const mismatched = report.filter((r) => typeof r.source === "number" && !DRY_RUN && r.copied !== r.source && !r.note.includes("placeholder"));
+  const mismatched = report.filter((r) => typeof r.source === "number" && !DRY_RUN && r.copied !== r.source && !/placeholder|template/.test(r.note));
   if (mismatched.length) {
     console.error("Row counts differ for:", mismatched.map((r) => r.table).join(", "));
     process.exitCode = 1;
