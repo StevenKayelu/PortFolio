@@ -146,6 +146,8 @@ enum SkillCategory {
   LANGUAGE
   FRAMEWORK
   SOFT_SKILL
+  MOBILE
+  OTHER
 }
 
 model Skill {
@@ -440,6 +442,7 @@ enum ExperienceType {
   LEADERSHIP
   VOLUNTEER
   INTERNET_CAFE
+  STUDENT_DEVELOPER
 }
 
 model Experience {
