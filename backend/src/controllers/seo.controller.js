@@ -8,7 +8,7 @@ import { SCOPES, assertBrandScope, brandFilter } from "../services/brandAccess.s
  * title/description/OG image/canonical/JSON-LD for one path on one brand.
  */
 
-// Same rule as the frontend: /solutions/* on the Devegen site is DevGen Solutions.
+// Same rule as the frontend: /solutions/* on the DevGen Ventures site is DevGen Solutions.
 export function brandKeyFor(site, path) {
   return site === "devegen" && (path === "/solutions" || path.startsWith("/solutions/")) ? "solutions" : site;
 }

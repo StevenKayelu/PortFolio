@@ -1,7 +1,9 @@
 import { Chip, Button, Stack, Typography, Box } from "@mui/material";
 import { FiPlus, FiEdit2 } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
-import ManageResource from "./ManageResource";
+import ManageResource, { thumbnail } from "./ManageResource";
+
+const THUMB_HELP = "Card thumbnail: landscape 1600 × 1000 pixels (16:10) works best; at least 1200 × 750. Keep the subject in the middle, since cards trim the edges slightly. JPEG, PNG or WebP up to 10 MB; converted to WebP.";
 import { formatKwacha, formatDate, formatMonthYear, formatCount } from "../../utils/format";
 
 const EXPERIENCE_TYPES = [
@@ -29,6 +31,7 @@ export const ManageProjects = () => (
     selectOptionsEndpoints={{ categoryId: "/projects/categories", showcaseBrandId: "/admin/brands" }}
     columns={[
       { key: "title", label: "Title" },
+      { key: "coverImage", label: "Thumbnail", render: (p) => thumbnail(p.coverImage) },
       { key: "status", label: "Status", render: (p) => <Chip size="small" label={humanize(p.status)} /> },
       { key: "visibility", label: "Visibility", render: (p) => <Chip size="small" variant="outlined" label={humanize(p.visibility)} /> },
       { key: "ownershipStatus", label: "Ownership", render: (p) => (
@@ -39,6 +42,7 @@ export const ManageProjects = () => (
     ]}
     fields={[
       { name: "title", label: "Title", type: "text", required: true },
+      { name: "coverImage", label: "Thumbnail", type: "image", helperText: THUMB_HELP },
       { name: "summary", label: "Summary (shown in cards)", type: "textarea", required: true },
       { name: "description", label: "Full description", type: "textarea", required: true },
       { name: "status", label: "Status", type: "select", options: [
@@ -85,6 +89,7 @@ export const ManageVentures = () => (
     selectOptionsEndpoints={{ brandId: "/admin/brands" }}
     columns={[
       { key: "name", label: "Venture" },
+      { key: "logoUrl", label: "Logo", render: (v) => thumbnail(v.logoUrl) },
       { key: "brand", label: "Brand", render: (v) => v.brand?.name || "—" },
       { key: "stage", label: "Stage", render: (v) => humanize(v.stage) },
       { key: "status", label: "Status", render: statusChip },
@@ -95,6 +100,8 @@ export const ManageVentures = () => (
       { name: "summary", label: "Summary (shown on cards)", type: "textarea", required: true },
       { name: "description", label: "Full description", type: "textarea" },
       { name: "brandId", label: "Brand", type: "select", required: true },
+      { name: "logoUrl", label: "Logo", type: "image", ratio: "1 / 1", fit: "contain",
+        helperText: "Square, at least 512 × 512 pixels; a PNG with a transparent background looks best." },
       { name: "stage", label: "Stage", type: "select", default: "IDEA", options: [
         { value: "IDEA", label: "Idea" }, { value: "BUILDING", label: "Building" }, { value: "OPERATING", label: "Operating" }, { value: "PAUSED", label: "Paused" },
       ] },
@@ -116,6 +123,7 @@ export const ManageProducts = () => (
     selectOptionsEndpoints={{ ventureId: "/admin/ventures", projectId: "/projects?includeHidden=true&pageSize=50" }}
     columns={[
       { key: "name", label: "Product" },
+      { key: "imageUrl", label: "Thumbnail", render: (p) => thumbnail(p.imageUrl) },
       { key: "venture", label: "Venture", render: (p) => p.venture?.name || "—" },
       { key: "status", label: "Status", render: statusChip },
       { key: "ownershipStatus", label: "Ownership", render: (p) => (
@@ -124,6 +132,7 @@ export const ManageProducts = () => (
     ]}
     fields={[
       { name: "name", label: "Name", type: "text", required: true },
+      { name: "imageUrl", label: "Thumbnail", type: "image", helperText: THUMB_HELP },
       { name: "summary", label: "Summary", type: "textarea" },
       { name: "ventureId", label: "Venture", type: "select", allowEmpty: true },
       { name: "projectId", label: "Case study project", type: "select", allowEmpty: true },

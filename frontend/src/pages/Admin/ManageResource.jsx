@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box, Typography, Table, TableHead, TableRow, TableCell, TableBody,
   IconButton, Chip, CircularProgress, Alert, Tooltip, Button, Stack,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Switch,
   FormControlLabel, MenuItem, Autocomplete, InputAdornment, useMediaQuery, useTheme,
 } from "@mui/material";
-import { FiTrash2, FiEdit2, FiPlus } from "react-icons/fi";
+import { FiTrash2, FiEdit2, FiPlus, FiUpload, FiImage } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
 import { useAdminBrand } from "../../context/AdminBrandContext";
 import { toDateInput } from "../../utils/format";
@@ -16,7 +16,56 @@ const emptyValueFor = (field) => {
   return "";
 };
 
+/** Upload, preview, replace or remove one image (stored as its URL). */
+function ImageInput({ field, value, onChange }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const upload = async (file) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setError("Choose a JPEG, PNG or WebP image."); return; }
+    if (file.size > 10 * 1024 * 1024) { setError("That image is over 10 MB. Choose a smaller one."); return; }
+    setBusy(true); setError("");
+    const data = new FormData();
+    data.append("image", file);
+    try {
+      onChange((await apiClient.post("/admin/uploads/image", data)).data.url);
+    } catch (err) {
+      setError(err.response?.data?.error || "The image wasn't uploaded. Try again.");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+  return (
+    <Box>
+      <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>{field.label}</Typography>
+      <Stack direction={{ xs: "column", sm: "row" }} gap={2} alignItems={{ sm: "center" }}>
+        <Box sx={{ width: 192, maxWidth: "100%", aspectRatio: field.ratio || "16 / 10", borderRadius: 2, overflow: "hidden", border: 1, borderColor: "divider", bgcolor: "action.hover", display: "grid", placeItems: "center", color: "text.secondary" }}>
+          {value ? <Box component="img" src={value} alt="" sx={{ width: "100%", height: "100%", objectFit: field.fit || "cover" }} /> : <FiImage size={28} aria-hidden="true" />}
+        </Box>
+        <Stack gap={1} alignItems="flex-start">
+          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => upload(e.target.files?.[0])} />
+          <Button variant="outlined" size="small" startIcon={<FiUpload />} disabled={busy} onClick={() => inputRef.current?.click()}>
+            {busy ? "Uploading…" : value ? "Replace image" : "Upload image"}
+          </Button>
+          {value && <Button size="small" color="inherit" onClick={() => onChange(null)}>Remove image</Button>}
+        </Stack>
+      </Stack>
+      {field.helperText && <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>{field.helperText}</Typography>}
+      {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
+    </Box>
+  );
+}
+
+/** Small preview for list columns. */
+export const thumbnail = (src) => (src
+  ? <Box component="img" src={src} alt="" loading="lazy" sx={{ width: 64, height: 40, objectFit: "cover", borderRadius: 1, display: "block", border: 1, borderColor: "divider" }} />
+  : <Typography variant="caption" color="text.secondary">No image</Typography>);
+
 function FieldInput({ field, value, onChange, selectOptions }) {
+  if (field.type === "image") return <ImageInput field={field} value={value} onChange={onChange} />;
+
   if (field.type === "boolean") {
     return (
       <FormControlLabel

@@ -132,7 +132,7 @@ placeholder backend URL in that rewrite** once you know your Render domain.
 - **Auth**: short-lived JWT access tokens (kept in memory, not localStorage) + rotating, hashed
   refresh tokens in an httpOnly cookie.
 
-## Devegen ecosystem: brands, ventures, leads
+## DevGen Ventures ecosystem: brands, ventures, leads
 
 One app serves **stevenkayelu.online** (personal) and **devgenventures.com** (umbrella,
 with DevGen Solutions under `/solutions`). The frontend picks the site from the hostname;
@@ -149,7 +149,7 @@ on any other host, add `?site=devegen` or `?site=steven` to review a site.
 | `Lead`, `LeadActivity` | Structured enquiries with a status pipeline, notes and history |
 
 `node prisma/seed-ecosystem.js` creates the three brands, their relationships (the
-Devegen ↔ DevGen Solutions one as `PENDING`) and draft products. It is idempotent and
+DevGen Ventures ↔ DevGen Solutions one as `PENDING`) and draft products. It is idempotent and
 never overwrites admin edits; the Render build runs it after migrations.
 
 ### API
@@ -226,9 +226,9 @@ issue/expiry dates and how to verify. Each item is shown on
 documents (which can list directors, shareholders and ID numbers) are stored privately
 and never published. Expired items disappear from the site automatically; super admins
 are emailed 60 and 30 days before expiry, and the dashboard flags them. Published PACRA
-details also appear as a one-line statement in the Devegen footer and as trust labels on
+details also appear as a one-line statement in the DevGen Ventures footer and as trust labels on
 the Solutions page. Registrations prove each business exists; they do not by themselves
-change the Devegen ↔ DevGen Solutions relationship status.
+change the DevGen Ventures ↔ DevGen Solutions relationship status.
 
 ### SEO per brand
 

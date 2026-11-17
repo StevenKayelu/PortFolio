@@ -1,4 +1,4 @@
-# Moving the Devegen API to the MotoGo server
+# Moving the DevGen Ventures API to the MotoGo server
 
 From: Render (API) + TiDB Cloud in Frankfurt (MySQL).
 To: a container on the MotoGo server in Johannesburg, using its own database on
@@ -43,7 +43,7 @@ git clone https://github.com/StevenKayelu/PortFolio.git /root/devegen
 cd /root/devegen && git checkout infra/postgres-vultr   # `main` once merged
 ```
 
-## 3. Create Devegen's database and login
+## 3. Create DevGen Ventures's database and login
 
 ```bash
 cd /root/devegen/deploy

@@ -1,9 +1,10 @@
 import { Box, useTheme } from "@mui/material";
+import BrandMark from "./BrandMark";
 
 /**
- * Text wordmarks until real logo files are supplied. Each mark uses the
- * brand's own glyph: a copper diamond (Devegen), a drafting square
- * (DevGen Solutions) and plain set type for Steven.
+ * Header wordmarks. DevGen Ventures uses the umbrella mark (or the logo
+ * uploaded in the admin), DevGen Solutions a drafting square, and Steven
+ * plain set type.
  */
 export default function Wordmark({ brandKey, inverse = false }) {
   const theme = useTheme();
@@ -39,8 +40,8 @@ export default function Wordmark({ brandKey, inverse = false }) {
         whiteSpace: "nowrap",
       }}
     >
-      <Box component="span" aria-hidden="true" sx={glyph} />
-      {brandKey === "devegen" ? "Devegen Ventures" : "DevGen Solutions"}
+      {brandKey === "devegen" ? <BrandMark size={30} /> : <Box component="span" aria-hidden="true" sx={glyph} />}
+      {brandKey === "devegen" ? "DevGen Ventures" : "DevGen Solutions"}
     </Box>
   );
 }

@@ -131,7 +131,7 @@ export default function Footer() {
               {siteKey === "steven" ? "FOUNDER OF" : "FOUNDED BY"}
             </Box>
             <Box component="span" sx={{ fontFamily: theme.custom.fontSerif, fontSize: "1.25rem" }}>
-              {siteKey === "steven" ? "Devegen Ventures" : "Steven Kayelu, software engineer"}
+              {siteKey === "steven" ? "DevGen Ventures" : "Steven Kayelu, software engineer"}
             </Box>
           </span>
           <FiArrowUpRight size={20} aria-hidden="true" />
@@ -142,7 +142,7 @@ export default function Footer() {
           color="text.secondary"
           sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: "divider", fontSize: "0.8125rem" }}
         >
-          © {new Date().getFullYear()} {siteKey === "steven" ? identity.name : "Devegen Ventures"}. All rights reserved.
+          © {new Date().getFullYear()} {siteKey === "steven" ? identity.name : "DevGen Ventures"}. All rights reserved.
         </Typography>
         {siteKey === "devegen" && <RegistrationLine />}
       </Container>

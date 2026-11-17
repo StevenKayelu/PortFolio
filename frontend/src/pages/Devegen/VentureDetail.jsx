@@ -6,12 +6,13 @@ import Band from "../../components/brand/Band";
 import Reveal from "../../components/common/Reveal";
 import apiClient from "../../services/apiClient";
 import { useFetch } from "../../hooks/useFetch";
+import CardImage from "../../components/common/CardImage";
 
 const STAGE = { IDEA: "Idea", BUILDING: "Building", OPERATING: "Operating", PAUSED: "Paused" };
 const VERIFICATION = {
-  VERIFIED: "Relationship to Devegen verified",
-  PENDING: "Relationship to Devegen being verified",
-  UNVERIFIED: "Relationship to Devegen not yet verified",
+  VERIFIED: "Relationship to DevGen Ventures verified",
+  PENDING: "Relationship to DevGen Ventures being verified",
+  UNVERIFIED: "Relationship to DevGen Ventures not yet verified",
 };
 
 /** Public profile of one published venture (GET /ventures/:slug). */
@@ -30,7 +31,7 @@ export default function VentureDetail() {
         <Helmet><title>Venture not found</title><meta name="robots" content="noindex" /></Helmet>
         <Typography variant="h2" component="h1">This venture isn't listed.</Typography>
         <Typography color="text.secondary" sx={{ mt: 2, maxWidth: "52ch" }}>
-          It may not be published yet, or the link may be wrong. Ventures appear here only once their relationship to Devegen is confirmed.
+          It may not be published yet, or the link may be wrong. Ventures appear here only once their relationship to DevGen Ventures is confirmed.
         </Typography>
         <Button component={NavLink} to="/ventures" startIcon={<FiArrowLeft />} sx={{ mt: 3 }}>All ventures</Button>
       </Container>
@@ -58,6 +59,9 @@ export default function VentureDetail() {
               <Typography sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.75rem", letterSpacing: "0.14em", color: band.accent, textTransform: "uppercase" }}>
                 {STAGE[venture.stage]} venture{venture.brand ? ` · ${venture.brand.name}` : ""}
               </Typography>
+              {venture.logoUrl && (
+                <Box component="img" src={venture.logoUrl} alt={`${venture.name} logo`} sx={{ display: "block", mt: 2, height: { xs: 56, md: 72 }, width: "auto", maxWidth: 240, objectFit: "contain" }} />
+              )}
               <Typography id="venture-title" component="h1" sx={{ mt: 1.5, fontFamily: theme.custom.fontSerif, fontSize: theme.custom.displayScale.size, lineHeight: 1.05, letterSpacing: "-0.02em" }}>
                 {venture.name}
               </Typography>
@@ -70,7 +74,7 @@ export default function VentureDetail() {
                   </Button>
                 )}
                 <Button component={NavLink} to="/contact?type=partnership" variant="outlined" size="large" sx={{ color: band.ink, borderColor: band.line }}>
-                  Talk to Devegen
+                  Talk to DevGen Ventures
                 </Button>
               </Stack>
             </>
@@ -99,7 +103,8 @@ export default function VentureDetail() {
               <Typography variant="h2" sx={{ mb: 3 }}>Products</Typography>
               <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" } }}>
                 {venture.products.map((p) => (
-                  <Box component="li" key={p.slug} sx={{ border: 1, borderColor: "divider", borderRadius: `${theme.custom.radii.lg}px`, p: 2.5, bgcolor: "background.paper", display: "grid", gap: 1, alignContent: "start" }}>
+                  <Box component="li" key={p.slug} sx={{ border: 1, borderColor: "divider", borderRadius: `${theme.custom.radii.lg}px`, p: 2.5, bgcolor: "background.paper", display: "grid", gap: 1, alignContent: "start", overflow: "hidden" }}>
+                    <CardImage src={p.imageUrl} />
                     <Typography sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.68rem", letterSpacing: "0.1em", color: "text.secondary", textTransform: "uppercase" }}>
                       {p.lifecycle || "Product"}{p.ownershipStatus !== "CONFIRMED" ? " · ownership under review" : ""}
                     </Typography>

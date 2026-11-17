@@ -50,7 +50,7 @@ test("staff create invites only for brands they can edit", async () => {
   assert.equal((await invite(tok.editor, { brandId: ids.brands.devegen })).status, 403);
   const res = await invite(tok.super, { projectId: ids.project, sendEmail: true });
   assert.equal(res.status, 201);
-  assert.match(res.body.link, /\/testimonial\/[\w-]{32}\?site=devegen$/, "DevGen Solutions links live on the Devegen site");
+  assert.match(res.body.link, /\/testimonial\/[\w-]{32}\?site=devegen$/, "DevGen Solutions links live on the DevGen Ventures site");
   ids.token = tokenFrom(res.body.link);
   ids.invite = res.body.id;
   const stored = await prisma.testimonialInvite.findUnique({ where: { id: ids.invite } });

@@ -15,7 +15,7 @@ import { siteHref } from "../../brand/brands";
 
 /**
  * Enquiries are routed by type (report §05): career enquiries stay on
- * Steven's site, commercial ones on Devegen. The type is prefixed onto
+ * Steven's site, commercial ones on DevGen Ventures. The type is prefixed onto
  * the subject so the existing ContactMessage API needs no change.
  */
 const TYPES = {
@@ -35,7 +35,7 @@ const HEADINGS = {
   career: { title: "Talk about a role or opportunity.", lede: "Recruiters, hiring managers and collaborators: tell me about the role and I will reply personally." },
   collaboration: { title: "Build something together.", lede: "Open-source, research or product collaboration. Share what you have in mind." },
   quote: { title: "Request a quote.", lede: "Describe the project and DevGen Solutions will reply with questions or a scoped proposal." },
-  partnership: { title: "Start a partnership conversation.", lede: "Tell Devegen Ventures about the idea, venture or collaboration you are proposing." },
+  partnership: { title: "Start a partnership conversation.", lede: "Tell DevGen Ventures about the idea, venture or collaboration you are proposing." },
   general: { title: "Get in touch.", lede: "Ask anything. Messages are read by a person, not a bot." },
 };
 
@@ -290,7 +290,7 @@ export default function Contact() {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{identity.availability}</Typography>
             )}
             <Box component="a" href={siteKey === "steven" ? siteHref("devegen") : siteHref("steven")} sx={{ mt: 2, display: "inline-flex", alignItems: "center", gap: 0.75, color: theme.custom.accentText, minHeight: 44 }}>
-              {siteKey === "steven" ? "Devegen Ventures" : "Steven Kayelu's portfolio"} <FiArrowUpRight aria-hidden="true" />
+              {siteKey === "steven" ? "DevGen Ventures" : "Steven Kayelu's portfolio"} <FiArrowUpRight aria-hidden="true" />
             </Box>
           </Box>
         </Box>

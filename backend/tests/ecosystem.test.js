@@ -69,7 +69,7 @@ before(async () => {
     data: { name: "Solutions Editor", email: TEST_EMAILS[0], passwordHash, role: "EDITOR", brandRoles: { create: { brandId: brands.solutions, scope: "EDITOR" } } },
   });
   const leadManager = await prisma.user.create({
-    data: { name: "Devegen Leads", email: TEST_EMAILS[1], passwordHash, role: "EDITOR", brandRoles: { create: { brandId: brands.devegen, scope: "LEAD_MANAGER" } } },
+    data: { name: "DevGen Ventures Leads", email: TEST_EMAILS[1], passwordHash, role: "EDITOR", brandRoles: { create: { brandId: brands.devegen, scope: "LEAD_MANAGER" } } },
   });
   ids.editor = editor.id;
   ids.leadManager = leadManager.id;

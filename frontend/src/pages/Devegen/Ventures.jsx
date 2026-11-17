@@ -6,6 +6,7 @@ import { FiArrowRight } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 import SectionHeading from "../../components/common/SectionHeading";
 import { useEcosystem } from "../../brand/useEcosystem";
+import CardImage from "../../components/common/CardImage";
 
 const FILTERS = [
   { key: "all", label: "All", test: () => true },
@@ -27,14 +28,14 @@ function directoryEntries(data, nodes) {
   };
   if (!data) return nodes.filter((n) => n.id !== "sk" && n.id !== "dv");
   const ventures = data.ventures.map((v) => ({
-    id: v.slug, name: v.name, short: titleCase(v.stage), kind: "service", visit: v.summary,
+    id: v.slug, name: v.name, short: titleCase(v.stage), kind: "service", visit: v.summary, image: v.logoUrl, logo: true,
     status: v.verificationStatus === "VERIFIED" ? { tone: "ok", label: "Verified" } : { tone: "pending", label: "Verification pending" },
     link: v.slug === "devgen-solutions"
       ? { site: "devegen", path: "/solutions", label: "Explore DevGen Solutions" }
       : { site: "devegen", path: `/ventures/${v.slug}`, label: `About ${v.name}` },
   }));
   const products = [...data.ventures.flatMap((v) => v.products.map((p) => ({ ...p, venture: v }))), ...(data.unassignedProducts || [])].map((p) => ({
-    id: `product-${p.slug}`, name: p.name, short: p.lifecycle ? `Product · ${p.lifecycle}` : "Product", kind: "product",
+    id: `product-${p.slug}`, name: p.name, short: p.lifecycle ? `Product · ${p.lifecycle}` : "Product", kind: "product", image: p.imageUrl,
     visit: p.summary || "Details coming soon.",
     status: p.ownershipStatus === "CONFIRMED" ? { tone: "ok", label: "Ownership confirmed" } : { tone: "pending", label: "Ownership under review" },
     link: p.venture && p.venture.slug !== "devgen-solutions" ? { site: "devegen", path: `/ventures/${p.venture.slug}`, label: `Part of ${p.venture.name}` } : null,
@@ -55,13 +56,13 @@ export default function Ventures() {
     <>
       <Helmet>
         <title>Ventures</title>
-        <meta name="description" content="The businesses and products presented under the Devegen Ventures umbrella, with their verification status." />
+        <meta name="description" content="The businesses and products presented under the DevGen Ventures umbrella, with their verification status." />
       </Helmet>
 
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 }, px: { xs: 2, sm: 3 } }}>
         <SectionHeading
           eyebrow="Venture directory"
-          title="The businesses under the Devegen umbrella."
+          title="The businesses under the DevGen Ventures umbrella."
           lede="Each entry shows its current status. Products stay under review until their ownership and display permission are confirmed."
         />
 
@@ -89,9 +90,10 @@ export default function Ventures() {
                 sx={{
                   border: 1, borderColor: "divider", borderStyle: n.kind === "slot" ? "dashed" : "solid",
                   borderRadius: `${theme.custom.radii.lg}px`, bgcolor: n.kind === "slot" ? "transparent" : "background.paper",
-                  p: 2.5, display: "grid", gap: 1.25, alignContent: "start",
+                  p: 2.5, display: "grid", gap: 1.25, alignContent: "start", overflow: "hidden",
                 }}
               >
+                <CardImage src={n.image} logo={n.logo} />
                 <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
                   <Typography sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.68rem", letterSpacing: "0.1em", color: "text.secondary", textTransform: "uppercase" }}>
                     {n.short}

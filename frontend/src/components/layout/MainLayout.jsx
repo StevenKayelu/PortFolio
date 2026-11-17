@@ -12,6 +12,7 @@ import { SeoDefaults, SeoOverrides } from "../seo/SeoTags";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import WhatsAppButton from "./WhatsAppButton";
+import { FaviconLinks } from "../brand/BrandMark";
 
 function BackToTopFab() {
   const [visible, setVisible] = useState(false);
@@ -122,6 +123,7 @@ export default function MainLayout() {
 
       <Footer />
       <BackToTopFab />
+      <FaviconLinks />
       <WhatsAppButton />
     </Box>
   );

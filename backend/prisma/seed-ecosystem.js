@@ -1,5 +1,5 @@
 /**
- * Idempotent seed for the Devegen ecosystem (Digital Ecosystem report §07,
+ * Idempotent seed for the DevGen Ventures ecosystem (Digital Ecosystem report §07,
  * "seed brand records idempotently"). Safe to run on production: it only
  * creates missing rows and never overwrites content edited in the admin.
  *
@@ -21,7 +21,7 @@ const BRANDS = [
     domains: ["stevenkayelu.online", "www.stevenkayelu.online"],
   },
   {
-    key: "devegen", name: "Devegen Ventures", slug: "devegen-ventures", kind: "UMBRELLA", displayOrder: 1,
+    key: "devegen", name: "DevGen Ventures", slug: "devegen-ventures", kind: "UMBRELLA", displayOrder: 1,
     tagline: "Building ideas into meaningful ventures.", // proposed positioning line, not a registered tagline
     domains: ["devgenventures.com", "www.devgenventures.com"],
   },
@@ -35,11 +35,11 @@ const BRANDS = [
 const RELATIONSHIPS = [
   {
     parent: "steven", child: "devegen", relationType: "FOUNDER_OF",
-    publicNote: "Founder of Devegen Ventures.",
+    publicNote: "Founder of DevGen Ventures.",
   },
   {
     parent: "devegen", child: "solutions", relationType: "UMBRELLA_OF",
-    publicNote: "Operates as the technology services brand within the Devegen ecosystem. The legal relationship is still to be confirmed.",
+    publicNote: "Operates as the technology services brand within the DevGen Ventures ecosystem. The legal relationship is still to be confirmed.",
     internalNote: "Confirm exact registered names and relationship with PACRA before changing to VERIFIED (report §12).",
   },
 ];

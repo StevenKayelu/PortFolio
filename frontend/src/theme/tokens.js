@@ -1,8 +1,8 @@
 /**
- * Design Token System — Devegen ecosystem
+ * Design Token System — DevGen Ventures ecosystem
  * ---------------------------------------------------------
  * One shared type scale, spacing, radius and motion system.
- * Each brand preset (Steven Kayelu, Devegen Ventures, DevGen
+ * Each brand preset (Steven Kayelu, DevGen Ventures, DevGen
  * Solutions) swaps only palette, display treatment and its
  * signature "band" (the hero ground), in a light and dark mode.
  *
@@ -92,7 +92,7 @@ export const brandThemes = {
     dark: { ...darkBase, primary: "#79AAE6", contrastText: "#0B1524", secondary: "#9AA8BA", band: band.steven },
   },
   devegen: {
-    label: "Devegen Ventures",
+    label: "DevGen Ventures",
     display: "serif",
     light: { ...lightBase, primary: palette.navy, contrastText: "#FFFFFF", secondary: palette.copperText, band: band.devegen },
     dark: { ...darkBase, primary: palette.copper, contrastText: palette.navy, secondary: "#9AA8BA", band: band.devegen },

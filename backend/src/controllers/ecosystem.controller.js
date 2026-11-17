@@ -14,7 +14,7 @@ import { SCOPES, assertBrandScope, brandFilter, forbidden, hasBrandScope } from 
 const publicBrandSelect = {
   key: true, name: true, slug: true, kind: true, tagline: true, description: true, logoUrl: true, domains: true, theme: true,
 };
-const publicProductSelect = { name: true, slug: true, summary: true, website: true, lifecycle: true, ownershipStatus: true };
+const publicProductSelect = { name: true, slug: true, summary: true, website: true, lifecycle: true, ownershipStatus: true, imageUrl: true };
 const publicVentureSelect = {
   name: true, slug: true, summary: true, description: true, stage: true, verificationStatus: true, website: true, logoUrl: true,
   brand: { select: { key: true, name: true } },

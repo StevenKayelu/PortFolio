@@ -14,6 +14,7 @@ import { siteHref } from "../../brand/brands";
 import { useCompliance, organizationForBrand } from "../../brand/useCompliance";
 
 import { formatKwacha } from "../../utils/format";
+import CardImage from "../../components/common/CardImage";
 const QUOTE_STEPS = [
   { title: "Choose a service", detail: "Business system, web app, mobile app or IT support" },
   { title: "Describe the project", detail: "Goals, users, timeline and an optional budget" },
@@ -189,13 +190,14 @@ export default function SolutionsHome() {
                 component={NavLink}
                 to={`/solutions/work/${p.slug}`}
                 sx={{
-                  display: "grid", gap: 1.25, height: "100%", p: 2.5, textDecoration: "none", color: "text.primary",
+                  display: "grid", gap: 1.25, height: "100%", p: 2.5, textDecoration: "none", color: "text.primary", overflow: "hidden", alignContent: "start",
                   border: 1, borderColor: "divider", borderRadius: `${theme.custom.radii.lg}px`, bgcolor: "background.paper",
                   transition: "border-color 150ms, transform 220ms",
                   "&:hover": { borderColor: "primary.main", transform: { sm: "translateY(-3px)" } },
                   "&:hover .arrow": { transform: "translate(2px,-2px)" },
                 }}
               >
+                <CardImage src={p.coverImage} />
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Typography sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.68rem", letterSpacing: "0.1em", color: "text.secondary" }}>
                     {(p.category?.name || "Project").toUpperCase()} · {p.status?.replace("_", " ")}

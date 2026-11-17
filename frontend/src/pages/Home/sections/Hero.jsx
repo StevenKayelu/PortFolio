@@ -6,6 +6,7 @@ import apiClient from "../../../services/apiClient";
 import { useFetch } from "../../../hooks/useFetch";
 import HeadlineReveal from "../../../components/common/HeadlineReveal";
 import { siteHref } from "../../../brand/brands";
+import { PHOTO_POSITION } from "../../../utils/photo";
 
 /**
  * Profile card built only from live CMS data. Shows Steven's real photo
@@ -27,18 +28,18 @@ function ProfileCard({ identity, about }) {
     <Box
       sx={{
         border: 1, borderColor: "divider", borderRadius: `${theme.custom.radii.xl}px`, bgcolor: "background.paper",
-        overflow: "hidden", display: "grid", gridTemplateColumns: { xs: "1fr", sm: "180px 1fr", md: "1fr" },
+        overflow: "hidden", display: "grid", gridTemplateColumns: { xs: "1fr", sm: "200px 1fr", md: "1fr" },
       }}
     >
       <Box
         sx={{
-          aspectRatio: { xs: "16 / 9", sm: "4 / 5", md: "16 / 10" }, maxWidth: "100%", position: "relative",
+          aspectRatio: { xs: "1 / 1", sm: "4 / 5" }, maxWidth: "100%", position: "relative",
           bgcolor: theme.custom.elevatedBg, display: "grid", placeItems: "center",
           backgroundImage: identity?.photo ? "none" : `repeating-linear-gradient(135deg, transparent 0 12px, ${theme.palette.divider} 12px 13px)`,
         }}
       >
         {identity?.photo ? (
-          <Box component="img" src={identity.photo} alt={identity.photoAlt || `Portrait of ${identity.name}`} loading="eager" sx={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
+          <Box component="img" src={identity.photo} alt={identity.photoAlt || `Portrait of ${identity.name}`} loading="eager" sx={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: PHOTO_POSITION[identity.photoPosition] || PHOTO_POSITION.upper, position: "absolute", inset: 0 }} />
         ) : (
           <Box aria-hidden="true" sx={{ fontFamily: theme.custom.fontSerif, fontSize: "3.5rem", color: "text.secondary", lineHeight: 1 }}>{initials}</Box>
         )}
@@ -126,7 +127,7 @@ export default function Hero() {
                   "&:hover b": { textDecorationThickness: "2px" },
                 }}
               >
-                Founder of <b>Devegen Ventures</b> <FiArrowUpRight aria-hidden="true" />
+                Founder of <b>DevGen Ventures</b> <FiArrowUpRight aria-hidden="true" />
               </Box>
             </motion.div>
           </Box>

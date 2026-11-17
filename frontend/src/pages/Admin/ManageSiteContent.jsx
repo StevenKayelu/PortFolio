@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Box, Typography, Stack, Tabs, Tab, TextField, Button, Alert, Skeleton, IconButton, Tooltip, Autocomplete, Chip, Avatar,
+  Box, Typography, Stack, Tabs, Tab, TextField, Button, Alert, Skeleton, IconButton, Tooltip, Autocomplete, Chip, MenuItem,
 } from "@mui/material";
 import { FiPlus, FiTrash2, FiArrowUp, FiArrowDown, FiUpload } from "react-icons/fi";
 import apiClient from "../../services/apiClient";
+import { DefaultMark, loadBranding } from "../../components/brand/BrandMark";
+import { PHOTO_POSITION } from "../../utils/photo";
 
 /**
  * Editor for the SiteSetting content shown on stevenkayelu.online:
@@ -17,6 +19,7 @@ const SECTIONS = [
   { key: "stats", label: "Stats" },
   { key: "technologies", label: "Tech stack" },
   { key: "timeline", label: "Timeline" },
+  { key: "branding", label: "Logo & favicon" },
 ];
 
 const EMPTY = {
@@ -25,7 +28,45 @@ const EMPTY = {
   stats: [],
   technologies: [],
   timeline: [],
+  branding: {},
 };
+
+const PHOTO_FOCUS = [
+  { value: "top", label: "Top: keep the top of the head" },
+  { value: "upper", label: "Upper: face and shoulders (recommended)" },
+  { value: "center", label: "Centre: the middle of the photo" },
+];
+
+/** Shared upload button: posts one image and reports the API's answer. */
+function UploadButton({ endpoint, field = "image", label, onDone, accept = "image/png,image/webp,image/jpeg" }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const upload = async (file) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { setError("That file is over 10 MB. Choose a smaller one."); return; }
+    setBusy(true); setError("");
+    const data = new FormData();
+    data.append(field, file);
+    try {
+      onDone((await apiClient.post(endpoint, data)).data);
+    } catch (err) {
+      setError(err.response?.data?.error || "It wasn't uploaded. Try again.");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+  return (
+    <Box>
+      <input ref={inputRef} type="file" accept={accept} hidden onChange={(e) => upload(e.target.files?.[0])} />
+      <Button variant="outlined" startIcon={<FiUpload />} disabled={busy} onClick={() => inputRef.current?.click()}>
+        {busy ? "Uploading…" : label}
+      </Button>
+      {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
+    </Box>
+  );
+}
 
 /** Repeatable rows with add, remove and reorder. */
 function ListEditor({ id, items, onChange, fields, addLabel, max }) {
@@ -59,38 +100,94 @@ function ListEditor({ id, items, onChange, fields, addLabel, max }) {
   );
 }
 
-function PhotoField({ value, alt, onUploaded }) {
-  const inputRef = useRef(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const upload = async (file) => {
-    if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setError("Choose a JPEG, PNG or WebP photo."); return; }
-    if (file.size > 10 * 1024 * 1024) { setError("That photo is over 10 MB. Choose a smaller one."); return; }
-    setBusy(true); setError("");
-    const data = new FormData();
-    data.append("photo", file);
-    try {
-      const res = await apiClient.post("/site-settings/identity/photo", data);
-      onUploaded(res.data.photo);
-    } catch (err) {
-      setError(err.response?.data?.error || "The photo wasn't uploaded. Try again.");
-    } finally { setBusy(false); }
-  };
+function PhotoField({ value, alt, position, onUploaded, onPosition }) {
+  const objectPosition = PHOTO_POSITION[position] || PHOTO_POSITION.upper;
+  const frame = (ratio, width, label) => (
+    <Stack gap={0.5} alignItems="center">
+      <Box sx={{ width, aspectRatio: ratio, borderRadius: 2, overflow: "hidden", bgcolor: "action.hover", border: 1, borderColor: "divider", display: "grid", placeItems: "center" }}>
+        {value
+          ? <Box component="img" src={value} alt={alt || ""} sx={{ width: "100%", height: "100%", objectFit: "cover", objectPosition }} />
+          : <Typography variant="caption" color="text.secondary">No photo</Typography>}
+      </Box>
+      <Typography variant="caption" color="text.secondary">{label}</Typography>
+    </Stack>
+  );
   return (
-    <Stack direction={{ xs: "column", sm: "row" }} gap={2} alignItems={{ sm: "center" }}>
-      <Avatar src={value || undefined} alt={alt || ""} variant="rounded" sx={{ width: 96, height: 120, bgcolor: "action.hover", color: "text.secondary", fontSize: "0.75rem" }}>
-        No photo
-      </Avatar>
+    <Stack gap={2}>
+      <Stack direction="row" gap={2} alignItems="flex-end" flexWrap="wrap">
+        {frame("4 / 5", 120, "Tablets & computers")}
+        {frame("1 / 1", 96, "Phones")}
+      </Stack>
+      <Stack direction={{ xs: "column", sm: "row" }} gap={2} alignItems={{ sm: "center" }}>
+        <UploadButton endpoint="/site-settings/identity/photo" field="photo" accept="image/jpeg,image/png,image/webp"
+          label={value ? "Replace photo" : "Upload your photo"} onDone={(d) => onUploaded(d.photo)} />
+        <TextField select size="small" label="Photo focus" value={position || "upper"} onChange={(e) => onPosition(e.target.value)} sx={{ minWidth: { sm: 300 } }}>
+          {PHOTO_FOCUS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+        </TextField>
+      </Stack>
+      <Alert severity="info" variant="outlined">
+        <strong>Best results:</strong> a portrait (upright) photo, at least <strong>1200 × 1500 pixels</strong> (4:5), with your face in the
+        upper third and some space above your head. A plain background works best. JPEG, PNG or WebP up to 10 MB; it's converted to WebP and
+        its location data is removed. The previews above show exactly how it will be trimmed. Remember to save the profile after changing the focus.
+      </Alert>
+    </Stack>
+  );
+}
+
+function BrandingTab({ value, set }) {
+  const after = (v) => { set(v); loadBranding({ fresh: true }); };
+  const tile = { width: 96, height: 96, borderRadius: 2, border: 1, borderColor: "divider", display: "grid", placeItems: "center", bgcolor: "background.paper", overflow: "hidden" };
+  return (
+    <Stack gap={4}>
       <Box>
-        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => upload(e.target.files?.[0])} />
-        <Button variant="outlined" startIcon={<FiUpload />} disabled={busy} onClick={() => inputRef.current?.click()}>
-          {busy ? "Uploading…" : value ? "Replace photo" : "Upload your photo"}
-        </Button>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, maxWidth: 420 }}>
-          Your real portrait, shown in the homepage hero. It's converted to WebP and its location data is removed.
+        <Typography variant="h4" component="h3" sx={{ mb: 1 }}>Umbrella logo</Typography>
+        <Typography color="text.secondary" sx={{ mb: 2 }}>
+          Shown in the header and footer of devgenventures.com and in the admin. Without an upload, the built-in DevGen Ventures mark is used.
         </Typography>
-        {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} alignItems={{ sm: "center" }}>
+          <Stack direction="row" gap={1}>
+            <Box sx={tile}>{value.logo ? <Box component="img" src={value.logo} alt="Current logo" sx={{ maxWidth: "80%", maxHeight: "80%" }} /> : <DefaultMark size={64} />}</Box>
+            <Box sx={{ ...tile, bgcolor: "#14243D", color: "#F3EFE6" }}>
+              {value.logo ? <Box component="img" src={value.logo} alt="" sx={{ maxWidth: "80%", maxHeight: "80%" }} /> : <DefaultMark size={64} color="#F3EFE6" />}
+            </Box>
+          </Stack>
+          <Stack gap={1} alignItems="flex-start">
+            <UploadButton endpoint="/site-settings/branding/logo" label={value.logo ? "Replace logo" : "Upload logo"} onDone={after} />
+            {value.logo && <Button size="small" color="inherit" onClick={() => set({ logo: "" })}>Use the built-in mark (then save)</Button>}
+          </Stack>
+        </Stack>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+          Use a <strong>PNG with a transparent background</strong>, at least <strong>512 × 512 pixels</strong>, without words, so it reads on
+          light and dark backgrounds (check both previews). Empty margins are trimmed automatically.
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="h4" component="h3" sx={{ mb: 1 }}>Favicon</Typography>
+        <Typography color="text.secondary" sx={{ mb: 2 }}>
+          The small icon in browser tabs, bookmarks and phone home screens, on all sites and the admin.
+        </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} gap={2} alignItems={{ sm: "center" }}>
+          <Stack direction="row" gap={1.5} alignItems="flex-end">
+            {[64, 32, 16].map((size) => (
+              <Box key={size} sx={{ width: size, height: size, borderRadius: size > 20 ? 1 : 0.5, overflow: "hidden" }}>
+                <Box component="img" src={value.favicon512 || value.favicon192 || "/icon-512.png"} alt="" sx={{ width: "100%", height: "100%" }} />
+              </Box>
+            ))}
+          </Stack>
+          <Stack gap={1} alignItems="flex-start">
+            <UploadButton endpoint="/site-settings/branding/favicon" label={value.favicon32 ? "Replace favicon" : "Upload favicon"} onDone={after} />
+            {value.favicon32 && (
+              <Button size="small" color="inherit" onClick={() => set({ favicon32: "", favicon180: "", favicon192: "", favicon512: "" })}>
+                Use the built-in favicon (then save)
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+          Use a <strong>square image, 512 × 512 pixels</strong>, with a solid background and a simple shape (no words; they can't be read at
+          16 pixels). All the needed sizes are made from it automatically. Browsers may take a few minutes or a refresh to show a new favicon.
+        </Typography>
       </Box>
     </Stack>
   );
@@ -122,6 +219,7 @@ export default function ManageSiteContent() {
     setStatus((s) => ({ ...s, [tab]: { saving: true } }));
     try {
       await apiClient.put(`/site-settings/${tab}`, { value });
+      if (tab === "branding") loadBranding({ fresh: true });
       setStatus((s) => ({ ...s, [tab]: { message: "Saved. The site shows the change on the next page load." } }));
     } catch (err) {
       const res = err.response?.data;
@@ -134,7 +232,7 @@ export default function ManageSiteContent() {
   return (
     <Box>
       <Typography variant="h2" sx={{ mb: 0.5 }}>Site content</Typography>
-      <Typography color="text.secondary" sx={{ mb: 2 }}>The text and photo on stevenkayelu.online's homepage and About page.</Typography>
+      <Typography color="text.secondary" sx={{ mb: 2 }}>The text and photo on stevenkayelu.online's homepage and About page, and the logo and favicon for all sites.</Typography>
       {status._load && <Alert severity="error" sx={{ mb: 2 }}>{status._load}</Alert>}
 
       <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" allowScrollButtonsMobile sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}>
@@ -146,7 +244,7 @@ export default function ManageSiteContent() {
         <Stack gap={2.5} sx={{ maxWidth: 820 }}>
           {tab === "identity" && (
             <>
-              <PhotoField value={value.photo} alt={value.photoAlt} onUploaded={(photo) => set({ photo })} />
+              <PhotoField value={value.photo} alt={value.photoAlt} position={value.photoPosition} onUploaded={(photo) => set({ photo })} onPosition={(photoPosition) => set({ photoPosition })} />
               {field("photoAlt", "Photo description (for screen readers)", { helperText: "e.g. Steven Kayelu smiling, wearing a blue shirt" })}
               <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" } }}>
                 {field("name", "Name")}
@@ -197,6 +295,8 @@ export default function ManageSiteContent() {
               renderInput={(params) => <TextField {...params} id="technologies" label="Technologies" placeholder="Type a name and press Enter" />}
             />
           )}
+
+          {tab === "branding" && <BrandingTab value={value} set={set} />}
 
           {tab === "timeline" && (
             <ListEditor id="timeline" items={value} onChange={set} max={40} addLabel="Add a timeline entry"

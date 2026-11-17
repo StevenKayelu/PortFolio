@@ -15,6 +15,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AdminBrandProvider, useAdminBrand } from "../../context/AdminBrandContext";
 import { useAuth } from "../../context/AuthContext";
 import { AdminRealtimeProvider, useAdminRealtime } from "../../context/AdminRealtimeContext";
+import BrandMark, { FaviconLinks } from "../../components/brand/BrandMark";
 
 const DRAWER_WIDTH = 240;
 
@@ -115,7 +116,8 @@ function AdminShell() {
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Toolbar>
         {/* One admin serves every brand (report §03), so it carries the umbrella name. */}
-        <Stack>
+        <BrandMark size={32} />
+        <Stack sx={{ ml: 1.25 }}>
           <Typography sx={{ fontFamily: theme.custom.fontSerif, fontSize: "1.15rem", lineHeight: 1.1 }}>DevGen admin</Typography>
           {identity?.name && (
             <Typography sx={{ fontFamily: theme.custom.fontMono, fontSize: "0.68rem", color: "text.secondary", letterSpacing: "0.06em" }}>
@@ -221,6 +223,7 @@ function AdminShell() {
         </Box>
       </Box>
       <LiveToast />
+      <FaviconLinks />
     </Box>
   );
 }

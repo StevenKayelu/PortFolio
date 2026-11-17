@@ -39,7 +39,7 @@ function Constellation() {
 const STORY = [
   {
     title: "Ideas, given a structure",
-    body: "Devegen Ventures is the umbrella name under which service brands, products and new businesses are presented together, each with its own identity.",
+    body: "DevGen Ventures is the umbrella name under which service brands, products and new businesses are presented together, each with its own identity.",
   },
   {
     title: "Technology at the core",
@@ -47,7 +47,7 @@ const STORY = [
   },
   {
     title: "Verified before listed",
-    body: "A venture or product appears here only once its ownership and relationship to Devegen are confirmed. Work in progress is labelled as such.",
+    body: "A venture or product appears here only once its ownership and relationship to DevGen Ventures are confirmed. Work in progress is labelled as such.",
   },
 ];
 
@@ -67,8 +67,8 @@ export default function DevegenHome() {
   return (
     <>
       <Helmet titleTemplate="%s">
-        <title>Devegen Ventures — Building ideas into meaningful ventures</title>
-        <meta name="description" content="Devegen Ventures is an umbrella business brand for technology services, products and future ventures, founded by Steven Kayelu." />
+        <title>DevGen Ventures — Building ideas into meaningful ventures</title>
+        <meta name="description" content="DevGen Ventures is an umbrella business brand for technology services, products and future ventures, founded by Steven Kayelu." />
       </Helmet>
 
       {/* HERO */}
@@ -89,7 +89,7 @@ export default function DevegenHome() {
               />
               <motion.div {...fade(0.25)}>
                 <Typography sx={{ mt: { xs: 3, md: 4 }, maxWidth: "50ch", color: band.muted, fontSize: { xs: "1.02rem", md: "1.12rem" } }}>
-                  An umbrella for technology services, products and future businesses. Each one is listed only once its relationship to Devegen is verified.
+                  An umbrella for technology services, products and future businesses. Each one is listed only once its relationship to DevGen Ventures is verified.
                 </Typography>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mt: { xs: 4, md: 5 } }}>
                   <Button href="#ecosystem" size="large" endIcon={<FiArrowDown />} sx={{ bgcolor: band.accent, color: "#14243D", "&:hover": { bgcolor: band.accent, boxShadow: `0 0 0 4px ${band.accent}40` } }}>
@@ -125,7 +125,7 @@ export default function DevegenHome() {
 
       {/* STORY */}
       <Container maxWidth="lg" component="section" aria-labelledby="dv-story" sx={{ py: { xs: 8, md: 13 }, px: { xs: 2, sm: 3 } }}>
-        <SectionHeading id="dv-story" eyebrow="What Devegen represents" title="One name for the businesses an idea can grow into." />
+        <SectionHeading id="dv-story" eyebrow="What DevGen Ventures represents" title="One name for the businesses an idea can grow into." />
         <Box sx={{ display: "grid", gap: { xs: 0, md: 5 }, gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" } }}>
           {STORY.map((s, i) => (
             <Reveal key={s.title} delay={i * 0.07}>
@@ -215,7 +215,7 @@ export default function DevegenHome() {
               Have an idea worth building together?
             </Typography>
             <Typography sx={{ mt: 2, color: band.muted, maxWidth: "52ch" }}>
-              Devegen welcomes partnership, collaboration and venture conversations. Tell us what you have in mind.
+              DevGen Ventures welcomes partnership, collaboration and venture conversations. Tell us what you have in mind.
             </Typography>
           </Box>
           <Button component={NavLink} to="/contact?type=partnership" size="large" endIcon={<FiArrowRight />} sx={{ bgcolor: band.accent, color: "#14243D", justifySelf: { md: "end" }, "&:hover": { bgcolor: band.accent, boxShadow: `0 0 0 4px ${band.accent}40` } }}>

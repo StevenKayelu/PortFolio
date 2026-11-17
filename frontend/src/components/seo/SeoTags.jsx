@@ -11,22 +11,22 @@ import { SITES, isProductionHost } from "../../brand/brands";
  * from the admin (/admin/seo) overrides both for one path.
  *
  * Structured data states only verified facts: the founder link is
- * confirmed, the Devegen ↔ DevGen Solutions relationship is not, so no
+ * confirmed, the DevGen Ventures ↔ DevGen Solutions relationship is not, so no
  * parentOrganization is claimed.
  */
 
 const DEFAULTS = {
   steven: {
-    description: "Steven Kayelu is a full-stack software engineer in Kitwe, Zambia, and the founder of Devegen Ventures.",
+    description: "Steven Kayelu is a full-stack software engineer in Kitwe, Zambia, and the founder of DevGen Ventures.",
     jsonLd: (url) => ({
       "@context": "https://schema.org", "@type": "Person", name: "Steven Kayelu", url,
       jobTitle: "Software engineer", sameAs: ["https://github.com/StevenKayelu"],
     }),
   },
   devegen: {
-    description: "Devegen Ventures is an umbrella brand for technology services, products and future ventures, founded by Steven Kayelu.",
+    description: "DevGen Ventures is an umbrella brand for technology services, products and future ventures, founded by Steven Kayelu.",
     jsonLd: (url) => ({
-      "@context": "https://schema.org", "@type": "Organization", name: "Devegen Ventures", url,
+      "@context": "https://schema.org", "@type": "Organization", name: "DevGen Ventures", url,
       founder: { "@type": "Person", name: "Steven Kayelu", url: `https://${SITES.steven.domain}` },
     }),
   },

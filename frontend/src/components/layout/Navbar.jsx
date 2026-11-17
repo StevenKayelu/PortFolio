@@ -21,7 +21,7 @@ function isActive(link, location) {
 function useCrossLink() {
   const { siteKey } = useBrand();
   return siteKey === "steven"
-    ? { eyebrow: "Founder of", label: "Devegen Ventures", href: siteHref("devegen") }
+    ? { eyebrow: "Founder of", label: "DevGen Ventures", href: siteHref("devegen") }
     : { eyebrow: "Founder", label: "Steven Kayelu", href: siteHref("steven") };
 }
 

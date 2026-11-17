@@ -145,6 +145,7 @@ export const productSchema = z.object({
   summary: optionalText(2000),
   website: url,
   lifecycle: optionalText(40),
+  imageUrl: url,
   status: PUBLICATION.optional(),
   ownershipStatus: z.enum(["NEEDS_REVIEW", "CONFIRMED", "NOT_OWNED"]).optional(),
   displayOrder: z.coerce.number().int().optional(),
@@ -261,6 +262,16 @@ export const siteSettingSchemas = {
     facebook: optionalUrl,
     photo: optionalUrl,
     photoAlt: optionalText(200),
+    // Which part of the portrait stays visible when the frame crops it.
+    photoPosition: z.enum(["top", "upper", "center"]).optional(),
+  }),
+  // Umbrella logo and favicon; empty values fall back to the built-in mark.
+  branding: z.object({
+    logo: optionalUrl,
+    favicon32: optionalUrl,
+    favicon180: optionalUrl,
+    favicon192: optionalUrl,
+    favicon512: optionalUrl,
   }),
   about: z.object({
     bio: shortText(4000),

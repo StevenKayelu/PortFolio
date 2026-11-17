@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.middleware.js";
-import { getSetting, getSettingsBulk, upsertSetting, uploadIdentityPhoto } from "../controllers/siteSetting.controller.js";
+import { getSetting, getSettingsBulk, upsertSetting, uploadIdentityPhoto, uploadBrandingLogo, uploadBrandingFavicon } from "../controllers/siteSetting.controller.js";
 import { siteSettingSchemas } from "../validation/schemas.js";
 
 const router = Router();
@@ -21,6 +21,8 @@ function validateSetting(req, res, next) {
 
 router.get("/", getSettingsBulk); // ?keys=identity,stats,technologies
 router.post("/identity/photo", ...canEdit, upload.single("photo"), uploadIdentityPhoto);
+router.post("/branding/logo", ...canEdit, upload.single("image"), uploadBrandingLogo);
+router.post("/branding/favicon", ...canEdit, upload.single("image"), uploadBrandingFavicon);
 router.get("/:key", getSetting);
 router.put("/:key", ...canEdit, validateSetting, upsertSetting);
 

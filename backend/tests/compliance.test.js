@@ -115,6 +115,6 @@ test("the dashboard counts registrations that need renewal for super admins", as
   assert.equal((await api("GET", "/admin/summary", { token: tok.brandAdmin })).body.expiringCredentialCount, 0);
 });
 
-test("the Devegen sitemap lists the compliance page", async () => {
+test("the DevGen Ventures sitemap lists the compliance page", async () => {
   assert.ok((await api("GET", "/sitemap.xml?site=devegen", { raw: true })).body.includes("/compliance"));
 });

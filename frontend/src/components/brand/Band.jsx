@@ -2,7 +2,7 @@ import { Box, useTheme } from "@mui/material";
 
 /**
  * A full-bleed section on the brand's signature ground: navy ledger
- * for Devegen, drafting-grid blueprint for DevGen Solutions. The band
+ * for DevGen Ventures, drafting-grid blueprint for DevGen Solutions. The band
  * keeps its colours in both light and dark mode, so text inside reads
  * from band tokens, never from the page palette.
  */

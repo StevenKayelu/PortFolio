@@ -46,7 +46,7 @@ export const SITES = {
   },
   devegen: {
     key: "devegen",
-    name: "Devegen Ventures",
+    name: "DevGen Ventures",
     domain: "devgenventures.com",
     nav: [
       { label: "Ventures", to: "/ventures" },
@@ -55,7 +55,7 @@ export const SITES = {
     ],
     cta: { label: "Partner with us", to: "/contact?type=partnership" },
     footer: [
-      { title: "Devegen", links: [
+      { title: "DevGen Ventures", links: [
         { label: "Ventures", to: "/ventures" },
         { label: "Ecosystem", to: "/#ecosystem" },
         { label: "Partnerships", to: "/contact?type=partnership" },
@@ -81,7 +81,7 @@ export const SOLUTIONS_NAV = {
     { label: "Overview", to: "/solutions", end: true },
     { label: "Services", to: "/solutions/services" },
     { label: "Work", to: "/solutions/work" },
-    { label: "Devegen Ventures", to: "/" , end: true },
+    { label: "DevGen Ventures", to: "/" , end: true },
   ],
   cta: { label: "Request a quote", to: "/contact?type=quote" },
 };

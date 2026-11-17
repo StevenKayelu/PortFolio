@@ -81,7 +81,7 @@ function NodeLink({ node }) {
 }
 
 /**
- * Interactive map of the Devegen ecosystem. Arrow keys move between
+ * Interactive map of the DevGen Ventures ecosystem. Arrow keys move between
  * nodes (roving tabindex); a list view offers the same content as
  * plain nested structure for screen readers and small screens.
  */
@@ -191,7 +191,7 @@ export default function EcosystemMap() {
             ref={svgRef}
             viewBox={`0 0 ${vbW} ${vbH}`}
             role="group"
-            aria-label="Devegen Ventures ecosystem map. Use the arrow keys to move between organisations."
+            aria-label="DevGen Ventures ecosystem map. Use the arrow keys to move between organisations."
             style={{ width: "100%", height: "auto", display: "block" }}
           >
             <rect x={bx} y={by} width={bw} height={bh} rx="22" fill={theme.custom.elevatedBg} stroke={theme.palette.divider} />
@@ -270,7 +270,7 @@ export default function EcosystemMap() {
             <style>{`.eco-node:hover .eco-halo, .eco-node:focus-visible .eco-halo { opacity: 1; }`}</style>
           </svg>
         ) : (
-          <Box component="ul" aria-label="Devegen Ventures ecosystem" sx={{ p: 0.5, m: 0, display: "grid", gap: 0.5 }}>
+          <Box component="ul" aria-label="DevGen Ventures ecosystem" sx={{ p: 0.5, m: 0, display: "grid", gap: 0.5 }}>
             {listItem("dv", [listItem("ds", ORDER.filter((id) => id.startsWith("p")).map((id) => listItem(id))), listItem("fv")])}
             <Box component="li" sx={{ listStyle: "none", mt: 1, p: 1.5, borderTop: 1, borderColor: "divider", fontFamily: theme.custom.fontMono, fontSize: "0.7rem", letterSpacing: "0.1em", color: "text.secondary" }}>
               INDEPENDENT IDENTITY

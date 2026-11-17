@@ -872,6 +872,7 @@ model Product {
   summary         String?           @db.Text
   website         String?
   lifecycle       String? // e.g. "concept", "beta", "live"
+  imageUrl        String? // card thumbnail (16:10)
   status          PublicationStatus @default(DRAFT)
   ownershipStatus OwnershipStatus   @default(NEEDS_REVIEW)
   displayOrder    Int               @default(0)

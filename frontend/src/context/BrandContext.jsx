@@ -6,7 +6,7 @@ const BrandContext = createContext(null);
 
 /**
  * Exposes the current site (steven | devegen) and the active brand
- * preset. On the Devegen site, any /solutions route switches the
+ * preset. On the DevGen Ventures site, any /solutions route switches the
  * preset and navigation to DevGen Solutions.
  */
 export function BrandProvider({ children }) {
