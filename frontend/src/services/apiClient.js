@@ -1,7 +1,22 @@
 import axios from "axios";
 
+// Each production site talks to an API on its own domain (api.<site>), so the
+// sign-in cookie is first-party and survives third-party-cookie blocking.
+// VITE_API_URL overrides this (local dev, previews, or falling back to Render).
+const SITE_APIS = {
+  "stevenkayelu.online": "https://api.stevenkayelu.online/api/v1",
+  "www.stevenkayelu.online": "https://api.stevenkayelu.online/api/v1",
+  "devegenventures.com": "https://api.devegenventures.com/api/v1",
+  "www.devegenventures.com": "https://api.devegenventures.com/api/v1",
+};
+
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" && SITE_APIS[window.location.hostname]) ||
+  "http://localhost:5000/api/v1";
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
+  baseURL: API_BASE_URL,
   withCredentials: true, // sends the httpOnly refresh-token cookie
 });
 

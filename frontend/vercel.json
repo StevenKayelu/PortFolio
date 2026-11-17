@@ -1,26 +1,93 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "devegenventures.com" }], "destination": "https://steven-kayelu.onrender.com/sitemap.xml?site=devegen" },
-    { "source": "/robots.txt", "has": [{ "type": "host", "value": "devegenventures.com" }], "destination": "https://steven-kayelu.onrender.com/robots.txt?site=devegen" },
-    { "source": "/sitemap.xml", "destination": "https://steven-kayelu.onrender.com/sitemap.xml?site=steven" },
-    { "source": "/robots.txt", "destination": "https://steven-kayelu.onrender.com/robots.txt?site=steven" },
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    {
+      "source": "/sitemap.xml",
+      "has": [
+        {
+          "type": "host",
+          "value": "devegenventures.com"
+        }
+      ],
+      "destination": "https://api.devegenventures.com/sitemap.xml?site=devegen"
+    },
+    {
+      "source": "/robots.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "devegenventures.com"
+        }
+      ],
+      "destination": "https://api.devegenventures.com/robots.txt?site=devegen"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://api.stevenkayelu.online/sitemap.xml?site=steven"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://api.stevenkayelu.online/robots.txt?site=steven"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
+    }
   ],
   "redirects": [
-    { "source": "/:path*", "has": [{ "type": "host", "value": "www.stevenkayelu.online" }], "destination": "https://stevenkayelu.online/:path*", "permanent": true },
-    { "source": "/:path*", "has": [{ "type": "host", "value": "www.devegenventures.com" }], "destination": "https://devegenventures.com/:path*", "permanent": true }
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.stevenkayelu.online"
+        }
+      ],
+      "destination": "https://stevenkayelu.online/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.devegenventures.com"
+        }
+      ],
+      "destination": "https://devegenventures.com/:path*",
+      "permanent": true
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
       ]
     },
-    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
   ]
 }

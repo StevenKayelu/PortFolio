@@ -6,7 +6,8 @@ A production-grade personal brand / portfolio / blog / lead-gen platform.
 
 ```
 portfolio-platform/
-├── backend/     Node.js + Express + Prisma + MySQL API
+├── backend/     Node.js + Express + Prisma + PostgreSQL API
+├── deploy/      Server setup for the MotoGo host (Docker, Caddy, backups, runbook)
 └── frontend/    React 19 + Vite + MUI + Framer Motion
 ```
 
@@ -34,7 +35,7 @@ file storage can be pointed at Cloudflare R2 with a single `.env` flag.
 cd backend
 cp .env.example .env       # fill in DATABASE_URL and JWT secrets
 npm install
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 npx prisma generate
 npm run prisma:seed        # populates real content + creates admin@example.com / ChangeMe123!
 npm run dev                # http://localhost:5000/api/v1
@@ -248,7 +249,7 @@ Run against a disposable database, never production:
 
 ```bash
 cd backend
-export DATABASE_URL="mysql://root@127.0.0.1:3306/devegen_test"
+export DATABASE_URL="postgresql://postgres@127.0.0.1:5432/devegen_test"   # localhost only; tests refuse remote databases
 npx prisma migrate deploy && node prisma/seed.js && node prisma/seed-ecosystem.js
 npm run test:integration
 ```
@@ -266,12 +267,16 @@ Then update that user's `passwordHash` column directly (`npx prisma studio` is t
 
 ## Deployment
 
-| Layer     | Target                                   | Config file            |
-|-----------|-------------------------------------------|-------------------------|
-| Frontend  | Vercel                                    | `frontend/vercel.json`  |
-| Backend   | Render                                    | `backend/render.yaml`   |
-| Database  | MySQL (TiDB Serverless recommended free tier) | `backend/prisma/schema.prisma` |
-| Storage   | Local → Cloudflare R2                     | `backend/src/services/storage.service.js` |
+| Layer     | Target                                                    | Config                         |
+|-----------|-----------------------------------------------------------|--------------------------------|
+| Frontend  | Vercel (both domains)                                     | `frontend/vercel.json`         |
+| API       | Docker container on the MotoGo server (Johannesburg), behind MotoGo's Caddy at `api.stevenkayelu.online` / `api.devegenventures.com` | `deploy/`                      |
+| Database  | PostgreSQL 15: its own `devegen` database and login on MotoGo's Postgres | `deploy/postgres-setup.sql`    |
+| Files     | Cloudflare R2 (public bucket + private bucket)            | `backend/src/services/storage.service.js` |
+
+The step-by-step move from Render + TiDB (MySQL), including the one-time data copy
+(`backend/scripts/copy-mysql-to-postgres.js`) and rollback, is in **`deploy/DEPLOY.md`**.
+The old MySQL migrations are archived in `backend/prisma/migrations-mysql-archive/`.
 
 ## Suggested next steps
 

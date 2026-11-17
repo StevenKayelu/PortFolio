@@ -12,7 +12,7 @@ export async function startApp({ mail = false } = {}) {
   process.env.NODE_ENV = "test";
   if (mail) process.env.MAIL_TRANSPORT = "memory";
 
-  if (/onrender|tidb|amazonaws|planetscale/i.test(process.env.DATABASE_URL || "")) {
+  if (/onrender|tidb|amazonaws|planetscale|neon\.tech|supabase|vultr/i.test(process.env.DATABASE_URL || "") || !/localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL || "")) {
     throw new Error("Refusing to run integration tests against what looks like a hosted database.");
   }
 

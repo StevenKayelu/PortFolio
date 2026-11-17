@@ -16,7 +16,8 @@
     "lint": "eslint src",
     "prisma:seed-ecosystem": "node prisma/seed-ecosystem.js",
     "prisma:deploy": "prisma migrate deploy",
-    "test:integration": "node --test --test-concurrency=1 \"tests/**/*.test.js\""
+    "test:integration": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
+    "copy:mysql-to-postgres": "node scripts/copy-mysql-to-postgres.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.658.1",
@@ -32,15 +33,16 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "mysql2": "3.11.5",
     "nodemailer": "^6.9.16",
     "sharp": "^0.33.5",
     "slugify": "^1.6.6",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "prisma": "^5.20.0"
   },
   "devDependencies": {
     "eslint": "^9.9.0",
-    "nodemon": "^3.1.4",
-    "prisma": "^5.20.0"
+    "nodemon": "^3.1.4"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

@@ -1,0 +1,30 @@
+# Add these two site blocks to MotoGo's production Caddyfile
+# (motogo repo: infrastructure/production/Caddyfile), then rebuild and
+# restart MotoGo's Caddy the way you normally deploy it. Caddy obtains
+# HTTPS certificates for both names automatically once DNS points here.
+#
+# DNS (A records → the server's IPv4, AAAA → IPv6 if it has one):
+#   api.stevenkayelu.online
+#   api.devegenventures.com
+
+api.stevenkayelu.online, api.devegenventures.com {
+	encode gzip zstd
+
+	# Uploads are at most 10 MB per file (two files for certificates).
+	request_body {
+		max_size 25MB
+	}
+
+	reverse_proxy devegen-api:5000 {
+		header_up X-Forwarded-Proto {scheme}
+		health_uri /api/v1/health
+		health_interval 30s
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
